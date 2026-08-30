@@ -1,0 +1,138 @@
+"""Esquemas Pydantic de gestion de pacientes polimedicados (RF02).
+
+Los limites declarados aqui replican, en el borde del API, las restricciones
+de integridad de la tabla ``pacientes``. La duplicidad es deliberada: la
+validacion de Pydantic devuelve un error legible por el panel medico antes de
+tocar la base de datos, mientras que la restriccion SQL garantiza la regla
+aunque el dato llegue por otra via (carga masiva, migracion, consola).
+"""
+from __future__ import annotations
+
+from datetime import date, datetime
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from ..db.models import (
+    Aseguramiento,
+    Diagnostico,
+    NivelSocioeconomico,
+    Sexo,
+    ZonaResidencia,
+)
+
+# Criterio de elegibilidad del estudio (Anexo n.o 04): polimedicacion.
+MIN_FARMACOS = 5
+
+
+class PacienteBase(BaseModel):
+    """Variables clinicas y sociodemograficas del Anexo n.o 04."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    # --- Dimension: paciente ---
+    edad: int = Field(ge=18, le=120, description="Edad en anios cumplidos")
+    sexo: Sexo
+
+    # --- Dimension: socioeconomica ---
+    nivel_socioeconomico: NivelSocioeconomico | None = None
+    aseguramiento: Aseguramiento | None = None
+    zona_residencia: ZonaResidencia | None = None
+
+    # --- Dimension: enfermedad ---
+    diagnostico: Diagnostico
+    tiempo_enfermedad_anios: float | None = Field(default=None, ge=0, le=80)
+    comorbilidades: int = Field(default=0, ge=0, le=15)
+
+    # --- Dimension: terapia (carga terapeutica) ---
+    numero_farmacos: int = Field(
+        ge=MIN_FARMACOS,
+        le=30,
+        description="Farmacos prescritos simultaneamente; minimo 5 (polimedicacion)",
+    )
+    tomas_dia: int = Field(ge=1, le=20, description="Complejidad del regimen")
+
+    # --- Dimension: sistema de salud ---
+    controles_programados_6m: int = Field(default=0, ge=0, le=30)
+    controles_perdidos_6m: int = Field(default=0, ge=0, le=30)
+
+    # --- Linea base de adherencia (test de Morisky-Green, Anexo n.o 05) ---
+    puntaje_morisky: int | None = Field(default=None, ge=0, le=4)
+    # La clasificacion proviene del patron de respuestas del instrumento, no de
+    # un umbral automatico sobre el puntaje: se registra tal como la determino
+    # el encuestador.
+    incumplimiento_basal: bool | None = None
+    fecha_evaluacion_morisky: date | None = None
+
+    @model_validator(mode="after")
+    def _controles_coherentes(self) -> PacienteBase:
+        if self.controles_perdidos_6m > self.controles_programados_6m:
+            raise ValueError(
+                "Los controles perdidos no pueden superar a los programados."
+            )
+        return self
+
+
+class PacienteCreate(PacienteBase):
+    """Alta de un paciente en el seguimiento (HU02)."""
+
+    # Si se omite, el API asigna el siguiente correlativo P-00N.
+    codigo_anonimizado: str | None = Field(
+        default=None, pattern=r"^P-\d{3,6}$", examples=["P-001"]
+    )
+    # Cuenta de la app movil, cuando el paciente ya fue dado de alta como usuario.
+    id_usuario: str | None = None
+
+
+class PacienteUpdate(BaseModel):
+    """Actualizacion parcial: solo se modifican los campos enviados."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    edad: int | None = Field(default=None, ge=18, le=120)
+    sexo: Sexo | None = None
+    nivel_socioeconomico: NivelSocioeconomico | None = None
+    aseguramiento: Aseguramiento | None = None
+    zona_residencia: ZonaResidencia | None = None
+    diagnostico: Diagnostico | None = None
+    tiempo_enfermedad_anios: float | None = Field(default=None, ge=0, le=80)
+    comorbilidades: int | None = Field(default=None, ge=0, le=15)
+    numero_farmacos: int | None = Field(default=None, ge=MIN_FARMACOS, le=30)
+    tomas_dia: int | None = Field(default=None, ge=1, le=20)
+    controles_programados_6m: int | None = Field(default=None, ge=0, le=30)
+    controles_perdidos_6m: int | None = Field(default=None, ge=0, le=30)
+    puntaje_morisky: int | None = Field(default=None, ge=0, le=4)
+    incumplimiento_basal: bool | None = None
+    fecha_evaluacion_morisky: date | None = None
+    id_usuario: str | None = None
+    activo: bool | None = None
+
+    def campos_enviados(self) -> dict:
+        """Solo los campos presentes en el cuerpo de la peticion.
+
+        ``exclude_unset`` distingue "no enviado" de "enviado como null", lo que
+        permite borrar un dato opcional sin sobrescribir el resto de la ficha.
+        """
+        return self.model_dump(exclude_unset=True)
+
+
+class PacienteOut(PacienteBase):
+    """Ficha devuelta al panel medico."""
+
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+    id_paciente: str
+    codigo_anonimizado: str
+    id_usuario: str | None = None
+    id_medico_tratante: str | None = None
+    activo: bool
+    fecha_registro: datetime
+    fecha_actualizacion: datetime
+
+
+class PaginaPacientes(BaseModel):
+    """Respuesta paginada del listado del panel clinico."""
+
+    total: int
+    pagina: int
+    tamano: int
+    items: list[PacienteOut]

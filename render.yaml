@@ -1,0 +1,48 @@
+# Blueprint de Render para el API Gateway del sistema de soporte clinico.
+#
+# Uso: en Render -> New -> Blueprint -> conectar este repositorio. Render lee
+# este archivo y crea el servicio. Las variables marcadas con `sync: false`
+# NO se versionan: se completan a mano en el panel de Render (RNF01).
+services:
+  - type: web
+    name: cdss-adherencia-api
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: backend-api
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    # Las migraciones se aplican al arrancar, de modo que un despliegue nuevo
+    # deje el esquema al dia sin intervencion manual. Alembic es idempotente:
+    # si no hay migraciones pendientes, no hace nada.
+    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+
+      - key: ENVIRONMENT
+        value: produccion
+
+      # Cadena de conexion de PostgreSQL. Pegar desde Aiven (o desde la base
+      # de datos de Render). Debe incluir sslmode=require.
+      - key: DATABASE_URL
+        sync: false
+
+      # Clave de firma del JWT. Generar con:
+      #   python -c "import secrets; print(secrets.token_urlsafe(48))"
+      - key: SECRET_KEY
+        sync: false
+
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+
+      # Dominio del panel medico en Vercel. Ajustar tras el primer despliegue
+      # del frontend; los subdominios de vista previa ya estan cubiertos por
+      # CORS_ORIGIN_REGEX en la configuracion de la aplicacion.
+      - key: CORS_ORIGINS
+        sync: false
+
+      # Host publico del servicio, para el middleware de host confiable.
+      - key: ALLOWED_HOSTS
+        sync: false

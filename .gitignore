@@ -1,0 +1,15 @@
+__pycache__/
+*.pyc
+.env
+*.db
+.venv/
+venv/
+.pytest_cache/
+ml-pipeline/data/raw/*
+!ml-pipeline/data/raw/.gitkeep
+ml-pipeline/data/processed/*
+!ml-pipeline/data/processed/.gitkeep
+ml-pipeline/models/*.pkl
+node_modules/
+dist/
+.vercel

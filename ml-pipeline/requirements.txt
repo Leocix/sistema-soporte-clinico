@@ -1,0 +1,11 @@
+# Pipeline CRISP-DM del modelo predictivo de incumplimiento terapeutico
+pandas==2.2.3
+numpy==2.2.6
+scikit-learn==1.5.2
+imbalanced-learn==0.12.4
+xgboost==2.1.1
+shap==0.46.0
+joblib==1.4.2
+matplotlib==3.9.2
+seaborn==0.13.2
+jupyterlab==4.2.5

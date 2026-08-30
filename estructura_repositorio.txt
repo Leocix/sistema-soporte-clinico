@@ -1,0 +1,92 @@
+sistema-soporte-clinico/
+├── app-movil/                          # Frontend Flutter (App Paciente)
+│   ├── android/                        # Configuraciones nativas Android
+│   ├── ios/                            # Configuraciones nativas iOS
+│   ├── assets/                         # Imágenes e íconos
+│   ├── lib/
+│   │   ├── main.dart                   # Punto de entrada de la app
+│   │   ├── models/                     # Clases de datos (Paciente, TomaMedicamento)
+│   │   ├── screens/                    # Vistas principales
+│   │   │   ├── login_screen.dart       # Autenticación de paciente
+│   │   │   ├── home_screen.dart        # Dashboard de tratamiento diario
+│   │   │   └── registro_toma.dart      # Formulario de registro de adherencia
+│   │   ├── services/                   # Lógica de conexión externa
+│   │   │   ├── api_service.dart        # Peticiones HTTP a FastAPI
+│   │   │   └── notification_service.dart # Manejo nativo de recordatorios locales
+│   │   ├── utils/                      # Constantes, colores y tipografías
+│   │   └── widgets/                    # Componentes UI reutilizables (botones, alertas)
+│   └── pubspec.yaml                    # Dependencias de Flutter
+├── backend-api/                        # Backend FastAPI y microservicio ML
+│   ├── alembic/                        # Migraciones de base de datos (PostgreSQL)
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py                     # Instancia de FastAPI, CORS y manejador global de errores
+│   │   ├── api/                        # Controladores de rutas (Endpoints)
+│   │   │   ├── auth.py                 # Login y generación de JWT
+│   │   │   ├── pacientes.py            # CRUD de pacientes polimedicados
+│   │   │   ├── adherencia.py           # Endpoints de registro de tomas
+│   │   │   └── prediccion.py           # Inferencia asíncrona del modelo de ML
+│   │   ├── core/                       # Configuraciones base de la API
+│   │   │   ├── config.py               # Carga de variables de entorno
+│   │   │   ├── security.py             # Hasheo de contraseñas y validación RBAC (Médico/Paciente)
+│   │   │   └── exceptions.py           # Manejo de errores controlados para evitar caídas
+│   │   ├── db/                         # Capa de datos relacional
+│   │   │   ├── database.py             # Conexión cifrada a Aiven (PostgreSQL)
+│   │   │   └── models.py               # Modelos SQLAlchemy (Usuario, Paciente, Registro)
+│   │   ├── schemas/                    # Validaciones de entrada/salida con Pydantic
+│   │   │   ├── auth_schema.py          
+│   │   │   ├── paciente_schema.py      
+│   │   │   └── adherencia_schema.py    
+│   │   └── services/                   # Lógica de negocio y procesamiento
+│   │       ├── ml_inference.py         # Carga del modelo .pkl en memoria y cálculo SHAP
+│   │       └── auth_service.py         
+│   ├── .env.example                    # Plantilla de credenciales seguras
+│   └── requirements.txt                # Dependencias (fastapi, sqlalchemy, xgboost, shap, psycopg2)
+├── frontend-web/                       # Frontend React + Vite (Panel Médico)
+│   ├── public/
+│   ├── src/
+│   │   ├── main.jsx                    # Renderizado principal
+│   │   ├── App.jsx                     # Enrutador principal (React Router)
+│   │   ├── assets/                     # Hojas de estilo globales e imágenes
+│   │   ├── components/                 # Componentes UI encapsulados
+│   │   │   ├── Layout.jsx              # Estructura base del panel clínico
+│   │   │   ├── AlertaRiesgo.jsx        # Visualización visual de la predicción
+│   │   │   └── GraficoShap.jsx         # Gráficos de interpretabilidad de factores de riesgo
+│   │   ├── pages/                      # Vistas de página completas
+│   │   │   ├── LoginMedico.jsx         # Acceso exclusivo del personal clínico
+│   │   │   ├── Dashboard.jsx           # Panel de auditoría de adherencia general
+│   │   │   └── DetallePaciente.jsx     # Ficha clínica individual y nivel de riesgo
+│   │   ├── context/                    # Manejo de estado global (Ej. AuthContext)
+│   │   └── services/                   # Interacciones de red
+│   │       └── api.js                  # Configuración de Axios con inyección automática de JWT
+│   ├── index.html
+│   ├── package.json
+│   └── vite.config.js
+├── ml-pipeline/                        # Entorno CRISP-DM (Data Science)
+│   ├── data/                           
+│   │   ├── raw/                        # Dataset original extraído de las historias clínicas
+│   │   └── processed/                  # Dataset depurado y con balanceo SMOTE aplicado
+│   ├── models/                         
+│   │   └── risk_model_v1.pkl           # Modelo entrenado (serializado) listo para producción
+│   ├── notebooks/                      # Entorno interactivo para experimentación
+│   │   ├── 01_data_understanding.ipynb # Exploración y análisis de la línea base
+│   │   ├── 02_data_preparation.ipynb   # Limpieza, imputación de nulos y aplicación de SMOTE
+│   │   └── 03_modeling.ipynb           # Comparación de métricas (LR, RF, XGBoost, SVM)
+│   └── src/                            # Scripts de ejecución productiva
+│       ├── preprocess.py               # Script automatizado de limpieza
+│       └── train_evaluate.py           # Rutina de validación cruzada estratificada (5 folds)
+└── documentacion/                      # Evidencias académicas y formatos exigidos por la USAT
+    ├── 00_documentos_base/             # Archivos normativos y de planificación (Markdown)
+    │   ├── Proyecto_de_Investigacion.md# Tesis original aprobada
+    │   ├── Silabo_Seminario_Tesis.md   # Rúbricas de evaluación del curso
+    │   └── Cronograma_Proyecto.md      # Planificación integral SCRUM, CRISP-DM, MOBILE D, RUP
+    ├── 01_preinforme/
+    │   └── Pre_informe_50.md           # Informe documentando iteraciones y cumplimiento de OEs
+    ├── 02_instrumentos/
+    │   ├── Anexo_04_Ficha_Extraccion.md# Instrumento formal para historias clínicas
+    │   ├── Test_Morisky.md             # Instrumento validado de línea base de adherencia
+    │   ├── Expediente_Expertos.md      # Carta y formato para juicio de los 3 expertos
+    │   └── Escala_SUS.md               # Instrumento de usabilidad (para Fase Final)
+    └── 03_gestion_scrum/
+        ├── Product_Backlog.md          # Pila de producto priorizada (MoSCoW)
+        └── Matriz_Trazabilidad.md      # Relación: Objetivos -> Requisitos -> Funcionalidad
