@@ -113,7 +113,17 @@ En Render: **New → Blueprint**, conectar el repositorio. Render detecta
 - Sonda de salud en `/health`
 
 Las migraciones se aplican en cada arranque. Alembic es idempotente: si no hay
-nada pendiente, no hace nada.
+nada pendiente, no hace nada. Si `DATABASE_URL` está mal, el servicio no
+arranca y el fallo aparece en los *logs* de Render: es deliberado, preferible a
+un API en pie que no puede leer datos.
+
+> `requirements.txt` contiene solo lo que el API ejecuta hoy. Las librerías de
+> aprendizaje automático (scikit-learn, XGBoost, SHAP) pesan cientos de
+> megabytes y agotarían el tiempo de construcción y la memoria del plan
+> gratuito, así que viven aparte en `requirements-ml.txt`. Cuando el
+> microservicio de inferencia entre en servicio (Sprint 3), el comando de
+> construcción pasa a ser:
+> `pip install -r requirements.txt -r requirements-ml.txt`
 
 ### 2.2. Completar las variables de entorno
 

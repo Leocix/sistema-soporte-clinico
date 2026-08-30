@@ -34,6 +34,11 @@ Una vez arriba: <http://127.0.0.1:8000/docs> (documentación interactiva) y
 pip install -r requirements.txt
 ```
 
+`requirements-ml.txt` contiene aparte las librerías del microservicio de
+inferencia (scikit-learn, XGBoost, SHAP). No hacen falta para ejecutar el API
+actual y pesan cientos de megabytes, así que solo se instalan cuando se
+trabaja en RF04/RF06.
+
 Copia `.env.example` como `.env` y complétalo. La clave de firma se genera con:
 
 ```bash

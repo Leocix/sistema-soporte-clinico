@@ -1,3 +1,12 @@
+# Dependencias de ejecucion del API Gateway.
+#
+# Se mantienen al minimo a proposito: en el plan gratuito de Render el
+# servicio dispone de poca memoria y el tiempo de construccion es limitado.
+# Las librerias de aprendizaje automatico (scikit-learn, XGBoost, SHAP) pesan
+# cientos de megabytes y hoy no las importa ningun modulo del API, asi que
+# viven en requirements-ml.txt hasta que el microservicio de inferencia
+# (RF04, RF06) las necesite en el Sprint 3.
+
 # --- API Gateway (FastAPI) ---
 fastapi==0.118.0
 uvicorn[standard]==0.30.6
@@ -11,17 +20,13 @@ email-validator==2.2.0
 # --- Persistencia (PostgreSQL / Aiven) ---
 sqlalchemy==2.0.35
 alembic==1.13.3
-psycopg2-binary==2.9.9
+# 2.9.10 es la primera version con ruedas precompiladas para Python 3.13;
+# evita que la instalacion intente compilar desde el codigo fuente.
+psycopg2-binary==2.9.10
 
 # --- Seguridad (RF01 / RNF01) ---
 bcrypt==4.2.0
 python-jose[cryptography]==3.3.0
-
-# --- Inferencia del modelo (RF04, RF06 - Sprint 3) ---
-scikit-learn==1.5.2
-xgboost==2.1.1
-shap==0.46.0
-joblib==1.4.2
 
 # --- Pruebas ---
 pytest==8.3.3
