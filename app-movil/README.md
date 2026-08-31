@@ -117,4 +117,3 @@ la semana 7 (OE5).
   definida; falta el paquete `flutter_local_notifications` y la configuración
   nativa (canal y permiso `POST_NOTIFICATIONS` en Android 13+, autorización en
   iOS).
-- Pruebas de widget.
