@@ -364,7 +364,15 @@ El preprocesador ajustado se serializa (`models/preprocesador_v1.pkl`) junto al 
 - **Semilla fija (42)** en particiones, balanceo y modelos, para garantizar la reproducibilidad del experimento.
 - **Contraste estadístico:** prueba de McNemar o *t* pareada entre los dos mejores clasificadores, programada para la Iteración #3.
 
-**Resultados comparativos:** «*completar con la ejecución de `train_evaluate.py` sobre el dataset real; la tabla de exactitud, sensibilidad, F1-score y AUCROC por algoritmo se incorpora al cierre de la Iteración #3*».
+**Implementación del experimento.** El protocolo no quedó solo descrito: `ml-pipeline/src/train_evaluate.py` lo ejecuta de extremo a extremo —ajuste de hiperparámetros, validación cruzada, evaluación sobre el conjunto apartado, contraste estadístico y serialización del modelo ganador— y emite la tabla comparativa en formato listo para incorporar a este informe, junto con un reporte JSON auditable.
+
+**Una precisión metodológica sobre el balanceo.** La sección 1.1.2.e establece que SMOTE se aplica solo al conjunto de entrenamiento, después de la partición. Eso es correcto para ajustar el modelo final, pero **no basta para la validación cruzada**: si se balancea el conjunto de entrenamiento completo y después se divide en pliegues, las muestras sintéticas —interpoladas entre casos reales— quedan repartidas entre los pliegues de entrenamiento y los de validación, de modo que el modelo termina evaluándose sobre casos derivados de los que ya vio. El AUCROC resultante sería optimista y la comparación entre algoritmos, inválida.
+
+Por eso `train_evaluate.py` parte del dataset **crudo** y encadena imputación, codificación, escalado, SMOTE y clasificador en un único objeto (`imblearn.Pipeline`) que la rutina de validación cruzada reajusta por completo en cada pliegue. El conjunto de prueba se aparta antes de todo y nunca se balancea: conserva la prevalencia real del consultorio, que es la distribución sobre la que operará el sistema.
+
+**Verificación del flujo.** El script se ejecutó de extremo a extremo sobre datos sintéticos, recorriendo las cuatro configuraciones, la búsqueda de hiperparámetros, los cinco pliegues, la evaluación en prueba, el contraste de McNemar y la escritura de los tres artefactos. **Los valores de esa corrida son artificiales y no se reportan como resultado de la investigación.**
+
+**Resultados comparativos:** «*completar con la ejecución de `train_evaluate.py` sobre el dataset real; la tabla generada en `data/processed/tabla_comparativa.md` se incorpora directamente a este apartado*».
 
 #### g) Cierre del núcleo funcional: gestión de pacientes (RF02) y registro de adherencia (RF03)
 
@@ -429,7 +437,7 @@ Con ello, el **escenario de inicio a fin exigido por el hito del 50 %** queda ej
 
 ### 1.1.3. Iteración #3: Selección del algoritmo, microservicio de inferencia y explicabilidad *(programada)*
 
-**Sprint 3 · Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*.** Alcance previsto: selección del algoritmo con mayor AUCROC mediante prueba de McNemar o *t* pareada; desarrollo del microservicio de inferencia y del módulo de predicción de riesgo (RF04); cálculo y visualización de la explicabilidad SHAP [11] (RF06); módulo de alertas tempranas (RF05); panel clínico de auditoría con reportes exportables (RF07); pruebas de integración y de seguridad.
+**Sprint 3 · Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*.** Alcance previsto: ejecución de `train_evaluate.py` sobre el dataset definitivo y selección del algoritmo con mayor AUCROC, con el contraste de McNemar ya implementado; desarrollo del microservicio de inferencia y del módulo de predicción de riesgo (RF04); cálculo y visualización de la explicabilidad SHAP [11] (RF06); módulo de alertas tempranas (RF05); panel clínico de auditoría con reportes exportables (RF07); pruebas de integración y de seguridad.
 
 ### 1.1.4. Iteración #4: Despliegue, recordatorios y validación de usabilidad *(programada)*
 
@@ -445,7 +453,7 @@ Con ello, el **escenario de inicio a fin exigido por el hito del 50 %** queda ej
 | :---: | :--- | :---: | :--- |
 | OE1 | Informe de diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base cuantitativa en consolidación) | Anexo n.° 03 aplicado; Tablas 2 y 3 |
 | OE2 | Documento de requisitos y arquitectura | **Cumplido** | Tablas 4 y 6; `backend-api/app/main.py` |
-| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~50 %) | `ml-pipeline/src/preprocess.py`; Tabla 9 |
+| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~65 %) | `preprocess.py` y `train_evaluate.py`; Tabla 9 |
 | OE4 | Sistema de soporte clínico funcional | **En ejecución** (~45 %) | Núcleo funcional RF01–RF03 operativo y verificado |
 | OE5 | Informe de validación de usabilidad | **Pendiente** (programado semana 7) | Anexo n.° 05 (SUS) formalizado |
 
@@ -483,15 +491,19 @@ La arquitectura de microservicios desacoplados quedó definida en cuatro capas �
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
 | N.° de algoritmos comparados | ≥ 4 | **4 configurados**: Regresión Logística, Random Forest, XGBoost y SVM (Tabla 9) |
-| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo definido (5 pliegues estratificados); «*completar con la ejecución sobre el dataset real*» |
-| Sensibilidad y especificidad del modelo seleccionado | Reportadas | Pendiente de la fase de *Modeling* (Iteración #3) |
-| F1-score en datos de prueba independientes | Reportado | Pendiente de la fase de *Modeling* (Iteración #3) |
+| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); «*completar con la ejecución sobre el dataset real*» |
+| Sensibilidad y especificidad del modelo seleccionado | Reportadas | Calculadas por el script; pendientes de la extracción definitiva |
+| F1-score en datos de prueba independientes | Reportado | Calculado sobre el conjunto apartado; pendiente de la extracción definitiva |
 
 **Demostración del avance.** La fase *Data Preparation* está **completa y automatizada**: el script `preprocess.py` valida el esquema contra el Anexo n.° 04, depura el dataset con siete reglas documentadas, perfila y trata los valores faltantes, deriva tres características clínicamente fundamentadas, particiona de forma estratificada, ajusta el preprocesador solo con entrenamiento, aplica SMOTE solo al entrenamiento y serializa tanto los conjuntos resultantes como el preprocesador y un reporte JSON auditable de todas las transformaciones.
 
-Dos decisiones metodológicas sostienen la validez de la comparación que se ejecutará en la Iteración #3: **(i)** la exclusión del puntaje de Morisky del conjunto de predictores, por ser la fuente de la etiqueta; y **(ii)** el orden estricto partición → ajuste → balanceo, que impide la fuga de información hacia el conjunto de prueba. Ambas quedan documentadas en el código y son verificables por revisión.
+La fase *Modeling* está **implementada y verificada en su flujo**: `train_evaluate.py` ajusta los hiperparámetros de los cuatro algoritmos dentro de la validación cruzada, evalúa con cinco pliegues estratificados, mide sobre el conjunto apartado, contrasta los dos mejores con la prueba de McNemar —en su versión binomial exacta cuando hay pocos casos discordantes— y serializa el modelo ganador junto con su preprocesador, de modo que la inferencia en producción aplique exactamente la misma transformación que el entrenamiento.
 
-Lo pendiente para cerrar el objetivo es la **ejecución experimental sobre el dataset real** una vez concluida la extracción documental, y el contraste estadístico entre los dos mejores clasificadores.
+Tres decisiones metodológicas sostienen la validez de la comparación: **(i)** la exclusión del puntaje de Morisky del conjunto de predictores, por ser la fuente de la etiqueta; **(ii)** el orden estricto partición → ajuste → balanceo, que impide la fuga hacia el conjunto de prueba; y **(iii)** la aplicación de SMOTE **dentro** de cada pliegue de la validación cruzada y no antes, que impide la fuga entre pliegues. Las tres están documentadas en el código y son verificables por revisión.
+
+El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el error clínicamente costoso es el falso negativo, un paciente en riesgo que el sistema no detecta y que por tanto no recibe la alerta temprana (RF05).
+
+Lo pendiente para cerrar el objetivo es la **ejecución sobre el dataset real** una vez concluida la extracción documental del Anexo n.° 04.
 
 ### 1.2.4. OE4 – Construir el sistema de soporte clínico
 

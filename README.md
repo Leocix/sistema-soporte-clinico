@@ -23,7 +23,7 @@ antes de la cita.
 | [`backend-api/`](backend-api/) | API Gateway (FastAPI + PostgreSQL) | RF01–RF03 operativos |
 | [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Acceso, auditoría y ficha clínica |
 | [`app-movil/`](app-movil/) | App del paciente (Flutter) | Acceso y registro de tomas con cola sin conexión |
-| [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación de datos automatizada |
+| [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación de datos y comparación de algoritmos |
 | [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe al 50 % |
 
 ## Requisitos funcionales
