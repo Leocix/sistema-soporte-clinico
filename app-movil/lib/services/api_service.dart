@@ -1,5 +1,5 @@
+import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:http/http.dart' as http;
 
@@ -68,14 +68,18 @@ class ServicioApi {
     late final http.Response respuesta;
     try {
       respuesta = await peticion().timeout(Constantes.tiempoDeEspera);
-    } on SocketException {
-      throw ErrorDeConexion();
-    } on HttpException {
-      throw ErrorDeConexion();
-    } catch (_) {
-      // Agotar el tiempo de espera tambien se trata como falta de conexion:
-      // desde el punto de vista del paciente es lo mismo, y el evento debe
-      // quedar en la cola para reintentarse.
+    } on http.ClientException {
+      // `package:http` envuelve los fallos de red de la plataforma
+      // (SocketException incluida) en ClientException, asi que capturar
+      // SocketException directamente no atrapa nada: es este el tipo que
+      // llega cuando el telefono no alcanza al servidor.
+      throw ErrorDeConexion(
+        'No se pudo conectar con el servidor. Su registro se guardo en el '
+        'telefono y se enviara automaticamente.',
+      );
+    } on TimeoutException {
+      // Para el paciente agotar el tiempo de espera equivale a no tener
+      // conexion: en ambos casos el evento debe quedar en la cola.
       throw ErrorDeConexion(
         'El servidor tardo demasiado en responder. Se guardo su registro y se '
         'enviara automaticamente.',
@@ -109,16 +113,13 @@ class ServicioApi {
     if (cuerpo['codigo'] == 'VALIDACION_FALLIDA' &&
         detalles is List &&
         detalles.isNotEmpty) {
-      return detalles
-          .whereType<Map<String, dynamic>>()
-          .map((d) {
-            final campo = d['campo'] as String?;
-            final motivo = d['motivo'] as String? ?? '';
-            return (campo == null || campo.isEmpty || campo == 'general')
-                ? motivo
-                : '$campo: $motivo';
-          })
-          .join(' · ');
+      return detalles.whereType<Map<String, dynamic>>().map((d) {
+        final campo = d['campo'] as String?;
+        final motivo = d['motivo'] as String? ?? '';
+        return (campo == null || campo.isEmpty || campo == 'general')
+            ? motivo
+            : '$campo: $motivo';
+      }).join(' · ');
     }
     return (cuerpo['mensaje'] as String?) ?? 'Ocurrio un error inesperado.';
   }

@@ -3,40 +3,13 @@
 Aplicación Flutter del paciente polimedicado. Cubre RF01 (acceso con perfil de
 paciente) y RF03 (registro de la toma de medicamentos con sincronización).
 
-> **Estado: código escrito, sin compilar.** Este módulo se desarrolló sin el
-> SDK de Flutter instalado en el equipo, así que no ha pasado por
-> `flutter analyze` ni se ha ejecutado en un dispositivo. Las carpetas nativas
-> `android/` e `ios/` tampoco existen todavía: las genera el propio Flutter.
-> Los pasos siguientes las crean y dejan el proyecto ejecutable.
+Verificado con **Flutter 3.47.2**: `flutter analyze` sin incidencias y
+**14 pruebas en verde** (`flutter test`). Pendiente de ejecutarse en un
+dispositivo real.
 
 ## Puesta en marcha
 
-### 1. Instalar Flutter
-
-Descarga el SDK desde <https://docs.flutter.dev/get-started/install/windows> y
-comprueba la instalación:
-
-```bash
-flutter doctor
-```
-
-Para probar en Android necesitas además Android Studio con un emulador
-configurado, o un teléfono con la depuración USB activada.
-
-### 2. Generar las carpetas nativas
-
-Desde `app-movil/`:
-
-```bash
-flutter create . --project-name cdss_adherencia --org pe.usat.cdss --platforms=android,ios
-```
-
-Este comando añade `android/`, `ios/` y los archivos de plataforma. **Commitea
-antes de ejecutarlo**: si toca algún archivo existente, `git status` te dirá
-exactamente cuál y `git checkout <archivo>` lo restaura. En particular revisa
-que `pubspec.yaml` conserve las dependencias `http` y `shared_preferences`.
-
-### 3. Instalar dependencias y ejecutar
+### 1. Instalar dependencias y ejecutar
 
 ```bash
 flutter pub get
@@ -57,18 +30,22 @@ flutter run --dart-define=API_URL=http://10.0.2.2:8000
 `localhost` apuntaría al propio emulador. En un dispositivo físico usa la IP
 del equipo en la red local.
 
-### 4. Antes de dar por bueno el código
+### 2. Pruebas
 
 ```bash
-dart format lib
+flutter test
 ```
+
+14 casos: validación del formulario de acceso, contrato con el API (cuerpo
+enviado, traducción de errores, distinción entre fallo de red y error de
+negocio) y la lógica de estado de la toma.
+
+Para ejecutar en Android hacen falta las licencias del SDK, que `flutter
+doctor` reporta como pendientes:
 
 ```bash
-flutter analyze
+flutter doctor --android-licenses
 ```
-
-`flutter analyze` es lo que sustituye a la verificación que no se pudo hacer
-aquí. Corrige lo que reporte antes de continuar.
 
 ## Cómo funciona
 
@@ -135,7 +112,7 @@ la semana 7 (OE5).
 
 ## Pendiente
 
-- `flutter analyze` y ejecución en dispositivo.
+- Ejecución en un dispositivo Android real (faltan las licencias del SDK).
 - RF08: recordatorios locales. `notification_service.dart` tiene la interfaz
   definida; falta el paquete `flutter_local_notifications` y la configuración
   nativa (canal y permiso `POST_NOTIFICATIONS` en Android 13+, autorización en

@@ -50,13 +50,23 @@ class Tema {
       scaffoldBackgroundColor: fondo,
     );
 
+    // No se escala el tema tipografico global con `fontSizeFactor`: varios
+    // estilos del tema base llegan con `fontSize` nulo y `TextTheme.apply`
+    // lanza una asercion en ese caso, lo que tumbaba la aplicacion al
+    // arrancar. El tamano se fija de forma explicita en cada texto, que
+    // ademas deja el criterio visible en el codigo en lugar de escondido en
+    // un multiplicador.
     return base.copyWith(
-      textTheme: base.textTheme.apply(fontSizeFactor: 1.15),
       appBarTheme: const AppBarTheme(
         backgroundColor: primario,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        titleTextStyle: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+        ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(

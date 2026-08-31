@@ -12,7 +12,8 @@ enum EstadoToma {
   final String codigo;
   final String etiqueta;
 
-  bool get cumplida => this == EstadoToma.tomada || this == EstadoToma.tomadaTarde;
+  bool get cumplida =>
+      this == EstadoToma.tomada || this == EstadoToma.tomadaTarde;
 
   static EstadoToma desdeCodigo(String codigo) => EstadoToma.values.firstWhere(
         (e) => e.codigo == codigo,

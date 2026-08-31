@@ -59,6 +59,7 @@ class ResumenAdherencia {
         retrasoPromedioMin: (json['retraso_promedio_min'] as num?)?.toDouble(),
         ultimaTomaRegistrada: json['ultima_toma_registrada'] == null
             ? null
-            : DateTime.parse(json['ultima_toma_registrada'] as String).toLocal(),
+            : DateTime.parse(json['ultima_toma_registrada'] as String)
+                .toLocal(),
       );
 }

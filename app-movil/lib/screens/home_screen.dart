@@ -310,7 +310,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: const TextStyle(fontSize: 17, color: Tema.neutro),
                   ),
                   const SizedBox(height: 16),
-
                   if (_error != null)
                     MensajeEstado(
                       texto: _error!,
@@ -318,7 +317,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       textoAccion: 'Reintentar',
                       accion: _cargar,
                     ),
-
                   if (_enCola.isNotEmpty)
                     MensajeEstado(
                       texto: '${_enCola.length} registro(s) guardado(s) en el '
@@ -327,11 +325,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       textoAccion: 'Enviar',
                       accion: _sincronizando ? null : () => _sincronizar(),
                     ),
-
                   if (_resumen != null) _Resumen(resumen: _resumen!),
-
                   const SizedBox(height: 8),
-
                   if (_plan.isEmpty)
                     _SinPlan(
                       alConfigurar: () async {

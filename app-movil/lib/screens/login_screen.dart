@@ -52,7 +52,8 @@ class _LoginScreenState extends State<LoginScreen> {
         _contrasena.text,
       );
       widget.api.token = sesion.token;
-      await Almacenamiento.instancia.guardarSesion(sesion.token, sesion.usuario);
+      await Almacenamiento.instancia
+          .guardarSesion(sesion.token, sesion.usuario);
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -103,10 +104,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 16, color: Tema.neutro),
                 ),
                 const SizedBox(height: 36),
-
                 if (_error != null)
                   MensajeEstado(texto: _error!, tono: TonoMensaje.error),
-
                 TextFormField(
                   controller: _correo,
                   keyboardType: TextInputType.emailAddress,
@@ -125,7 +124,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                 ),
                 const SizedBox(height: 16),
-
                 TextFormField(
                   controller: _contrasena,
                   obscureText: _ocultarContrasena,
@@ -148,12 +146,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   onFieldSubmitted: (_) => _ingresar(),
-                  validator: (valor) => (valor ?? '').isEmpty
-                      ? 'Escriba su contraseña.'
-                      : null,
+                  validator: (valor) =>
+                      (valor ?? '').isEmpty ? 'Escriba su contraseña.' : null,
                 ),
                 const SizedBox(height: 28),
-
                 FilledButton(
                   onPressed: _enviando ? null : _ingresar,
                   child: _enviando
@@ -168,7 +164,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       : const Text('Ingresar'),
                 ),
                 const SizedBox(height: 20),
-
                 const Text(
                   'Si no recuerda sus datos de acceso, consúltelos en el '
                   'consultorio.',
@@ -176,10 +171,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   style: TextStyle(fontSize: 15, color: Tema.neutro),
                 ),
                 const SizedBox(height: 24),
-                Text(
+                const Text(
                   Constantes.urlApi,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 12, color: Tema.neutro),
+                  style: TextStyle(fontSize: 12, color: Tema.neutro),
                 ),
               ],
             ),

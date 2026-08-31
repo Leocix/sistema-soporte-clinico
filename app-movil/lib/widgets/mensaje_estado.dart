@@ -25,25 +25,25 @@ class MensajeEstado extends StatelessWidget {
         TonoMensaje.exito => (
             color: Tema.exito,
             fondo: Tema.exitoFondo,
-            borde: Color(0xFFBEE3D0),
+            borde: const Color(0xFFBEE3D0),
             icono: Icons.check_circle_outline,
           ),
         TonoMensaje.aviso => (
             color: Tema.aviso,
             fondo: Tema.avisoFondo,
-            borde: Color(0xFFEFD9A8),
+            borde: const Color(0xFFEFD9A8),
             icono: Icons.cloud_off,
           ),
         TonoMensaje.error => (
             color: Tema.peligro,
             fondo: Tema.peligroFondo,
-            borde: Color(0xFFF2C4C1),
+            borde: const Color(0xFFF2C4C1),
             icono: Icons.error_outline,
           ),
         TonoMensaje.informacion => (
             color: Tema.primarioOscuro,
-            fondo: Color(0xFFE8F1F8),
-            borde: Color(0xFFC3DCEC),
+            fondo: const Color(0xFFE8F1F8),
+            borde: const Color(0xFFC3DCEC),
             icono: Icons.info_outline,
           ),
       };

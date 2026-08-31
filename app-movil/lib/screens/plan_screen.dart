@@ -142,7 +142,8 @@ class _PlanScreenState extends State<PlanScreen> {
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
                             [
-                              if (medicamento.dosis.isNotEmpty) medicamento.dosis,
+                              if (medicamento.dosis.isNotEmpty)
+                                medicamento.dosis,
                               medicamento.horarios.join(' · '),
                             ].join('\n'),
                             style: const TextStyle(
@@ -200,7 +201,8 @@ class _FormularioMedicamentoState extends State<_FormularioMedicamento> {
     super.initState();
     _nombre = TextEditingController(text: widget.existente?.nombre ?? '');
     _dosis = TextEditingController(text: widget.existente?.dosis ?? '');
-    _horarios = List<String>.from(widget.existente?.horarios ?? const ['08:00']);
+    _horarios =
+        List<String>.from(widget.existente?.horarios ?? const ['08:00']);
   }
 
   @override
@@ -277,9 +279,8 @@ class _FormularioMedicamentoState extends State<_FormularioMedicamento> {
                 labelText: 'Nombre del medicamento',
                 hintText: 'Losartán',
               ),
-              validator: (v) => (v ?? '').trim().isEmpty
-                  ? 'Escriba el nombre.'
-                  : null,
+              validator: (v) =>
+                  (v ?? '').trim().isEmpty ? 'Escriba el nombre.' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(

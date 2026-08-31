@@ -31,7 +31,8 @@ class Almacenamiento {
     await p.setString(Constantes.claveUsuario, jsonEncode(usuario.aJson()));
   }
 
-  Future<String?> leerToken() async => (await _p).getString(Constantes.claveToken);
+  Future<String?> leerToken() async =>
+      (await _p).getString(Constantes.claveToken);
 
   Future<Usuario?> leerUsuario() async {
     final crudo = (await _p).getString(Constantes.claveUsuario);
@@ -118,9 +119,8 @@ class Almacenamiento {
   /// Retira de la cola los eventos ya confirmados por el servidor.
   Future<List<Toma>> descartarDeLaCola(Iterable<String> claves) async {
     final aDescartar = claves.toSet();
-    final cola = (await leerCola())
-        .where((t) => !aDescartar.contains(t.clave))
-        .toList();
+    final cola =
+        (await leerCola()).where((t) => !aDescartar.contains(t.clave)).toList();
     await guardarCola(cola);
     return cola;
   }

@@ -105,7 +105,6 @@ class _RegistroTomaScreenState extends State<RegistroTomaScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-
               const Text(
                 '¿Por qué no pudo tomarla?',
                 style: TextStyle(fontSize: 19, fontWeight: FontWeight.w600),
@@ -116,24 +115,30 @@ class _RegistroTomaScreenState extends State<RegistroTomaScreen> {
                 style: TextStyle(fontSize: 15, color: Tema.neutro),
               ),
               const SizedBox(height: 12),
-
-              ..._motivosFrecuentes.map(
-                (motivo) => RadioListTile<String>(
-                  value: motivo,
-                  groupValue: _motivoElegido,
-                  onChanged: (valor) => setState(() => _motivoElegido = valor),
-                  title: Text(motivo, style: const TextStyle(fontSize: 18)),
-                  contentPadding: EdgeInsets.zero,
-                ),
-              ),
-              RadioListTile<String>(
-                value: 'Otro',
+              // El valor del grupo lo gestiona el ancestro `RadioGroup`;
+              // pasarlo a cada `RadioListTile` quedo obsoleto en Flutter 3.32.
+              RadioGroup<String>(
                 groupValue: _motivoElegido,
                 onChanged: (valor) => setState(() => _motivoElegido = valor),
-                title: const Text('Otro motivo', style: TextStyle(fontSize: 18)),
-                contentPadding: EdgeInsets.zero,
+                child: Column(
+                  children: [
+                    ..._motivosFrecuentes.map(
+                      (motivo) => RadioListTile<String>(
+                        value: motivo,
+                        title:
+                            Text(motivo, style: const TextStyle(fontSize: 18)),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                    const RadioListTile<String>(
+                      value: 'Otro',
+                      title:
+                          Text('Otro motivo', style: TextStyle(fontSize: 18)),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ],
+                ),
               ),
-
               if (_motivoElegido == 'Otro') ...[
                 const SizedBox(height: 8),
                 TextField(
@@ -146,7 +151,6 @@ class _RegistroTomaScreenState extends State<RegistroTomaScreen> {
                   ),
                 ),
               ],
-
               const SizedBox(height: 20),
               FilledButton(
                 onPressed: _guardar,
