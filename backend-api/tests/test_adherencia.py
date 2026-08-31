@@ -172,3 +172,49 @@ def test_medico_ajeno_no_ve_el_historial(client, cab_paciente, cab_otro_medico, 
         headers=cab_otro_medico,
     )
     assert respuesta.status_code == 403
+
+
+# --- Rutas del propio paciente (app móvil) ---------------------------------
+
+
+def test_paciente_consulta_su_ficha_sin_conocer_su_id(client, cab_paciente, datos):
+    """La app móvil resuelve la ficha desde el token, no desde un id."""
+    respuesta = client.get("/api/pacientes/mi-ficha", headers=cab_paciente)
+
+    assert respuesta.status_code == 200, respuesta.text
+    assert respuesta.json()["id_paciente"] == datos["ficha"].id_paciente
+    assert respuesta.json()["codigo_anonimizado"] == "P-001"
+
+
+def test_mi_ficha_no_se_confunde_con_un_identificador(client, cab_medico):
+    """La ruta literal se declara antes que `/{id_paciente}`.
+
+    Si el orden se invirtiera, "mi-ficha" se interpretaría como el id de un
+    paciente y esta petición terminaría en 404 en lugar de 403.
+    """
+    respuesta = client.get("/api/pacientes/mi-ficha", headers=cab_medico)
+
+    # El médico no tiene ficha clínica propia: 404 del servicio, no de la ruta.
+    assert respuesta.status_code == 404
+    assert "ficha clinica" in respuesta.json()["mensaje"].lower()
+
+
+def test_paciente_consulta_su_resumen_y_su_historial(client, cab_paciente):
+    client.post("/api/adherencia/registros/lote",
+                json=[toma(0), toma(8, "omitida", None), toma(16)],
+                headers=cab_paciente)
+
+    resumen = client.get("/api/adherencia/mi-resumen", headers=cab_paciente)
+    assert resumen.status_code == 200
+    assert resumen.json()["total_eventos"] == 3
+    assert resumen.json()["cumplidos"] == 2
+
+    historial = client.get("/api/adherencia/mis-registros", headers=cab_paciente)
+    assert historial.status_code == 200
+    assert len(historial.json()) == 3
+
+
+def test_las_rutas_propias_exigen_perfil_paciente(client, cab_medico):
+    """El médico no tiene ficha propia: sus rutas son las de por identificador."""
+    assert client.get("/api/adherencia/mi-resumen", headers=cab_medico).status_code == 404
+    assert client.get("/api/adherencia/mis-registros", headers=cab_medico).status_code == 404

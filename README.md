@@ -22,7 +22,7 @@ antes de la cita.
 | :--- | :--- | :--- |
 | [`backend-api/`](backend-api/) | API Gateway (FastAPI + PostgreSQL) | RF01–RF03 operativos |
 | [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Acceso, auditoría y ficha clínica |
-| [`app-movil/`](app-movil/) | App del paciente (Flutter) | Pendiente |
+| [`app-movil/`](app-movil/) | App del paciente (Flutter) | Código escrito, sin compilar |
 | [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación de datos automatizada |
 | [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe al 50 % |
 
@@ -32,7 +32,7 @@ antes de la cita.
 | :---: | :--- | :---: | :--- |
 | RF01 | Autenticación y autorización por perfil (médico / paciente) | Must | Implementado |
 | RF02 | Gestión de pacientes polimedicados y esquema farmacológico | Must | Implementado |
-| RF03 | Registro de la toma de medicamentos desde la app móvil | Must | Implementado (API) |
+| RF03 | Registro de la toma de medicamentos desde la app móvil | Must | API implementada; app escrita |
 | RF04 | Predicción del riesgo de incumplimiento | Must | Sprint 3 |
 | RF05 | Alertas tempranas al médico | Must | Sprint 3 |
 | RF06 | Explicabilidad de la predicción (SHAP) | Should | Sprint 3 |

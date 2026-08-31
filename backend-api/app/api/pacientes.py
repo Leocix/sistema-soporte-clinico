@@ -23,7 +23,7 @@ from ..schemas.paciente_schema import (
     PacienteUpdate,
     PaginaPacientes,
 )
-from ..services.acceso import obtener_paciente_autorizado
+from ..services.acceso import ficha_del_paciente_autenticado, obtener_paciente_autorizado
 
 router = APIRouter(prefix="/api/pacientes", tags=["Pacientes"])
 
@@ -126,6 +126,26 @@ def listar_pacientes(
         tamano=tamano,
         items=[PacienteOut.model_validate(p) for p in items],
     )
+
+
+@router.get(
+    "/mi-ficha",
+    response_model=PacienteOut,
+    summary="Ficha clinica del paciente autenticado",
+)
+def mi_ficha(
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+) -> Paciente:
+    """Resuelve la ficha desde el token, para la aplicacion movil.
+
+    El paciente no conoce su `id_paciente`: la cuenta de usuario y la ficha
+    clinica son entidades distintas, y ese identificador solo lo maneja el
+    panel medico. Esta ruta debe declararse ANTES que `/{id_paciente}`; en caso
+    contrario "mi-ficha" se interpretaria como un identificador y la peticion
+    terminaria en un 404.
+    """
+    return ficha_del_paciente_autenticado(db, usuario)
 
 
 @router.get(

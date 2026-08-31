@@ -181,21 +181,18 @@ def sincronizar_lote(
     )
 
 
-@router.get(
-    "/pacientes/{id_paciente}/registros",
-    response_model=list[RegistroTomaOut],
-    summary="Historial de tomas de un paciente",
-)
-def listar_registros(
-    id_paciente: str,
-    db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_current_user),
-    desde: datetime | None = Query(default=None),
-    hasta: datetime | None = Query(default=None),
-    limite: int = Query(default=100, ge=1, le=500),
+# ---------------------------------------------------------------------------
+# Consulta de la traza de adherencia
+# ---------------------------------------------------------------------------
+def _consultar_registros(
+    db: Session,
+    paciente: Paciente,
+    desde: datetime | None,
+    hasta: datetime | None,
+    limite: int | None = None,
+    ascendente: bool = False,
 ) -> list[RegistroAdherencia]:
-    paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
-
+    """Eventos del paciente en la ventana indicada."""
     consulta = db.query(RegistroAdherencia).filter(
         RegistroAdherencia.id_paciente == paciente.id_paciente
     )
@@ -204,43 +201,28 @@ def listar_registros(
     if hasta is not None:
         consulta = consulta.filter(RegistroAdherencia.fecha_hora_programada <= hasta)
 
-    return (
-        consulta.order_by(RegistroAdherencia.fecha_hora_programada.desc())
-        .limit(limite)
-        .all()
+    orden = (
+        RegistroAdherencia.fecha_hora_programada.asc()
+        if ascendente
+        else RegistroAdherencia.fecha_hora_programada.desc()
     )
+    consulta = consulta.order_by(orden)
+    if limite is not None:
+        consulta = consulta.limit(limite)
+    return consulta.all()
 
 
-@router.get(
-    "/pacientes/{id_paciente}/resumen",
-    response_model=ResumenAdherencia,
-    summary="Indicadores de adherencia observada",
-)
-def resumen_adherencia(
-    id_paciente: str,
-    db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_current_user),
-    desde: datetime | None = Query(default=None),
-    hasta: datetime | None = Query(default=None),
+def _construir_resumen(
+    paciente: Paciente,
+    eventos: list[RegistroAdherencia],
+    desde: datetime | None,
+    hasta: datetime | None,
 ) -> ResumenAdherencia:
-    """Adherencia observada a partir de la traza digital.
+    """Calcula los indicadores de adherencia observada sobre `eventos`.
 
-    A diferencia del puntaje de Morisky —autorreportado en consulta—, estos
-    indicadores se calculan sobre eventos fechados, que es exactamente la
-    evidencia objetiva cuya ausencia identifico el diagnostico (OE1).
+    Se espera la lista en orden cronologico ascendente: la racha de omisiones
+    se recorre desde el evento mas reciente hacia atras.
     """
-    paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
-
-    consulta = db.query(RegistroAdherencia).filter(
-        RegistroAdherencia.id_paciente == paciente.id_paciente
-    )
-    if desde is not None:
-        consulta = consulta.filter(RegistroAdherencia.fecha_hora_programada >= desde)
-    if hasta is not None:
-        consulta = consulta.filter(RegistroAdherencia.fecha_hora_programada <= hasta)
-
-    eventos = consulta.order_by(RegistroAdherencia.fecha_hora_programada.asc()).all()
-
     cumplidos = [e for e in eventos if e.estado in ESTADOS_CUMPLIDOS]
     omitidos = [e for e in eventos if e.estado is EstadoToma.OMITIDA]
     # Una toma pospuesta aun no tiene desenlace: se excluye del denominador
@@ -276,3 +258,86 @@ def resumen_adherencia(
         omisiones_consecutivas=racha,
         ultima_toma_registrada=max(horas_registro) if horas_registro else None,
     )
+
+
+# --- Rutas del propio paciente (app movil) ---------------------------------
+# La app del paciente no conoce su `id_paciente`: la cuenta de usuario y la
+# ficha clinica son entidades distintas y el identificador de la ficha solo lo
+# maneja el panel medico. Estas dos rutas resuelven la ficha desde el token,
+# de modo que el paciente pueda ver su propio seguimiento sin que el API le
+# revele identificadores de terceros.
+
+
+@router.get(
+    "/mis-registros",
+    response_model=list[RegistroTomaOut],
+    summary="Historial de tomas del paciente autenticado",
+)
+def mis_registros(
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+    desde: datetime | None = Query(default=None),
+    hasta: datetime | None = Query(default=None),
+    limite: int = Query(default=100, ge=1, le=500),
+) -> list[RegistroAdherencia]:
+    paciente = ficha_del_paciente_autenticado(db, usuario)
+    return _consultar_registros(db, paciente, desde, hasta, limite=limite)
+
+
+@router.get(
+    "/mi-resumen",
+    response_model=ResumenAdherencia,
+    summary="Indicadores de adherencia del paciente autenticado",
+)
+def mi_resumen(
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+    desde: datetime | None = Query(default=None),
+    hasta: datetime | None = Query(default=None),
+) -> ResumenAdherencia:
+    paciente = ficha_del_paciente_autenticado(db, usuario)
+    eventos = _consultar_registros(db, paciente, desde, hasta, ascendente=True)
+    return _construir_resumen(paciente, eventos, desde, hasta)
+
+
+# --- Rutas por identificador (panel medico) --------------------------------
+
+
+@router.get(
+    "/pacientes/{id_paciente}/registros",
+    response_model=list[RegistroTomaOut],
+    summary="Historial de tomas de un paciente",
+)
+def listar_registros(
+    id_paciente: str,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+    desde: datetime | None = Query(default=None),
+    hasta: datetime | None = Query(default=None),
+    limite: int = Query(default=100, ge=1, le=500),
+) -> list[RegistroAdherencia]:
+    paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
+    return _consultar_registros(db, paciente, desde, hasta, limite=limite)
+
+
+@router.get(
+    "/pacientes/{id_paciente}/resumen",
+    response_model=ResumenAdherencia,
+    summary="Indicadores de adherencia observada",
+)
+def resumen_adherencia(
+    id_paciente: str,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(get_current_user),
+    desde: datetime | None = Query(default=None),
+    hasta: datetime | None = Query(default=None),
+) -> ResumenAdherencia:
+    """Adherencia observada a partir de la traza digital.
+
+    A diferencia del puntaje de Morisky —autorreportado en consulta—, estos
+    indicadores se calculan sobre eventos fechados, que es exactamente la
+    evidencia objetiva cuya ausencia identifico el diagnostico (OE1).
+    """
+    paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
+    eventos = _consultar_registros(db, paciente, desde, hasta, ascendente=True)
+    return _construir_resumen(paciente, eventos, desde, hasta)
