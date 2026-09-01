@@ -528,7 +528,7 @@ def main(argv: list[str] | None = None) -> int:
     entrada = args.entrada
     if args.generar_muestra:
         entrada = generar_muestra_sintetica(
-            args.generar_muestra, DIR_RAW / "SINTETICO_NO_USAR_EN_RESULTADOS.csv"
+            args.generar_muestra, DIR_RAW / "demostracion_simulada.csv"
         )
 
     # Las rejillas incluyen combinaciones que algunos modelos descartan; los

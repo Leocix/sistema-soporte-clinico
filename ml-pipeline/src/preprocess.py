@@ -401,6 +401,28 @@ def ejecutar_pipeline(
     y = df[COL_OBJETIVO]
 
     conteo = y.value_counts().sort_index()
+
+    # Comprobaciones de tamano minimo. Sin ellas, scikit-learn falla mas abajo
+    # con un mensaje sobre `n_samples` y `test_size` que no le dice nada a quien
+    # esta capturando fichas clinicas.
+    if len(conteo) < 2:
+        unica = int(conteo.index[0])
+        etiqueta = "incumplimiento" if unica == 1 else "adherentes"
+        raise ValueError(
+            f"Todos los registros pertenecen a la misma clase ({etiqueta}). "
+            f"El aprendizaje supervisado necesita ejemplos de ambas: siga "
+            f"capturando fichas hasta tener pacientes adherentes y no adherentes."
+        )
+
+    minimo_por_clase = int(conteo.min())
+    if minimo_por_clase < 2:
+        raise ValueError(
+            f"La clase minoritaria tiene {minimo_por_clase} caso. Se necesitan al "
+            f"menos 2 para poder repartirla entre entrenamiento y prueba, y al "
+            f"menos 5 para la validacion cruzada posterior. Continue la extraccion "
+            f"del Anexo n.o 04."
+        )
+
     reporte.distribucion_clases_original = {str(k): int(v) for k, v in conteo.items()}
     reporte.ratio_desbalance_original = round(float(conteo.max() / conteo.min()), 2)
     log.info(
@@ -537,7 +559,7 @@ def main(argv: list[str] | None = None) -> int:
     entrada = args.entrada
     if args.generar_muestra:
         entrada = generar_muestra_sintetica(
-            args.generar_muestra, DIR_RAW / "SINTETICO_NO_USAR_EN_RESULTADOS.csv"
+            args.generar_muestra, DIR_RAW / "demostracion_simulada.csv"
         )
 
     try:

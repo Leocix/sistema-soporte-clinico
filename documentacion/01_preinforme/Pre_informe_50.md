@@ -289,6 +289,25 @@ La ficha de recolección se formalizó como el **contrato de esquema del dataset
 
 **Decisión metodológica.** El puntaje de Morisky se **excluye del conjunto de predictores**: al ser la fuente directa de la etiqueta, incorporarlo produciría fuga de información (*data leakage*) y métricas artificialmente perfectas que no reflejarían capacidad predictiva alguna.
 
+**Captura de los datos.** La ficha se acompaña de una plantilla en formato CSV
+(`documentacion/02_instrumentos/Plantilla_Extraccion_Anexo_04.csv`) cuyas columnas
+y valores admitidos son exactamente los que valida el pipeline. Un nombre de
+columna o un valor categórico que no coincida detiene la ejecución con un mensaje
+explícito, de modo que un error de captura no llegue silenciosamente al modelo.
+La documentación del anexo fija además una regla de captura relevante para la
+validez del estudio: **una celda vacía es preferible a un valor supuesto**, porque
+el pipeline imputa los faltantes y deja constancia del porcentaje imputado,
+mientras que un dato inventado sesga el modelo sin dejar rastro.
+
+**Conjunto de demostración.** Para poder ejercitar el sistema completo antes de
+disponer de la extracción definitiva, el pipeline incorpora un generador de datos
+**simulados** (`--generar-muestra`). Sirve exclusivamente para comprobar que el
+flujo se ejecuta de extremo a extremo y para demostrar el funcionamiento de la
+plataforma; **ningún valor obtenido con él se reporta como resultado de esta
+investigación**, y los archivos que produce quedan excluidos del control de
+versiones. Los resultados del OE3 se obtendrán únicamente sobre las historias
+clínicas reales del consultorio.
+
 #### c) Depuración del dataset clínico
 
 El script `ml-pipeline/src/preprocess.py` automatiza el recorrido completo desde la ficha en bruto hasta las matrices listas para el modelado. Las reglas de limpieza implementadas son:
@@ -429,7 +448,55 @@ Se construyó una batería automatizada con `pytest` sobre una base de datos en 
 
 Con ello, el **escenario de inicio a fin exigido por el hito del 50 %** queda ejecutable y verificado: alta del paciente polimedicado → registro de la toma desde la app → cálculo de las variables conductuales de adherencia. Un evento registrado con 45 minutos de retraso respecto del horario prescrito se clasifica correctamente como cumplido con retraso y su latencia se calcula como insumo directo de la ingeniería de características del modelo predictivo.
 
-#### i) Cierre de la iteración
+#### i) Despliegue del sistema en infraestructura real
+
+El sistema no quedó en un entorno de desarrollo local: los tres componentes que
+lo integran están desplegados y accesibles, lo que permite verificar los
+requisitos no funcionales sobre la infraestructura real y no sobre una
+simulación.
+
+**Tabla 11.** Componentes desplegados y su verificación.
+
+| Componente | Plataforma | Verificación ejecutada |
+| :--- | :--- | :--- |
+| Base de datos PostgreSQL | Aiven | Conexión cifrada (`sslmode=require`); esquema aplicado con Alembic |
+| API Gateway | Render | `/health` responde `200`; entorno `produccion` |
+| Panel médico | Vercel | Sitio servido; el paquete apunta al API de producción |
+
+**Comprobaciones de seguridad sobre el servicio desplegado.** Las siguientes se
+ejecutaron contra el dominio público, no en local:
+
+| Comprobación | Resultado esperado | Resultado obtenido |
+| :--- | :--- | :---: |
+| Documentación interactiva oculta en producción | `404` en `/docs` | ✔ `404` |
+| Cabecera `Host` falsificada | Rechazo | ✔ `403` |
+| Origen del panel autorizado por CORS | Origen reflejado | ✔ |
+| Cabeceras de seguridad (HSTS, CSP, `nosniff`, `no-store`) | Presentes | ✔ |
+| Conexión efectiva a la base clínica | Error de credenciales, no de base de datos | ✔ `401`, no `503` |
+
+La última merece explicación: un intento de acceso con credenciales inexistentes
+responde `401 NO_AUTENTICADO`. Si la conexión a PostgreSQL estuviera mal
+configurada, el manejador global devolvería `503 BD_NO_DISPONIBLE`. Distinguir
+ambos casos es lo que permite comprobar la conectividad sin exponer ninguna
+credencial válida.
+
+**Gestión de secretos (RNF01).** Ninguna credencial está versionada. La clave de
+firma del JWT y la cadena de conexión se inyectan como variables de entorno en
+la plataforma de despliegue, y el repositorio excluye los archivos `.env`. Antes
+de la primera publicación se auditó el índice del repositorio para confirmar que
+ni las credenciales de la base de datos ni la clave de firma habían quedado
+incluidas.
+
+**Limitación conocida del entorno.** El plan gratuito de la plataforma de
+alojamiento suspende el servicio tras quince minutos sin tráfico; la primera
+petición posterior tarda entre 30 y 45 segundos en responder. Esta latencia es
+del arranque en frío de la infraestructura, no del sistema, y debe descontarse
+al medir el indicador de RNF02 (tiempo de respuesta ≤ 2 s), que se evaluará con
+el servicio ya activo durante las pruebas de carga del Sprint 4.
+
+#### j) Cierre de la iteración
+
+Las actas completas de ambas ceremonias, con los entregables aceptados, las observaciones del Product Owner y los compromisos del sprint siguiente, constan en el Anexo n.° 11.
 
 **Sprint Review (Iteración #2).** Se aceptaron el núcleo funcional RF01–RF03, el pipeline de preparación de datos y la configuración experimental. **Retrospectiva:** se detectó que el `pd.NA` de las columnas de texto de pandas no es interpretado por los imputadores de scikit-learn, lo que interrumpía la ejecución; la corrección —normalizar las categóricas a `object` con `np.nan` antes de imputar— se incorporó al script y quedó documentada para evitar su reaparición.
 
@@ -447,7 +514,7 @@ Con ello, el **escenario de inicio a fin exigido por el hito del 50 %** queda ej
 
 ## 1.2. En base a los objetivos del proyecto
 
-**Tabla 11.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
+**Tabla 12.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
 
 | Objetivo | Resultado esperado | Estado al corte | Evidencia principal |
 | :---: | :--- | :---: | :--- |
@@ -512,8 +579,8 @@ Lo pendiente para cerrar el objetivo es la **ejecución sobre el dataset real** 
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
 | Porcentaje de cumplimiento de historias de usuario | 100 % por sprint | **3 de 3** historias del escenario principal (HU01–HU03) cerradas de extremo a extremo y verificadas: **100 %** del alcance comprometido para los Sprints 1 y 2 |
-| N.° de módulos construidos frente a módulos requeridos | Todos los módulos | **3 de 8** requisitos funcionales operativos de extremo a extremo (RF01, RF02, RF03), correspondientes a la totalidad del núcleo funcional del Hito 2 |
-| Densidad de errores por módulo al cierre de cada sprint | Decreciente | 1 defecto detectado y corregido en el módulo de preparación de datos (`pd.NA` no interpretado por los imputadores); **0 defectos en los módulos de API** (25 de 25 pruebas en verde); 0 defectos abiertos al cierre |
+| N.° de módulos construidos frente a módulos requeridos | Todos los módulos | **3 de 8** requisitos funcionales operativos de extremo a extremo (RF01, RF02, RF03), correspondientes a la totalidad del núcleo funcional del Hito 2, con los tres componentes del sistema desplegados |
+| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **4 defectos detectados y corregidos**, todos por las pruebas automatizadas o la verificación en navegador (imputación de nulos de texto, persistencia de los tipos enumerados, maquetación del panel, escalado tipográfico de la app). **0 defectos abiertos** al cierre; 43 de 43 pruebas en verde |
 | Porcentaje de cumplimiento de atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación formal programada para la Iteración #4 |
 
 **Demostración del avance.** El núcleo funcional está operativo y verificado:
@@ -527,8 +594,10 @@ Lo pendiente para cerrar el objetivo es la **ejecución sobre el dataset real** 
 | Registro de toma de medicamentos (RF03) | Implementado y verificado | `backend-api/app/api/adherencia.py` + `schemas/adherencia_schema.py` |
 | Autorización de dominio (acceso a la ficha por rol y por médico tratante) | Implementado y verificado | `backend-api/app/services/acceso.py` |
 | Pipeline de preparación de datos | Implementado y verificado | `ml-pipeline/src/preprocess.py` |
-| Batería de pruebas automatizadas del núcleo funcional (25 casos) | Implementada; 25/25 en verde | `backend-api/tests/` |
-| Panel médico (React + Vite) y app del paciente (Flutter) | En construcción | `frontend-web/`, `app-movil/` |
+| Panel médico de auditoría (React + Vite) | Implementado y desplegado | `frontend-web/` |
+| Aplicación del paciente (Flutter) | Implementada y verificada | `app-movil/` |
+| Comparación de algoritmos con validación cruzada | Implementada y verificada | `ml-pipeline/src/train_evaluate.py` |
+| Batería de pruebas automatizadas | 43 casos, todos en verde | `backend-api/tests/`, `app-movil/test/` |
 
 Quedan pendientes, conforme al cronograma, la predicción de riesgo (RF04), las alertas tempranas (RF05), la explicabilidad SHAP (RF06), el panel de auditoría (RF07) y los recordatorios (RF08).
 
@@ -590,3 +659,8 @@ Este objetivo **no se ejecuta en el presente corte**. Conforme al cronograma ofi
 | N.° 06 | Ficha de observación de pruebas con usuarios | `documentacion/02_instrumentos/` | Pendiente (semana 7) |
 | N.° 07 | Expediente de juicio de expertos | `documentacion/02_instrumentos/Expediente_Expertos.md` | En proceso |
 | N.° 08 | Repositorio de código del producto acreditable | `backend-api/`, `frontend-web/`, `app-movil/`, `ml-pipeline/` | Adjunto |
+| N.° 09 | Product Backlog priorizado (MoSCoW) e historias de usuario | `documentacion/03_gestion_scrum/Product_Backlog.md` | Adjunto |
+| N.° 10 | Matriz de trazabilidad objetivos → requisitos → funcionalidad → evidencia | `documentacion/03_gestion_scrum/Matriz_Trazabilidad.md` | Adjunto |
+| N.° 11 | Actas de Sprint Review y Retrospectiva (Sprints 1 y 2) | `documentacion/03_gestion_scrum/Actas_Sprint.md` | Adjunto |
+| N.° 12 | Plantilla de captura de la ficha de extracción | `documentacion/02_instrumentos/Plantilla_Extraccion_Anexo_04.csv` | En uso |
+| N.° 13 | Guía de despliegue del sistema | `DESPLIEGUE.md` | Adjunto |
