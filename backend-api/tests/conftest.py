@@ -59,6 +59,8 @@ def datos(db_session):
 
     ficha = Paciente(
         codigo_anonimizado="P-001",
+        nombres="Jose", apellidos="Vasquez",
+        correo="jose.vasquez@correo.pe", telefono="987654321",
         id_usuario=cuenta_paciente.id_usuario,
         id_medico_tratante=medico.id_usuario,
         edad=68, sexo=Sexo.MASCULINO, diagnostico=Diagnostico.AMBAS,

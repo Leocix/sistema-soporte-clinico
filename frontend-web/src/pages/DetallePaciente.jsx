@@ -22,6 +22,14 @@ const ESTADOS = {
 
 const DIMENSIONES = [
   {
+    titulo: 'Contacto',
+    campos: [
+      ['Documento', (p) => p.documento_identidad || '—'],
+      ['Teléfono', (p) => p.telefono || '—'],
+      ['Correo', (p) => p.correo || '—'],
+    ],
+  },
+  {
     titulo: 'Paciente',
     campos: [
       ['Edad', (p) => `${p.edad} años`],
@@ -134,8 +142,11 @@ export default function DetallePaciente() {
       <div className="seccion__cabecera">
         <div>
           <Link className="enlace enlace--volver" to="/panel">← Panel de auditoría</Link>
-          <h2>Ficha del paciente {paciente.codigo_anonimizado}</h2>
+          <h2>{paciente.nombres} {paciente.apellidos}</h2>
           <p className="seccion__descripcion">
+            <span className="paciente__codigo paciente__codigo--suelto">
+              {paciente.codigo_anonimizado}
+            </span>
             {paciente.edad} años · <span>{etiquetaDiagnostico(paciente.diagnostico)}</span> ·{' '}
             {paciente.numero_farmacos} fármacos
             {!paciente.activo && <span className="distintivo distintivo--sin_datos"> Dado de baja</span>}

@@ -9,3 +9,5 @@ android/local.properties
 android/key.properties
 ios/Flutter/Generated.xcconfig
 ios/Pods/
+android/.gradle/
+android/app/.cxx/

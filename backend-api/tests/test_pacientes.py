@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 FICHA_VALIDA = {
+    "nombres": "Ana Maria",
+    "apellidos": "Reyes Torres",
+    "correo": "ana.reyes@correo.pe",
+    "telefono": "987123456",
     "edad": 72,
     "sexo": "F",
     "diagnostico": "hta",
@@ -151,3 +155,61 @@ def test_paciente_inexistente_responde_404(client, cab_medico):
 
 def test_sin_token_no_hay_acceso(client):
     assert client.get("/api/pacientes").status_code == 401
+
+
+# --- Identificación clínica -------------------------------------------------
+
+
+def test_el_alta_exige_nombre_y_apellidos(client, cab_medico):
+    """El médico debe poder saber a quién llamar ante un riesgo alto."""
+    ficha = {k: v for k, v in FICHA_VALIDA.items() if k not in ("nombres", "apellidos")}
+    respuesta = client.post("/api/pacientes", json=ficha, headers=cab_medico)
+
+    assert respuesta.status_code == 422
+    campos = {d["campo"] for d in respuesta.json()["detalles"]}
+    assert {"nombres", "apellidos"} <= campos
+
+
+def test_los_nombres_se_normalizan_al_capturarlos(client, cab_medico):
+    """Se teclean a mano: dos capturas del mismo nombre no deben diferir."""
+    ficha = {**FICHA_VALIDA, "nombres": "  Ana   Maria ", "apellidos": " Reyes  Torres  "}
+    respuesta = client.post("/api/pacientes", json=ficha, headers=cab_medico)
+
+    assert respuesta.status_code == 201
+    assert respuesta.json()["nombres"] == "Ana Maria"
+    assert respuesta.json()["apellidos"] == "Reyes Torres"
+
+
+def test_el_correo_del_paciente_se_valida(client, cab_medico):
+    ficha = {**FICHA_VALIDA, "correo": "no-es-un-correo"}
+    respuesta = client.post("/api/pacientes", json=ficha, headers=cab_medico)
+
+    assert respuesta.status_code == 422
+    assert any(d["campo"] == "correo" for d in respuesta.json()["detalles"])
+
+
+def test_la_identidad_es_visible_para_el_medico_tratante(client, cab_medico, datos):
+    respuesta = client.get(
+        f"/api/pacientes/{datos['ficha'].id_paciente}", headers=cab_medico
+    )
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert cuerpo["nombres"] == "Jose"
+    assert cuerpo["telefono"] == "987654321"
+    # El seudónimo sigue siendo la clave con la que el paciente viaja al dataset.
+    assert cuerpo["codigo_anonimizado"] == "P-001"
+
+
+def test_la_busqueda_encuentra_por_nombre_y_por_codigo(client, cab_medico):
+    """El médico busca por el nombre que recuerda, no por el seudónimo."""
+    client.post("/api/pacientes", json=FICHA_VALIDA, headers=cab_medico)
+
+    def total(termino):
+        return client.get("/api/pacientes", params={"busqueda": termino},
+                          headers=cab_medico).json()["total"]
+
+    assert total("Reyes") == 1        # apellidos
+    assert total("ana") == 1          # nombres, sin distinguir mayúsculas
+    assert total("P-002") == 1        # código
+    assert total("Inexistente") == 0

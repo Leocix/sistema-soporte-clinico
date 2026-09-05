@@ -1,10 +1,12 @@
 # App del paciente — CDSS Adherencia
 
 Aplicación Flutter del paciente polimedicado. Cubre RF01 (acceso con perfil de
-paciente) y RF03 (registro de la toma de medicamentos con sincronización).
+paciente), RF03 (registro de la toma con sincronización) y RF08 (recordatorios
+de toma).
 
-Verificado con **Flutter 3.47.2**: `flutter analyze` sin incidencias y
-**14 pruebas en verde** (`flutter test`). Pendiente de ejecutarse en un
+Verificado con **Flutter 3.47.2**: `flutter analyze` sin incidencias, **21
+pruebas en verde** y **APK de depuración compilado**, con los permisos de
+notificación confirmados dentro del paquete. Pendiente de ejecutarse en un
 dispositivo real.
 
 ## Puesta en marcha
@@ -69,6 +71,24 @@ con retraso comparando la hora real con la prescrita (margen de 30 minutos).
 Pedirle que se autocalifique sería devolverle el autorreporte subjetivo que el
 sistema pretende sustituir.
 
+### Los recordatorios se programan en el teléfono (RF08)
+
+Responde a la brecha B4 del diagnóstico: el olvido es la primera causa de
+incumplimiento que refirió el médico. Los avisos **no se envían desde el
+servidor**, se programan en el dispositivo. Es lo que corresponde a un paciente
+que puede estar sin cobertura justo a la hora de su medicación: un recordatorio
+que dependiera de la red fallaría precisamente en el escenario que más lo
+necesita.
+
+El permiso se pide cuando el paciente configura su plan y entiende para qué
+sirve, no al arrancar. Los avisos se reprograman con cada cambio del plan —un
+aviso de un medicamento retirado le diría que tome algo que ya no toma— y se
+restauran tras reiniciar el teléfono.
+
+Se usa programación inexacta a propósito: la exacta requiere un permiso que
+Android reserva para relojes y calendarios, y para un recordatorio de
+medicación un margen de minutos es aceptable.
+
 ### El plan de tomas vive en el teléfono
 
 El modelo de datos actual guarda la carga terapéutica de forma agregada
@@ -113,7 +133,3 @@ la semana 7 (OE5).
 ## Pendiente
 
 - Ejecución en un dispositivo Android real (faltan las licencias del SDK).
-- RF08: recordatorios locales. `notification_service.dart` tiene la interfaz
-  definida; falta el paquete `flutter_local_notifications` y la configuración
-  nativa (canal y permiso `POST_NOTIFICATIONS` en Android 13+, autorización en
-  iOS).

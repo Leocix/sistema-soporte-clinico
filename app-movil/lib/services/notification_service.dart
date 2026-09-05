@@ -1,42 +1,216 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:timezone/data/latest_all.dart' as datos_zonas;
+import 'package:timezone/timezone.dart' as tz;
+
+import '../models/medicamento.dart';
+
 /// Recordatorios de toma en el dispositivo (RF08).
 ///
-/// RF08 tiene prioridad "Could" y esta programado para el Sprint 4. Su
-/// implementacion requiere el paquete `flutter_local_notifications` y
-/// configuracion nativa por plataforma: canal de notificaciones y permiso
-/// POST_NOTIFICATIONS en Android 13 o superior, y autorizacion explicita en
-/// iOS. Esa configuracion no puede darse por hecha, asi que el servicio se
-/// deja aqui con su interfaz definida y sin dependencia externa: el resto de
-/// la aplicacion ya programa y cancela recordatorios contra este contrato, y
-/// activarlos consistira en rellenar estos metodos.
+/// Responde a la brecha B4 del diagnostico: el olvido es la primera causa de
+/// incumplimiento que refirio el medico, y hasta ahora la aplicacion solo
+/// registraba la toma sin ayudar a recordarla.
+///
+/// Los avisos se programan **en el telefono**, no se envian desde el servidor.
+/// Es lo que corresponde a un paciente que puede estar sin cobertura justo a la
+/// hora de su medicacion: un recordatorio que dependiera de la red fallaria
+/// precisamente en el escenario que mas lo necesita.
 class ServicioNotificaciones {
   ServicioNotificaciones._();
 
   static final ServicioNotificaciones instancia = ServicioNotificaciones._();
 
-  bool _habilitado = false;
+  final FlutterLocalNotificationsPlugin _plugin =
+      FlutterLocalNotificationsPlugin();
 
-  bool get habilitado => _habilitado;
+  static const String _canalId = 'recordatorios_toma';
+  static const String _canalNombre = 'Recordatorios de medicación';
+  static const String _canalDescripcion =
+      'Avisos a la hora de cada toma indicada por su médico.';
 
-  /// Solicita el permiso del sistema e inicializa el canal.
+  bool _iniciado = false;
+  bool _permitido = false;
+
+  bool get permitido => _permitido;
+
+  /// Prepara el complemento y la base de zonas horarias.
+  ///
+  /// La zona horaria importa: `zonedSchedule` necesita saber en que huso vive
+  /// el paciente para que «las 8 de la mañana» sean sus ocho y no las del
+  /// servidor. Se consulta al sistema en lugar de fijar Lima, para que la
+  /// aplicacion siga siendo correcta si el paciente viaja.
+  Future<void> iniciar() async {
+    if (_iniciado) return;
+
+    datos_zonas.initializeTimeZones();
+    try {
+      // `getLocalTimezone` devuelve un objeto; el identificador IANA que
+      // necesita la base de zonas horarias esta en `identifier`.
+      final zona = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(zona.identifier));
+    } catch (_) {
+      // Si el sistema no informa la zona, se asume la del consultorio.
+      tz.setLocalLocation(tz.getLocation('America/Lima'));
+    }
+
+    await _plugin.initialize(
+      settings: const InitializationSettings(
+        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        iOS: DarwinInitializationSettings(
+          // El permiso se pide de forma explicita mas abajo, no al arrancar:
+          // un aviso de permisos antes de que el paciente entienda para que
+          // sirve se rechaza casi siempre.
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        ),
+      ),
+    );
+
+    _iniciado = true;
+  }
+
+  /// Solicita el permiso del sistema para mostrar avisos.
   Future<bool> solicitarPermiso() async {
-    // Sprint 4: inicializar flutter_local_notifications y pedir el permiso.
-    _habilitado = false;
-    return _habilitado;
+    await iniciar();
+
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      // Android 13 y superiores exigen POST_NOTIFICATIONS en tiempo de
+      // ejecucion; en versiones anteriores el metodo devuelve verdadero.
+      _permitido = await android?.requestNotificationsPermission() ?? false;
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      _permitido = await ios?.requestPermissions(
+              alert: true, badge: true, sound: true) ??
+          false;
+    }
+    return _permitido;
   }
 
-  /// Programa el aviso de una dosis concreta.
-  Future<void> programarRecordatorio({
+  /// Reprograma los recordatorios de todo el plan de tomas.
+  ///
+  /// Se cancelan todos antes de volver a crearlos: si el paciente quita un
+  /// medicamento o cambia una hora, un aviso viejo seguiria sonando y le diria
+  /// que tome algo que ya no toma.
+  Future<void> reprogramar(List<Medicamento> plan) async {
+    await iniciar();
+    if (!_permitido) return;
+
+    await _plugin.cancelAll();
+
+    for (var iMedicamento = 0; iMedicamento < plan.length; iMedicamento++) {
+      final medicamento = plan[iMedicamento];
+      for (var iHora = 0; iHora < medicamento.horarios.length; iHora++) {
+        final partes = medicamento.horarios[iHora].split(':');
+        if (partes.length != 2) continue;
+        final hora = int.tryParse(partes[0]);
+        final minuto = int.tryParse(partes[1]);
+        if (hora == null || minuto == null) continue;
+
+        await _programarDiario(
+          id: idDeAviso(iMedicamento, iHora),
+          titulo: 'Hora de su medicación',
+          cuerpo: medicamento.dosis.isEmpty
+              ? 'Le toca ${medicamento.nombre}.'
+              : 'Le toca ${medicamento.nombre} · ${medicamento.dosis}.',
+          hora: hora,
+          minuto: minuto,
+        );
+      }
+    }
+  }
+
+  Future<void> _programarDiario({
     required int id,
-    required String medicamento,
-    required DateTime cuando,
+    required String titulo,
+    required String cuerpo,
+    required int hora,
+    required int minuto,
   }) async {
-    if (!_habilitado) return;
-    // Sprint 4: zonedSchedule con repeticion diaria.
+    await _plugin.zonedSchedule(
+      id: id,
+      title: titulo,
+      body: cuerpo,
+      scheduledDate: _proximaOcurrencia(hora, minuto),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _canalId,
+          _canalNombre,
+          channelDescription: _canalDescripcion,
+          importance: Importance.max,
+          priority: Priority.high,
+          // El paciente objetivo es un adulto mayor: el aviso debe verse en la
+          // pantalla de bloqueo sin tener que desplegar la bandeja.
+          category: AndroidNotificationCategory.reminder,
+          visibility: NotificationVisibility.public,
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      // `inexact` no requiere el permiso de alarmas exactas, que Android
+      // reserva para relojes y calendarios. Para un recordatorio de medicacion
+      // un margen de minutos es aceptable y evita pedir un permiso que el
+      // sistema puede denegar.
+      androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time, // se repite cada día
+    );
   }
 
-  /// Cancela los avisos ya programados, p. ej. al cambiar el plan de tomas.
+  tz.TZDateTime _proximaOcurrencia(int hora, int minuto) =>
+      proximaOcurrencia(hora, minuto, tz.TZDateTime.now(tz.local));
+
+  /// Primera ocurrencia futura de esa hora: hoy si aún no pasó, mañana si sí.
+  ///
+  /// Se expone y recibe el instante de referencia para poder verificarla sin
+  /// depender del reloj ni de los canales nativos. Es la pieza con más
+  /// probabilidad de fallar en silencio: un recordatorio programado en el
+  /// pasado no suena nunca y el paciente no tiene forma de notarlo.
+  @visibleForTesting
+  static tz.TZDateTime proximaOcurrencia(
+    int hora,
+    int minuto,
+    tz.TZDateTime referencia,
+  ) {
+    var momento = tz.TZDateTime(
+      referencia.location,
+      referencia.year,
+      referencia.month,
+      referencia.day,
+      hora,
+      minuto,
+    );
+    if (!momento.isAfter(referencia)) {
+      momento = momento.add(const Duration(days: 1));
+    }
+    return momento;
+  }
+
+  /// Identificador estable de un aviso dentro del plan.
+  ///
+  /// Reprogramar debe sustituir el aviso anterior, no acumular uno nuevo: si
+  /// el identificador cambiara, el paciente acabaria recibiendo dos avisos por
+  /// la misma dosis.
+  @visibleForTesting
+  static int idDeAviso(int indiceMedicamento, int indiceHorario) =>
+      indiceMedicamento * 100 + indiceHorario;
+
+  /// Cantidad de avisos actualmente programados; se usa para informar al
+  /// paciente de que sus recordatorios están activos.
+  Future<int> programados() async {
+    await iniciar();
+    final pendientes = await _plugin.pendingNotificationRequests();
+    return pendientes.length;
+  }
+
   Future<void> cancelarTodos() async {
-    if (!_habilitado) return;
-    // Sprint 4: cancelAll().
+    await iniciar();
+    await _plugin.cancelAll();
   }
 }

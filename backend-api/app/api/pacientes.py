@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 
 from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy import func
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from ..core.exceptions import ConflictoError, RecursoNoEncontradoError
@@ -101,8 +101,8 @@ def listar_pacientes(
     tamano: int = Query(default=20, ge=1, le=100),
     activo: bool | None = Query(default=True, description="null para incluir las bajas"),
     diagnostico: Diagnostico | None = Query(default=None),
-    busqueda: str | None = Query(default=None, max_length=12,
-                                 description="Coincidencia parcial por codigo anonimizado"),
+    busqueda: str | None = Query(default=None, max_length=60,
+                                 description="Coincidencia parcial por nombre, apellidos o codigo"),
 ) -> PaginaPacientes:
     consulta = db.query(Paciente).filter(Paciente.id_medico_tratante == medico.id_usuario)
 
@@ -111,7 +111,16 @@ def listar_pacientes(
     if diagnostico is not None:
         consulta = consulta.filter(Paciente.diagnostico == diagnostico)
     if busqueda:
-        consulta = consulta.filter(Paciente.codigo_anonimizado.ilike(f"%{busqueda}%"))
+        # El medico busca por el nombre que recuerda; el codigo seudonimizado
+        # es util cuando ya tiene la ficha delante. Se admiten ambos.
+        patron = f"%{busqueda.strip()}%"
+        consulta = consulta.filter(
+            or_(
+                Paciente.nombres.ilike(patron),
+                Paciente.apellidos.ilike(patron),
+                Paciente.codigo_anonimizado.ilike(patron),
+            )
+        )
 
     total = consulta.with_entities(func.count(Paciente.id_paciente)).scalar() or 0
     items = (

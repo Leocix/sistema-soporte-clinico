@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/medicamento.dart';
 import '../services/almacenamiento.dart';
+import '../services/notification_service.dart';
 import '../utils/tema.dart';
 import '../widgets/mensaje_estado.dart';
 
@@ -23,6 +24,7 @@ class PlanScreen extends StatefulWidget {
 class _PlanScreenState extends State<PlanScreen> {
   List<Medicamento> _plan = const [];
   bool _cargando = true;
+  bool _avisosActivos = false;
 
   @override
   void initState() {
@@ -32,17 +34,45 @@ class _PlanScreenState extends State<PlanScreen> {
 
   Future<void> _cargar() async {
     final plan = await Almacenamiento.instancia.leerPlan();
+    final programados = await ServicioNotificaciones.instancia.programados();
     if (!mounted) return;
     setState(() {
       _plan = plan;
+      _avisosActivos = programados > 0;
       _cargando = false;
     });
   }
 
   Future<void> _guardar(List<Medicamento> plan) async {
     await Almacenamiento.instancia.guardarPlan(plan);
+    // Los recordatorios se rehacen con cada cambio del plan: un aviso de un
+    // medicamento retirado le diria al paciente que tome algo que ya no toma.
+    await ServicioNotificaciones.instancia.reprogramar(plan);
     if (!mounted) return;
     setState(() => _plan = plan);
+  }
+
+  /// Pide el permiso de avisos y programa los recordatorios del plan actual.
+  Future<void> _activarRecordatorios() async {
+    final concedido = await ServicioNotificaciones.instancia.solicitarPermiso();
+    if (concedido) {
+      await ServicioNotificaciones.instancia.reprogramar(_plan);
+    }
+    if (!mounted) return;
+    setState(() => _avisosActivos = concedido);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          concedido
+              ? 'Listo. Le avisaremos a la hora de cada toma.'
+              : 'No se activaron los avisos. Puede permitirlos desde los '
+                  'ajustes del teléfono.',
+          style: const TextStyle(fontSize: 17),
+        ),
+        backgroundColor: concedido ? Tema.exito : Tema.aviso,
+      ),
+    );
   }
 
   Future<void> _editar({Medicamento? existente}) async {
@@ -110,6 +140,18 @@ class _PlanScreenState extends State<PlanScreen> {
                       'médico y a qué hora los toma. Con eso la aplicación '
                       'arma su lista diaria.',
                 ),
+                if (_plan.isNotEmpty)
+                  MensajeEstado(
+                    texto: _avisosActivos
+                        ? 'Sus recordatorios están activos: le avisaremos a la '
+                            'hora de cada toma.'
+                        : 'Active los recordatorios y le avisaremos a la hora '
+                            'de cada toma.',
+                    tono:
+                        _avisosActivos ? TonoMensaje.exito : TonoMensaje.aviso,
+                    textoAccion: _avisosActivos ? null : 'Activar',
+                    accion: _avisosActivos ? null : _activarRecordatorios,
+                  ),
                 if (_plan.isEmpty)
                   const Padding(
                     padding: EdgeInsets.symmetric(vertical: 40),

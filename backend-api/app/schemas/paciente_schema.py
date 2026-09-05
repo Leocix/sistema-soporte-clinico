@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from ..db.models import (
     Aseguramiento,
@@ -25,9 +25,19 @@ MIN_FARMACOS = 5
 
 
 class PacienteBase(BaseModel):
-    """Variables clinicas y sociodemograficas del Anexo n.o 04."""
+    """Ficha del paciente: identificacion y variables del Anexo n.o 04."""
 
     model_config = ConfigDict(extra="forbid")
+
+    # --- Identificacion clinica ---
+    # Estos datos permiten al medico contactar al paciente cuando el sistema
+    # marca un riesgo alto. No forman parte del dataset: la exportacion hacia
+    # el pipeline de aprendizaje automatico solo lleva el codigo seudonimizado.
+    nombres: str = Field(min_length=2, max_length=120)
+    apellidos: str = Field(min_length=2, max_length=120)
+    documento_identidad: str | None = Field(default=None, max_length=20)
+    correo: EmailStr | None = None
+    telefono: str | None = Field(default=None, max_length=25)
 
     # --- Dimension: paciente ---
     edad: int = Field(ge=18, le=120, description="Edad en anios cumplidos")
@@ -64,6 +74,14 @@ class PacienteBase(BaseModel):
     fecha_evaluacion_morisky: date | None = None
 
     @model_validator(mode="after")
+    def _normalizar_identidad(self) -> PacienteBase:
+        # Los nombres se teclean a mano: se colapsan los espacios sobrantes
+        # para que "Jose  Luis " y "Jose Luis" no sean fichas distintas.
+        object.__setattr__(self, "nombres", " ".join(self.nombres.split()))
+        object.__setattr__(self, "apellidos", " ".join(self.apellidos.split()))
+        return self
+
+    @model_validator(mode="after")
     def _controles_coherentes(self) -> PacienteBase:
         if self.controles_perdidos_6m > self.controles_programados_6m:
             raise ValueError(
@@ -88,6 +106,11 @@ class PacienteUpdate(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    nombres: str | None = Field(default=None, min_length=2, max_length=120)
+    apellidos: str | None = Field(default=None, min_length=2, max_length=120)
+    documento_identidad: str | None = Field(default=None, max_length=20)
+    correo: EmailStr | None = None
+    telefono: str | None = Field(default=None, max_length=25)
     edad: int | None = Field(default=None, ge=18, le=120)
     sexo: Sexo | None = None
     nivel_socioeconomico: NivelSocioeconomico | None = None

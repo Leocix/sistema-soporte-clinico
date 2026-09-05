@@ -200,6 +200,17 @@ class Paciente(Base):
         String(36), ForeignKey("usuarios.id_usuario", ondelete="SET NULL"), index=True
     )
 
+    # --- Identificacion clinica -------------------------------------------
+    # La seudonimizacion protege el DATASET, no la ficha: el medico necesita
+    # saber a quien llamar cuando el sistema marca un riesgo alto. Estos campos
+    # viven en la historia clinica y nunca salen hacia el pipeline de
+    # aprendizaje automatico, que solo recibe `codigo_anonimizado` (RNF01).
+    nombres: Mapped[str] = mapped_column(String(120), nullable=False)
+    apellidos: Mapped[str] = mapped_column(String(120), nullable=False)
+    documento_identidad: Mapped[str | None] = mapped_column(String(20), index=True)
+    correo: Mapped[str | None] = mapped_column(String(180))
+    telefono: Mapped[str | None] = mapped_column(String(25))
+
     # --- Dimension: paciente ---------------------------------------------
     edad: Mapped[int] = mapped_column(Integer, nullable=False)
     sexo: Mapped[Sexo] = mapped_column(_enum(Sexo, "sexo_paciente"), nullable=False)
@@ -256,11 +267,17 @@ class Paciente(Base):
     )
 
     @property
+    def nombre_completo(self) -> str:
+        return f"{self.nombres} {self.apellidos}".strip()
+
+    @property
     def es_polimedicado(self) -> bool:
         """Criterio de inclusion del estudio: cinco o mas farmacos."""
         return self.numero_farmacos >= 5
 
     def __repr__(self) -> str:  # pragma: no cover - ayuda de depuracion
+        # El repr acaba en los logs: se identifica por el seudonimo, nunca por el
+        # nombre del paciente.
         return f"<Paciente codigo={self.codigo_anonimizado} farmacos={self.numero_farmacos}>"
 
 

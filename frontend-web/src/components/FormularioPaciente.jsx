@@ -10,6 +10,11 @@ import { mensajeDeError, servicioPacientes } from '../services/api'
  */
 
 const VALORES_INICIALES = {
+  nombres: '',
+  apellidos: '',
+  documento_identidad: '',
+  telefono: '',
+  correo: '',
   codigo_anonimizado: '',
   edad: '',
   sexo: 'M',
@@ -91,8 +96,40 @@ export default function FormularioPaciente({ alGuardar, alCancelar }) {
           </p>
 
           <fieldset className="formulario__grupo">
-            <legend>Identificación y datos del paciente</legend>
+            <legend>Identificación del paciente</legend>
             <div className="rejilla">
+              <label className="campo">
+                <span>Nombres *</span>
+                <input name="nombres" required minLength={2} maxLength={120}
+                  value={valores.nombres} onChange={cambiar} placeholder="José Luis" />
+              </label>
+
+              <label className="campo">
+                <span>Apellidos *</span>
+                <input name="apellidos" required minLength={2} maxLength={120}
+                  value={valores.apellidos} onChange={cambiar} placeholder="Vásquez Ríos" />
+              </label>
+
+              <label className="campo">
+                <span>Documento de identidad</span>
+                <input name="documento_identidad" maxLength={20}
+                  value={valores.documento_identidad} onChange={cambiar} />
+              </label>
+
+              <label className="campo">
+                <span>Teléfono</span>
+                <input name="telefono" type="tel" maxLength={25}
+                  value={valores.telefono} onChange={cambiar} placeholder="987654321" />
+                <small>Necesario para contactarle ante una alerta de riesgo.</small>
+              </label>
+
+              <label className="campo">
+                <span>Correo electrónico</span>
+                <input name="correo" type="email" maxLength={180}
+                  value={valores.correo} onChange={cambiar} />
+                <small>Con él se le crea la cuenta de la aplicación móvil.</small>
+              </label>
+
               <label className="campo">
                 <span>Código anonimizado</span>
                 <input
@@ -103,6 +140,12 @@ export default function FormularioPaciente({ alGuardar, alCancelar }) {
                 <small>Opcional. Si lo deja vacío, el sistema asigna el correlativo.</small>
               </label>
 
+            </div>
+          </fieldset>
+
+          <fieldset className="formulario__grupo">
+            <legend>Datos del paciente</legend>
+            <div className="rejilla">
               <label className="campo">
                 <span>Edad *</span>
                 <input name="edad" type="number" min="18" max="120" required

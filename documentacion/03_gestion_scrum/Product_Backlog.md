@@ -39,7 +39,7 @@ incumplimiento.
 | RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | Pendiente |
 | RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | Pendiente |
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 3 | **Parcial** |
-| RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 4 | Pendiente |
+| RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 4 | **Terminado** |
 
 **Brechas del diagnóstico (OE1):** B1 ausencia de registro estructurado ·
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
@@ -125,7 +125,6 @@ reportes queda para el Sprint 3.
 
 **Sprint 4 (semanas 7–8)**
 
-- Recordatorios locales en la app (RF08).
 - Pruebas de rendimiento y carga (RNF02, RNF06).
 - Pruebas de usabilidad con escala SUS (OE5).
 - Verificación de atributos ISO/IEC 25010.

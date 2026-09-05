@@ -132,12 +132,12 @@ export default function Dashboard() {
       <section className="tarjeta">
         <div className="filtros">
           <label className="campo campo--linea">
-            <span>Buscar por código</span>
+            <span>Buscar paciente</span>
             <input
               value={busqueda}
               onChange={(e) => { setBusqueda(e.target.value); setPagina(1) }}
-              placeholder="P-001"
-              maxLength={12}
+              placeholder="Nombre o P-001"
+              maxLength={60}
             />
           </label>
 
@@ -173,7 +173,7 @@ export default function Dashboard() {
               <caption className="oculto">Pacientes polimedicados en seguimiento</caption>
               <thead>
                 <tr>
-                  <th scope="col">Código</th>
+                  <th scope="col">Paciente</th>
                   <th scope="col">Edad</th>
                   <th scope="col">Diagnóstico</th>
                   <th scope="col" className="num">Fármacos</th>
@@ -189,7 +189,14 @@ export default function Dashboard() {
                   const resumen = resumenes[paciente.id_paciente]
                   return (
                     <tr key={paciente.id_paciente}>
-                      <th scope="row">{paciente.codigo_anonimizado}</th>
+                      <th scope="row">
+                        <span className="paciente__nombre">
+                          {paciente.nombres} {paciente.apellidos}
+                        </span>
+                        <span className="paciente__codigo">
+                          {paciente.codigo_anonimizado}
+                        </span>
+                      </th>
                       <td>{paciente.edad}</td>
                       <td>{etiquetaDiagnostico(paciente.diagnostico)}</td>
                       <td className="num">{paciente.numero_farmacos}</td>

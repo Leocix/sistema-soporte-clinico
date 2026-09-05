@@ -5,9 +5,16 @@ import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/almacenamiento.dart';
 import 'services/api_service.dart';
+import 'services/notification_service.dart';
 import 'utils/tema.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // Se prepara el complemento y la zona horaria antes de dibujar nada: el
+  // recordatorio debe sonar a la hora del paciente, no a la del servidor.
+  // No se pide el permiso aqui; eso ocurre cuando el paciente configura su
+  // plan y entiende para que sirve.
+  await ServicioNotificaciones.instancia.iniciar();
   runApp(const AplicacionPaciente());
 }
 

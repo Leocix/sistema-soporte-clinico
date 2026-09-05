@@ -12,10 +12,13 @@ dependencies:
   flutter:
     sdk: flutter
   # Cliente HTTP hacia el API Gateway.
+  flutter_local_notifications: ^22.3.0
+  flutter_timezone: ^5.1.0
   http: ^1.2.2
   # Persistencia local: token de sesion, plan de tomas y cola de envio
   # pendiente cuando el telefono esta sin conexion.
   shared_preferences: ^2.3.2
+  timezone: ^0.11.1
 
 dev_dependencies:
   flutter_test:

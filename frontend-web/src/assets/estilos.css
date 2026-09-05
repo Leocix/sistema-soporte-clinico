@@ -277,6 +277,28 @@ p { margin: 0; }
 .tabla tbody tr:hover { background: var(--superficie-alt); }
 .tabla .num { text-align: right; font-variant-numeric: tabular-nums; }
 
+/* El seudónimo acompaña al nombre en vez de sustituirlo: el médico reconoce a
+   su paciente por el nombre, pero el código es la clave con la que ese
+   paciente viaja al conjunto de datos. */
+.paciente__nombre { display: block; }
+.paciente__codigo {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 400;
+  color: var(--texto-tenue);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+.paciente__codigo--suelto {
+  display: inline-block;
+  margin-right: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  background: var(--superficie-alt);
+  border: 1px solid var(--borde);
+  font-size: 0.78rem;
+}
+
 /* --- Distintivos y alertas -------------------------------------------------- */
 
 .distintivo {

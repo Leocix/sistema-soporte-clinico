@@ -41,18 +41,20 @@ from app.db.models import (  # noqa: E402
 
 CORREO_MEDICO = "milko.ugaz@consultorio.pe"
 
+# Nombres ficticios, coherentes con el codigo D- de demostracion.
 PACIENTES_DEMO = [
-    # codigo, edad, sexo, diagnostico, nse, aseg, zona, anios, comorb, farm, tomas, prog, perd, morisky
-    ("D-001", 68, Sexo.MASCULINO, Diagnostico.AMBAS, NivelSocioeconomico.BAJO,
-     Aseguramiento.SIS, ZonaResidencia.URBANA, 12.0, 2, 7, 5, 6, 3, 1),
-    ("D-002", 72, Sexo.FEMENINO, Diagnostico.HTA, NivelSocioeconomico.BAJO,
-     Aseguramiento.SIS, ZonaResidencia.RURAL, 15.5, 3, 9, 6, 6, 4, 0),
-    ("D-003", 65, Sexo.MASCULINO, Diagnostico.DM2, NivelSocioeconomico.MEDIO,
-     Aseguramiento.ESSALUD, ZonaResidencia.URBANA, 8.0, 1, 5, 3, 6, 1, 3),
-    ("D-004", 59, Sexo.FEMENINO, Diagnostico.AMBAS, NivelSocioeconomico.MEDIO,
-     Aseguramiento.ESSALUD, ZonaResidencia.URBANA, 6.5, 0, 6, 4, 6, 0, 4),
-    ("D-005", 70, Sexo.MASCULINO, Diagnostico.HTA, NivelSocioeconomico.BAJO,
-     Aseguramiento.NINGUNO, ZonaResidencia.RURAL, 20.0, 4, 8, 6, 6, 2, 2),
+    # codigo, nombres, apellidos, edad, sexo, diagnostico, nse, aseg, zona,
+    # anios, comorb, farm, tomas, prog, perd, morisky
+    ("D-001", "Jose Luis", "Vasquez Rios", 68, Sexo.MASCULINO, Diagnostico.AMBAS,
+     NivelSocioeconomico.BAJO, Aseguramiento.SIS, ZonaResidencia.URBANA, 12.0, 2, 7, 5, 6, 3, 1),
+    ("D-002", "Maria Elena", "Rios Chavez", 72, Sexo.FEMENINO, Diagnostico.HTA,
+     NivelSocioeconomico.BAJO, Aseguramiento.SIS, ZonaResidencia.RURAL, 15.5, 3, 9, 6, 6, 4, 0),
+    ("D-003", "Carlos Alberto", "Diaz Mendoza", 65, Sexo.MASCULINO, Diagnostico.DM2,
+     NivelSocioeconomico.MEDIO, Aseguramiento.ESSALUD, ZonaResidencia.URBANA, 8.0, 1, 5, 3, 6, 1, 3),
+    ("D-004", "Lucia", "Fernandez Paz", 59, Sexo.FEMENINO, Diagnostico.AMBAS,
+     NivelSocioeconomico.MEDIO, Aseguramiento.ESSALUD, ZonaResidencia.URBANA, 6.5, 0, 6, 4, 6, 0, 4),
+    ("D-005", "Ricardo", "Campos Leon", 70, Sexo.MASCULINO, Diagnostico.HTA,
+     NivelSocioeconomico.BAJO, Aseguramiento.NINGUNO, ZonaResidencia.RURAL, 20.0, 4, 8, 6, 6, 2, 2),
 ]
 
 
@@ -83,10 +85,13 @@ def crear_demo(db, medico: Usuario) -> None:
 
     ahora = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
 
-    for (codigo, edad, sexo, dx, nse, aseg, zona, anios, comorb,
+    for (codigo, nombres, apellidos, edad, sexo, dx, nse, aseg, zona, anios, comorb,
          farmacos, tomas, programados, perdidos, morisky) in PACIENTES_DEMO:
         paciente = Paciente(
             codigo_anonimizado=codigo,
+            nombres=nombres, apellidos=apellidos,
+            correo=f"{codigo.lower()}@demostracion.local",
+            telefono="9" + codigo.replace("D-", "").rjust(8, "0"),
             id_medico_tratante=medico.id_usuario,
             edad=edad, sexo=sexo, diagnostico=dx,
             nivel_socioeconomico=nse, aseguramiento=aseg, zona_residencia=zona,

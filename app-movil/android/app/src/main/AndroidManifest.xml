@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- RF08 - Recordatorios de toma.
+         POST_NOTIFICATIONS lo exige Android 13 (API 33) en tiempo de ejecucion.
+         RECEIVE_BOOT_COMPLETED permite reprogramar los avisos tras reiniciar el
+         telefono; sin el, el paciente dejaria de recibir recordatorios despues
+         de apagar el equipo y no habria forma de que se diera cuenta. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:label="cdss_adherencia"
         android:name="${applicationName}"
@@ -30,6 +38,19 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Reprograma los recordatorios tras un reinicio del dispositivo. -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

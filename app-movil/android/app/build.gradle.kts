@@ -10,6 +10,12 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // `flutter_local_notifications` usa API de java.time, que no existe en
+        // las versiones antiguas de Android. El desugarado la traduce en tiempo
+        // de compilacion, de modo que los recordatorios (RF08) funcionen
+        // tambien en los telefonos mas modestos, que son los que mas
+        // probablemente tenga la poblacion del estudio.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -46,4 +52,8 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
