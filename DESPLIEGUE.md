@@ -5,6 +5,7 @@ Milko Ugaz Zegarra.
 
 | Componente | Plataforma | Estado |
 | :--- | :--- | :--- |
+| Modelo predictivo | Artefacto versionado en el repositorio | Cargado por el API al primer uso |
 | Base de datos PostgreSQL | Aiven (o PostgreSQL de Render) | Listo para aprovisionar |
 | API Gateway (FastAPI) | Render | Configurado (`render.yaml`) |
 | Panel médico (React + Vite) | Vercel | Configurado (`frontend-web/vercel.json`) |
@@ -117,13 +118,14 @@ nada pendiente, no hace nada. Si `DATABASE_URL` está mal, el servicio no
 arranca y el fallo aparece en los *logs* de Render: es deliberado, preferible a
 un API en pie que no puede leer datos.
 
-> `requirements.txt` contiene solo lo que el API ejecuta hoy. Las librerías de
-> aprendizaje automático (scikit-learn, XGBoost, SHAP) pesan cientos de
-> megabytes y agotarían el tiempo de construcción y la memoria del plan
-> gratuito, así que viven aparte en `requirements-ml.txt`. Cuando el
-> microservicio de inferencia entre en servicio (Sprint 3), el comando de
-> construcción pasa a ser:
-> `pip install -r requirements.txt -r requirements-ml.txt`
+> `requirements.txt` incluye scikit-learn, numpy, pandas y joblib porque el
+> artefacto serializado los necesita para reconstruir el pipeline durante la
+> inferencia (RF04). XGBoost y SHAP quedan aparte en `requirements-ml.txt`:
+> pesan cientos de megabytes y solo hacen falta para entrenar. Por eso el
+> modelo desplegado se produce con `--sin-xgboost`, de modo que el servicio no
+> arrastre esa dependencia. Si la comparación sobre el dataset real
+> seleccionara XGBoost, el comando de construcción pasaría a ser
+> `pip install -r requirements.txt -r requirements-ml.txt`.
 
 ### 2.2. Completar las variables de entorno
 

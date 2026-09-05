@@ -1,0 +1,99 @@
+{
+  "algoritmo": "SVM (RBF)",
+  "hiperparametros": {
+    "C": 10,
+    "gamma": 0.01
+  },
+  "entrenado_el": "2026-09-05",
+  "origen_datos": "conjunto de demostracion simulado",
+  "datos_reales": false,
+  "filas_entrenamiento": 320,
+  "aucroc_validacion_cruzada": 0.8945,
+  "sensibilidad_validacion_cruzada": 0.7778,
+  "metricas_prueba": {
+    "exactitud": 0.7625,
+    "sensibilidad": 0.6364,
+    "especificidad": 0.7826,
+    "f1": 0.4242,
+    "aucroc": 0.8617
+  },
+  "cumple_meta_aucroc": true,
+  "semilla": 42,
+  "factores_influyentes": [
+    {
+      "variable": "tasa_inasistencia",
+      "importancia": 0.2076,
+      "desviacion": 0.0583
+    },
+    {
+      "variable": "carga_terapeutica",
+      "importancia": 0.0752,
+      "desviacion": 0.0365
+    },
+    {
+      "variable": "numero_farmacos",
+      "importancia": 0.028,
+      "desviacion": 0.0194
+    },
+    {
+      "variable": "tomas_dia",
+      "importancia": 0.0243,
+      "desviacion": 0.0171
+    },
+    {
+      "variable": "comorbilidades",
+      "importancia": 0.0181,
+      "desviacion": 0.0076
+    },
+    {
+      "variable": "tiempo_enfermedad_anios",
+      "importancia": 0.0144,
+      "desviacion": 0.0193
+    },
+    {
+      "variable": "controles_perdidos_6m",
+      "importancia": 0.0123,
+      "desviacion": 0.0202
+    },
+    {
+      "variable": "zona_residencia",
+      "importancia": 0.0081,
+      "desviacion": 0.0157
+    },
+    {
+      "variable": "aseguramiento",
+      "importancia": 0.0055,
+      "desviacion": 0.0145
+    },
+    {
+      "variable": "sexo",
+      "importancia": 0.0051,
+      "desviacion": 0.0037
+    },
+    {
+      "variable": "diagnostico",
+      "importancia": 0.0034,
+      "desviacion": 0.0038
+    },
+    {
+      "variable": "edad",
+      "importancia": 0.0023,
+      "desviacion": 0.0091
+    },
+    {
+      "variable": "cronicidad_relativa",
+      "importancia": -0.0023,
+      "desviacion": 0.0118
+    },
+    {
+      "variable": "nivel_socioeconomico",
+      "importancia": -0.0024,
+      "desviacion": 0.0061
+    },
+    {
+      "variable": "controles_programados_6m",
+      "importancia": -0.0107,
+      "desviacion": 0.0125
+    }
+  ]
+}

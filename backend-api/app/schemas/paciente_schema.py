@@ -139,9 +139,19 @@ class PacienteUpdate(BaseModel):
 
 
 class PacienteOut(PacienteBase):
-    """Ficha devuelta al panel medico."""
+    """Ficha devuelta al panel medico.
+
+    El correo se declara como texto y no como `EmailStr`, al reves que en el
+    alta. La validacion estricta corresponde a la entrada; aplicarla tambien a
+    la salida significa que una direccion mal formada —heredada de una carga
+    masiva o de una migracion— haria fallar el listado **entero** en lugar de
+    mostrar esa ficha con un dato imperfecto. Estricto al entrar, tolerante al
+    salir.
+    """
 
     model_config = ConfigDict(from_attributes=True, extra="ignore")
+
+    correo: str | None = None
 
     id_paciente: str
     codigo_anonimizado: str

@@ -107,6 +107,11 @@ export const servicioPacientes = {
   darDeBaja: (id) => api.delete(`/api/pacientes/${id}`),
 }
 
+export const servicioPrediccion = {
+  estado: () => api.get('/api/prediccion/estado'),
+  riesgo: (idPaciente) => api.get(`/api/prediccion/pacientes/${idPaciente}`),
+}
+
 export const servicioAdherencia = {
   resumen: (idPaciente) => api.get(`/api/adherencia/pacientes/${idPaciente}/resumen`),
   registros: (idPaciente, params) =>

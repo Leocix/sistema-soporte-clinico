@@ -213,3 +213,22 @@ def test_la_busqueda_encuentra_por_nombre_y_por_codigo(client, cab_medico):
     assert total("ana") == 1          # nombres, sin distinguir mayúsculas
     assert total("P-002") == 1        # código
     assert total("Inexistente") == 0
+
+
+def test_un_correo_heredado_no_valido_no_tumba_el_listado(client, cab_medico, datos, db_session):
+    """Estricto al entrar, tolerante al salir.
+
+    Una dirección mal formada puede llegar por una carga masiva o una
+    migración. Rechazarla al mostrarla dejaría al médico sin listado entero por
+    culpa de una sola ficha.
+    """
+    datos["ficha"].correo = "correo-heredado@dominio.local"
+    db_session.commit()
+
+    listado = client.get("/api/pacientes", headers=cab_medico)
+    assert listado.status_code == 200
+    assert listado.json()["total"] == 1
+
+    # Pero el alta sí sigue exigiendo una dirección válida.
+    ficha = {**FICHA_VALIDA, "correo": "otro@dominio.local"}
+    assert client.post("/api/pacientes", json=ficha, headers=cab_medico).status_code == 422

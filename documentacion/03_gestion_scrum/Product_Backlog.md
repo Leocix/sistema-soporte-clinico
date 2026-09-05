@@ -35,15 +35,22 @@ incumplimiento.
 | RF01 | Autenticar y autorizar a médicos y pacientes con perfiles diferenciados | Must | — | OE2/OE4 | 1 | **Terminado** |
 | RF02 | Registrar y gestionar pacientes polimedicados y su esquema farmacológico | Must | B2 | OE4 | 2 | **Terminado** |
 | RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | B1, B2 | OE4 | 2 | **Terminado** |
-| RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | B3 | OE3/OE5 | 3 | Pendiente |
+| RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | B3 | OE3/OE5 | 3 | **Terminado** |
 | RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | Pendiente |
-| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | Pendiente |
+| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Parcial** |
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 3 | **Parcial** |
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 4 | **Terminado** |
 
 **Brechas del diagnóstico (OE1):** B1 ausencia de registro estructurado ·
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
 B4 ausencia de alertas y recordatorios.
+
+RF06 figura como **parcial**: la ficha muestra los factores que más pesan en el
+modelo, medidos por importancia de permutación, que es agnóstica al algoritmo.
+Es una importancia **global**, no la contribución de cada variable a la
+predicción de ese paciente concreto; la atribución individual con SHAP se
+incorpora en el Sprint 3 y la interfaz declara esa diferencia de forma
+explícita.
 
 RF07 figura como **parcial**: el panel de auditoría existe con indicadores,
 listado priorizado por riesgo y ficha individual, pero la exportación de
@@ -116,8 +123,7 @@ reportes queda para el Sprint 3.
 **Sprint 3 (semanas 5–6)**
 
 - Ejecutar `train_evaluate.py` sobre el dataset definitivo y seleccionar el algoritmo.
-- Microservicio de inferencia y endpoint de predicción (RF04).
-- Explicabilidad SHAP en la ficha del paciente (RF06).
+- Atribución individual con SHAP, en sustitución de la importancia global (RF06).
 - Alertas tempranas al médico (RF05).
 - Exportación de reportes del panel (RF07).
 - Endpoint agregado de resúmenes de adherencia, para evitar una petición por

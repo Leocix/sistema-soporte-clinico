@@ -23,7 +23,7 @@ antes de la cita.
 | [`backend-api/`](backend-api/) | API Gateway (FastAPI + PostgreSQL) | RF01–RF03 operativos |
 | [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Acceso, auditoría y ficha clínica |
 | [`app-movil/`](app-movil/) | App del paciente (Flutter) | Acceso, registro de tomas sin conexión y recordatorios |
-| [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación de datos y comparación de algoritmos |
+| [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación, comparación de algoritmos y modelo en servicio |
 | [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe al 50 % |
 
 ## Requisitos funcionales
@@ -33,9 +33,9 @@ antes de la cita.
 | RF01 | Autenticación y autorización por perfil (médico / paciente) | Must | Implementado |
 | RF02 | Gestión de pacientes polimedicados y esquema farmacológico | Must | Implementado |
 | RF03 | Registro de la toma de medicamentos desde la app móvil | Must | Implementado |
-| RF04 | Predicción del riesgo de incumplimiento | Must | Sprint 3 |
+| RF04 | Predicción del riesgo de incumplimiento | Must | Implementado |
 | RF05 | Alertas tempranas al médico | Must | Sprint 3 |
-| RF06 | Explicabilidad de la predicción (SHAP) | Should | Sprint 3 |
+| RF06 | Explicabilidad de la predicción (SHAP) | Should | Parcial: importancia global |
 | RF07 | Panel de auditoría con reportes exportables | Should | Parcial |
 | RF08 | Recordatorios de toma al paciente | Could | Implementado |
 

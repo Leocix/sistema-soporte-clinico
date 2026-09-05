@@ -52,6 +52,7 @@ from sklearn.metrics import (
     recall_score,
     roc_auc_score,
 )
+from sklearn.inspection import permutation_importance
 from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_validate
 from sklearn.svm import SVC
 
@@ -82,6 +83,9 @@ log = logging.getLogger("train_evaluate")
 # Meta fijada en la hipotesis del proyecto de investigacion.
 META_AUCROC = 0.80
 
+# Etiqueta con la que se marca un modelo entrenado sobre datos simulados.
+ORIGEN_SIMULADO = "conjunto de demostracion simulado"
+
 
 # ---------------------------------------------------------------------------
 # Metricas
@@ -109,7 +113,7 @@ METRICAS = {
 # ---------------------------------------------------------------------------
 # Algoritmos candidatos (Tabla 9 del pre informe)
 # ---------------------------------------------------------------------------
-def catalogo_de_modelos() -> dict:
+def catalogo_de_modelos(incluir_xgboost: bool = True) -> dict:
     """Estimadores y sus rejillas de hiperparametros.
 
     XGBoost se declara aparte porque es la unica dependencia que puede faltar
@@ -136,6 +140,10 @@ def catalogo_de_modelos() -> dict:
             {"clf__C": [0.1, 1, 10], "clf__gamma": ["scale", 0.01]},
         ),
     }
+
+    if not incluir_xgboost:
+        log.info("XGBoost excluido a peticion: el modelo resultante no lo necesitara.")
+        return modelos
 
     try:
         from xgboost import XGBClassifier
@@ -290,6 +298,38 @@ def evaluar_en_prueba(pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> dict
     }
 
 
+def importancia_de_variables(pipeline, X_test, y_test, n_repeticiones: int = 20) -> list[dict]:
+    """Importancia por permutacion de cada variable del Anexo n.o 04.
+
+    Mide cuanto empeora el AUCROC al barajar una variable: si al desordenarla
+    el modelo pierde capacidad, esa variable le importaba. Es agnostica al
+    algoritmo, lo que resulta necesario aqui porque el ganador puede ser un SVM
+    con nucleo radial, que no expone coeficientes interpretables.
+
+    Es una importancia **global** del modelo, no una descomposicion por
+    paciente. La atribucion individual con SHAP corresponde a RF06, en el
+    Sprint 3; hasta entonces el microservicio informa estos factores dejando
+    claro su alcance, en lugar de presentar como personal algo que no lo es.
+    """
+    resultado = permutation_importance(
+        pipeline, X_test, y_test,
+        scoring="roc_auc", n_repeats=n_repeticiones,
+        random_state=SEMILLA, n_jobs=-1,
+    )
+    factores = [
+        {
+            "variable": columna,
+            "importancia": round(float(media), 4),
+            "desviacion": round(float(desviacion), 4),
+        }
+        for columna, media, desviacion in zip(
+            X_test.columns, resultado.importances_mean, resultado.importances_std
+        )
+    ]
+    factores.sort(key=lambda f: f["importancia"], reverse=True)
+    return factores
+
+
 # ---------------------------------------------------------------------------
 # Seleccion y contraste estadistico
 # ---------------------------------------------------------------------------
@@ -391,6 +431,29 @@ def guardar_artefactos(
     ruta_modelo = DIR_MODELOS / "risk_model_v1.pkl"
     joblib.dump(pipeline_ganador, ruta_modelo)
 
+    # La procedencia viaja con el modelo. El microservicio la lee y la devuelve
+    # en cada prediccion, de modo que un resultado obtenido con datos simulados
+    # no pueda presentarse como si viniera de historias clinicas reales.
+    ficha = {
+        "algoritmo": mejor.nombre,
+        "hiperparametros": mejor.hiperparametros,
+        "entrenado_el": date.today().isoformat(),
+        "origen_datos": contexto["origen_datos"],
+        "datos_reales": contexto["origen_datos"] != ORIGEN_SIMULADO,
+        "filas_entrenamiento": contexto["filas_entrenamiento"],
+        "aucroc_validacion_cruzada": mejor.aucroc_cv,
+        "sensibilidad_validacion_cruzada": mejor.sensibilidad_cv,
+        "metricas_prueba": mejor.prueba,
+        "cumple_meta_aucroc": mejor.aucroc_cv >= META_AUCROC,
+        "semilla": SEMILLA,
+        # Importancia global del modelo, no atribucion por paciente.
+        "factores_influyentes": contexto["factores"],
+    }
+    (DIR_MODELOS / "risk_model_v1.json").write_text(
+        json.dumps(ficha, indent=2, ensure_ascii=False), encoding="utf-8"
+    )
+    log.info("Ficha del modelo guardada en %s", DIR_MODELOS / "risk_model_v1.json")
+
     reporte = {
         "fecha": date.today().isoformat(),
         "semilla": SEMILLA,
@@ -428,6 +491,8 @@ def ejecutar(
     test_size: float = 0.20,
     pliegues: int = 5,
     con_busqueda: bool = True,
+    incluir_xgboost: bool = True,
+    origen_datos: str = "extraccion documental (Anexo n.o 04)",
 ) -> tuple[list[ResultadoModelo], ResultadoModelo]:
     reporte_prep = ReporteDePreparacion()
 
@@ -459,7 +524,7 @@ def ejecutar(
     resultados: list[ResultadoModelo] = []
     pipelines: dict[str, object] = {}
 
-    for nombre, (estimador, rejilla) in catalogo_de_modelos().items():
+    for nombre, (estimador, rejilla) in catalogo_de_modelos(incluir_xgboost).items():
         resultado, pipeline = evaluar_modelo(
             nombre, estimador, rejilla, X_train, y_train,
             numericas, pliegues, con_busqueda,
@@ -470,6 +535,13 @@ def ejecutar(
 
     mejor = seleccionar_mejor(resultados)
     ordenados = sorted(resultados, key=lambda r: r.aucroc_cv, reverse=True)
+
+    log.info("Calculando la importancia de las variables por permutacion...")
+    factores = importancia_de_variables(pipelines[mejor.nombre], X_test, y_test)
+    log.info(
+        "Variables mas influyentes: %s",
+        ", ".join(f["variable"] for f in factores[:4]),
+    )
 
     if len(ordenados) >= 2:
         primero, segundo = ordenados[0], ordenados[1]
@@ -496,6 +568,8 @@ def ejecutar(
             "pliegues": pliegues,
             "busqueda_de_hiperparametros": con_busqueda,
             "algoritmos_comparados": len(resultados),
+            "origen_datos": origen_datos,
+            "factores": factores,
         },
     )
     return resultados, mejor
@@ -513,6 +587,10 @@ def main(argv: list[str] | None = None) -> int:
         help="Omite el ajuste de hiperparametros y usa los valores por defecto.",
     )
     parser.add_argument(
+        "--sin-xgboost", action="store_true",
+        help="Excluye XGBoost; produce un modelo que no lo necesita en produccion.",
+    )
+    parser.add_argument(
         "--generar-muestra", type=int, metavar="N",
         help="Genera N filas sinteticas y ejecuta sobre ellas (solo prueba tecnica).",
     )
@@ -526,10 +604,12 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     entrada = args.entrada
+    origen = "extraccion documental (Anexo n.o 04)"
     if args.generar_muestra:
         entrada = generar_muestra_sintetica(
             args.generar_muestra, DIR_RAW / "demostracion_simulada.csv"
         )
+        origen = ORIGEN_SIMULADO
 
     # Las rejillas incluyen combinaciones que algunos modelos descartan; los
     # avisos de convergencia no aportan nada al reporte.
@@ -538,7 +618,10 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         resultados, mejor = ejecutar(
-            entrada, args.test_size, args.pliegues, con_busqueda=not args.sin_busqueda
+            entrada, args.test_size, args.pliegues,
+            con_busqueda=not args.sin_busqueda,
+            incluir_xgboost=not args.sin_xgboost,
+            origen_datos=origen,
         )
     except (FileNotFoundError, ValueError) as exc:
         log.error("%s", exc)

@@ -90,7 +90,8 @@ def crear_demo(db, medico: Usuario) -> None:
         paciente = Paciente(
             codigo_anonimizado=codigo,
             nombres=nombres, apellidos=apellidos,
-            correo=f"{codigo.lower()}@demostracion.local",
+            # `.local` es un dominio reservado que el validador rechaza.
+            correo=f"{codigo.lower()}@ejemplo.pe",
             telefono="9" + codigo.replace("D-", "").rjust(8, "0"),
             id_medico_tratante=medico.id_usuario,
             edad=edad, sexo=sexo, diagnostico=dx,

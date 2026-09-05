@@ -10,6 +10,10 @@ ml-pipeline/data/raw/*
 ml-pipeline/data/processed/*
 !ml-pipeline/data/processed/.gitkeep
 ml-pipeline/models/*.pkl
+# El modelo en servicio y su ficha si se versionan: Render los necesita para
+# poder responder predicciones, y la ficha declara con que datos se entreno.
+!ml-pipeline/models/risk_model_v1.pkl
+!ml-pipeline/models/risk_model_v1.json
 node_modules/
 dist/
 .vercel

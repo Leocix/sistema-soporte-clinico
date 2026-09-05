@@ -29,6 +29,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from .api.adherencia import router as adherencia_router
 from .api.auth import router as auth_router
 from .api.pacientes import router as pacientes_router
+from .api.prediccion import router as prediccion_router
 from .core.config import settings
 from .core.exceptions import register_exception_handlers
 from .db.database import Base, engine
@@ -177,12 +178,12 @@ app.add_middleware(
 # Manejadores globales de excepciones (RNF04).
 register_exception_handlers(app)
 
-# Routers del nucleo funcional (RF01-RF03). El microservicio de inferencia
-# (RF04) y las alertas (RF05) se incorporan en el Sprint 3, manteniendo el
-# prefijo /api y el mismo contrato de errores.
+# Routers del sistema. Todos comparten el prefijo /api y el mismo contrato de
+# errores; las alertas tempranas (RF05) se incorporan en el Sprint 3.
 app.include_router(auth_router)
 app.include_router(pacientes_router)
 app.include_router(adherencia_router)
+app.include_router(prediccion_router)
 
 
 # ---------------------------------------------------------------------------

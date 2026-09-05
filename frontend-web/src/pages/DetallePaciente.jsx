@@ -1,7 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import AlertaRiesgo from '../components/AlertaRiesgo'
-import { mensajeDeError, servicioAdherencia, servicioPacientes } from '../services/api'
+import PrediccionRiesgo from '../components/PrediccionRiesgo'
+import {
+  mensajeDeError,
+  servicioAdherencia,
+  servicioPacientes,
+  servicioPrediccion,
+} from '../services/api'
 import { etiquetaAdherenciaBasal } from '../services/riesgo'
 import {
   etiquetaAseguramiento,
@@ -89,6 +95,7 @@ export default function DetallePaciente() {
   const [paciente, setPaciente] = useState(null)
   const [resumen, setResumen] = useState(null)
   const [registros, setRegistros] = useState([])
+  const [prediccion, setPrediccion] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
@@ -98,16 +105,23 @@ export default function DetallePaciente() {
     try {
       // El resumen y el historial pueden fallar de forma independiente sin
       // impedir que se muestre la ficha del paciente.
-      const [fichaRes, resumenRes, registrosRes] = await Promise.allSettled([
-        servicioPacientes.obtener(id),
-        servicioAdherencia.resumen(id),
-        servicioAdherencia.registros(id, { limite: 60 }),
-      ])
+      const [fichaRes, resumenRes, registrosRes, prediccionRes] =
+        await Promise.allSettled([
+          servicioPacientes.obtener(id),
+          servicioAdherencia.resumen(id),
+          servicioAdherencia.registros(id, { limite: 60 }),
+          servicioPrediccion.riesgo(id),
+        ])
 
       if (fichaRes.status === 'rejected') throw fichaRes.reason
       setPaciente(fichaRes.value.data)
       setResumen(resumenRes.status === 'fulfilled' ? resumenRes.value.data : null)
       setRegistros(registrosRes.status === 'fulfilled' ? registrosRes.value.data : [])
+      // Si el modelo no está disponible, la ficha se muestra igual: el resto
+      // de la consulta clínica no depende del componente inteligente.
+      setPrediccion(
+        prediccionRes.status === 'fulfilled' ? prediccionRes.value.data : null,
+      )
     } catch (fallo) {
       setError(mensajeDeError(fallo))
     } finally {
@@ -156,6 +170,7 @@ export default function DetallePaciente() {
 
       <div className="detalle">
         <div className="detalle__principal">
+          {prediccion && <PrediccionRiesgo prediccion={prediccion} />}
           <AlertaRiesgo resumen={resumen} />
 
           {resumen && resumen.total_eventos > 0 && (
