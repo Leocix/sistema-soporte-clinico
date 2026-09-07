@@ -41,6 +41,10 @@ from app.db.models import (  # noqa: E402
 
 CORREO_MEDICO = "milko.ugaz@consultorio.pe"
 
+# Marca que deja la migracion de identidad en las fichas anteriores a ella.
+# Una ficha con este valor esta a medio completar, no completa.
+RELLENO_MIGRACION = "(por registrar)"
+
 # Nombres ficticios, coherentes con el codigo D- de demostracion.
 PACIENTES_DEMO = [
     # codigo, nombres, apellidos, edad, sexo, diagnostico, nse, aseg, zona,
@@ -106,33 +110,70 @@ def crear_cuenta_de_paciente(db, paciente: Paciente, clave: str) -> Usuario | No
 
 
 def crear_demo(db, medico: Usuario, clave: str) -> None:
-    if db.query(Paciente).filter(Paciente.codigo_anonimizado.like("D-%")).first():
-        print("Los pacientes de demostracion ya existen; no se duplican.")
-        return
+    """Crea o **completa** los pacientes de demostracion.
 
+    No se limita a saltar lo que ya existe: una ficha creada antes de que la
+    identidad fuera obligatoria quedo con el relleno de la migracion y sin
+    cuenta movil, de modo que rendirse al encontrarla dejaria el sistema en
+    ese estado intermedio para siempre. Cada paso comprueba lo que falta y lo
+    completa, asi que el script puede ejecutarse las veces que haga falta.
+    """
     ahora = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
+    creados = completados = cuentas = 0
 
     for (codigo, nombres, apellidos, edad, sexo, dx, nse, aseg, zona, anios, comorb,
          farmacos, tomas, programados, perdidos, morisky) in PACIENTES_DEMO:
-        paciente = Paciente(
-            codigo_anonimizado=codigo,
-            nombres=nombres, apellidos=apellidos,
-            # `.local` es un dominio reservado que el validador rechaza.
-            correo=f"{codigo.lower()}@ejemplo.pe",
-            telefono="9" + codigo.replace("D-", "").rjust(8, "0"),
-            id_medico_tratante=medico.id_usuario,
-            edad=edad, sexo=sexo, diagnostico=dx,
-            nivel_socioeconomico=nse, aseguramiento=aseg, zona_residencia=zona,
-            tiempo_enfermedad_anios=anios, comorbilidades=comorb,
-            numero_farmacos=farmacos, tomas_dia=tomas,
-            controles_programados_6m=programados, controles_perdidos_6m=perdidos,
-            puntaje_morisky=morisky,
-            # Clasificacion segun el patron del test de Morisky-Green: el
-            # paciente adherente responde correctamente las cuatro preguntas.
-            incumplimiento_basal=morisky < 4,
+
+        paciente = (
+            db.query(Paciente).filter(Paciente.codigo_anonimizado == codigo).first()
         )
-        db.add(paciente)
-        db.flush()
+
+        if paciente is None:
+            paciente = Paciente(
+                codigo_anonimizado=codigo,
+                nombres=nombres, apellidos=apellidos,
+                # `.local` es un dominio reservado que el validador rechaza.
+                correo=f"{codigo.lower()}@ejemplo.pe",
+                telefono="9" + codigo.replace("D-", "").rjust(8, "0"),
+                id_medico_tratante=medico.id_usuario,
+                edad=edad, sexo=sexo, diagnostico=dx,
+                nivel_socioeconomico=nse, aseguramiento=aseg, zona_residencia=zona,
+                tiempo_enfermedad_anios=anios, comorbilidades=comorb,
+                numero_farmacos=farmacos, tomas_dia=tomas,
+                controles_programados_6m=programados, controles_perdidos_6m=perdidos,
+                puntaje_morisky=morisky,
+                # Clasificacion segun el patron del test de Morisky-Green: el
+                # paciente adherente responde correctamente las cuatro preguntas.
+                incumplimiento_basal=morisky < 4,
+            )
+            db.add(paciente)
+            db.flush()
+            creados += 1
+        else:
+            # Ficha preexistente: se completa lo que la migracion dejo a medias.
+            reparada = False
+            if paciente.nombres in (RELLENO_MIGRACION, "", None):
+                paciente.nombres, paciente.apellidos = nombres, apellidos
+                reparada = True
+            if not paciente.correo:
+                paciente.correo = f"{codigo.lower()}@ejemplo.pe"
+                paciente.telefono = "9" + codigo.replace("D-", "").rjust(8, "0")
+                reparada = True
+            completados += reparada
+
+        if crear_cuenta_de_paciente(db, paciente, clave) is not None:
+            cuentas += paciente.id_usuario is not None
+
+        # El historial solo se genera una vez: repetirlo duplicaria eventos y
+        # falsearia la tasa de adherencia observada.
+        tiene_historial = (
+            db.query(RegistroAdherencia)
+            .filter(RegistroAdherencia.id_paciente == paciente.id_paciente)
+            .first()
+            is not None
+        )
+        if tiene_historial:
+            continue
 
         # Catorce dias de historial: cuanto mayor es la inasistencia a
         # controles, mayor es la proporcion de omisiones, para que el panel
@@ -154,21 +195,46 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
                 )
             )
 
-        # Cada paciente de demostracion recibe su cuenta movil, de modo que la
-        # aplicacion se pueda recorrer de extremo a extremo.
-        crear_cuenta_de_paciente(db, paciente, clave)
-
     db.commit()
-    print(f"{len(PACIENTES_DEMO)} pacientes de demostracion creados con 14 dias de historial.")
+
+    if creados:
+        print(f"{creados} paciente(s) de demostracion creado(s).")
+    if completados:
+        print(f"{completados} ficha(s) preexistente(s) completada(s) con su identidad.")
     print("Cuentas de la aplicacion movil (misma contrasena que el medico):")
     for codigo, *_ in PACIENTES_DEMO:
         print(f"  {codigo.lower()}@ejemplo.pe")
 
 
+def crear_cuentas_pendientes(db, clave: str) -> None:
+    """Crea la cuenta movil de toda ficha que tenga correo y aun no la tenga.
+
+    Es lo que se ejecuta cuando el medico da de alta pacientes reales desde el
+    panel: la ficha nace con su correo, pero la cuenta de acceso a la
+    aplicacion es una entidad distinta y hay que crearla.
+    """
+    pendientes = (
+        db.query(Paciente)
+        .filter(Paciente.correo.isnot(None), Paciente.id_usuario.is_(None))
+        .all()
+    )
+    if not pendientes:
+        print("No hay fichas con correo pendientes de cuenta movil.")
+        return
+
+    for paciente in pendientes:
+        cuenta = crear_cuenta_de_paciente(db, paciente, clave)
+        if cuenta is not None:
+            print(f"  cuenta creada: {paciente.correo}  ({paciente.codigo_anonimizado})")
+    db.commit()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Carga inicial de la base clinica.")
     parser.add_argument("--demo", action="store_true",
-                        help="Crea tambien pacientes y registros de ejemplo.")
+                        help="Crea o completa los pacientes y registros de ejemplo.")
+    parser.add_argument("--cuentas", action="store_true",
+                        help="Crea la cuenta movil de las fichas que tengan correo.")
     args = parser.parse_args()
 
     clave = os.environ.get("SEED_PASSWORD")
@@ -190,6 +256,8 @@ def main() -> int:
         medico = crear_medico(db, clave)
         if args.demo:
             crear_demo(db, medico, clave)
+        if args.cuentas:
+            crear_cuentas_pendientes(db, clave)
     finally:
         db.close()
     return 0
