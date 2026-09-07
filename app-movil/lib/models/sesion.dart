@@ -1,24 +1,52 @@
-/// Cuenta con la que el paciente inicia sesion (RF01).
+/// Perfil con el que se entra en la aplicacion (RF01).
+///
+/// La aplicacion atiende a dos personas distintas: el paciente, que registra
+/// sus tomas, y su acompanante familiar, que las corrobora (RF09). No son el
+/// mismo usuario con permisos distintos sino dos recorridos separados, y el
+/// perfil es lo que decide cual se muestra.
+enum PerfilUsuario {
+  paciente('paciente'),
+  familiar('familiar');
+
+  const PerfilUsuario(this.codigo);
+
+  final String codigo;
+
+  static PerfilUsuario desdeCodigo(String? codigo) =>
+      PerfilUsuario.values.firstWhere(
+        (p) => p.codigo == codigo,
+        // Las sesiones guardadas antes de que existiera el perfil familiar no
+        // llevan el campo; todas eran de pacientes.
+        orElse: () => PerfilUsuario.paciente,
+      );
+}
+
+/// Cuenta con la que se inicia sesion (RF01).
 class Usuario {
   const Usuario({
     required this.idUsuario,
     required this.nombres,
     required this.apellidos,
     required this.correo,
+    this.perfil = PerfilUsuario.paciente,
   });
 
   final String idUsuario;
   final String nombres;
   final String apellidos;
   final String correo;
+  final PerfilUsuario perfil;
 
   String get nombreCompleto => '$nombres $apellidos'.trim();
+
+  bool get esFamiliar => perfil == PerfilUsuario.familiar;
 
   factory Usuario.desdeJson(Map<String, dynamic> json) => Usuario(
         idUsuario: json['id_usuario'] as String,
         nombres: json['nombres'] as String,
         apellidos: json['apellidos'] as String,
         correo: json['correo'] as String,
+        perfil: PerfilUsuario.desdeCodigo(json['rol'] as String?),
       );
 
   Map<String, dynamic> aJson() => {
@@ -26,6 +54,7 @@ class Usuario {
         'nombres': nombres,
         'apellidos': apellidos,
         'correo': correo,
+        'rol': perfil.codigo,
       };
 }
 

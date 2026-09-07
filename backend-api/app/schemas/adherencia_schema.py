@@ -86,6 +86,12 @@ class RegistroTomaOut(BaseModel):
     motivo_omision: str | None
     fecha_sincronizacion: datetime
 
+    # Testimonio del grupo familiar sobre el evento (RF09). Permite distinguir
+    # en el analisis una toma con dos fuentes de una que solo tiene la palabra
+    # del paciente.
+    corroborada: bool
+    fecha_confirmacion: datetime | None
+
     # Propiedades calculadas en el modelo; insumo de las caracteristicas
     # conductuales del modelo predictivo (RF04).
     cumplida: bool

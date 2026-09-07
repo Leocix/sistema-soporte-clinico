@@ -35,6 +35,7 @@ class Toma {
     required this.estado,
     this.fechaHoraRegistro,
     this.motivoOmision,
+    this.corroborada = false,
   });
 
   final String medicamento;
@@ -43,6 +44,13 @@ class Toma {
   final DateTime? fechaHoraRegistro;
   final EstadoToma estado;
   final String? motivoOmision;
+
+  /// Un familiar dio fe de esta toma (RF09).
+  ///
+  /// Solo llega desde el servidor: la corroboracion la hace otra persona en su
+  /// propio dispositivo, de modo que un evento recien creado en el telefono
+  /// del paciente nace siempre sin corroborar.
+  final bool corroborada;
 
   /// Clave local del evento; coincide con la que usa el servidor.
   String get clave =>
@@ -135,6 +143,7 @@ class Toma {
             : DateTime.parse(json['fecha_hora_registro'] as String).toLocal(),
         estado: EstadoToma.desdeCodigo(json['estado'] as String),
         motivoOmision: json['motivo_omision'] as String?,
+        corroborada: (json['corroborada'] as bool?) ?? false,
       );
 }
 

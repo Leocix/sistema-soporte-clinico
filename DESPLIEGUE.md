@@ -9,7 +9,7 @@ Milko Ugaz Zegarra.
 | Base de datos PostgreSQL | Aiven (o PostgreSQL de Render) | Listo para aprovisionar |
 | API Gateway (FastAPI) | Render | Configurado (`render.yaml`) |
 | Panel médico (React + Vite) | Vercel | Configurado (`frontend-web/vercel.json`) |
-| App del paciente (Flutter) | APK / Play Store interno | Pendiente de construcción |
+| App del paciente y su familia (Flutter) | APK / Play Store interno | APK de publicación construido |
 
 El orden importa: **base de datos → API → panel web**. Cada paso necesita la
 URL que produce el anterior.
@@ -226,3 +226,4 @@ el Sprint 3.
 - [ ] `CORS_ORIGINS` apuntando al dominio real del panel
 - [ ] Servicio de Render despierto
 - [ ] Pacientes de demostración (`D-`) retirados si se muestran datos reales
+- [ ] APK reconstruido tras el último cambio: `flutter build apk --release`

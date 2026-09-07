@@ -28,6 +28,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from .api.adherencia import router as adherencia_router
 from .api.auth import router as auth_router
+from .api.familiares import router as familiares_router
 from .api.pacientes import router as pacientes_router
 from .api.prediccion import router as prediccion_router
 from .core.config import settings
@@ -183,6 +184,7 @@ register_exception_handlers(app)
 app.include_router(auth_router)
 app.include_router(pacientes_router)
 app.include_router(adherencia_router)
+app.include_router(familiares_router)
 app.include_router(prediccion_router)
 
 

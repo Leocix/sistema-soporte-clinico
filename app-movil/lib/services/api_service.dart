@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../models/familia.dart';
 import '../models/resumen_adherencia.dart';
 import '../models/sesion.dart';
 import '../models/toma.dart';
@@ -126,15 +127,17 @@ class ServicioApi {
 
   // --- Sesion (RF01) -------------------------------------------------------
 
-  /// Inicia sesion con perfil de paciente.
+  /// Inicia sesion con perfil de paciente o de acompanante familiar.
   ///
-  /// El perfil viaja fijo: esta aplicacion no atiende al personal medico, que
-  /// usa el panel web. Un medico que intente entrar aqui recibe el mismo 401
-  /// generico que una credencial equivocada.
+  /// El perfil lo declara quien entra, igual que en el panel web. Nunca es
+  /// `medico`: esta aplicacion no atiende al personal clinico, y un medico que
+  /// intente entrar aqui recibe el mismo 401 generico que una credencial
+  /// equivocada.
   Future<({String token, Usuario usuario})> iniciarSesion(
     String correo,
-    String contrasena,
-  ) async {
+    String contrasena, {
+    PerfilUsuario perfil = PerfilUsuario.paciente,
+  }) async {
     final datos = await _enviar(
       () => _cliente.post(
         _uri('/api/auth/login'),
@@ -142,7 +145,7 @@ class ServicioApi {
         body: jsonEncode({
           'correo': correo,
           'contrasena': contrasena,
-          'perfil': 'paciente',
+          'perfil': perfil.codigo,
         }),
       ),
     ) as Map<String, dynamic>;
@@ -232,6 +235,124 @@ class ServicioApi {
     return (
       creados: datos['creados'] as int,
       actualizados: datos['actualizados'] as int,
+    );
+  }
+
+  // --- Grupo familiar de acompanamiento (RF09) -----------------------------
+
+  /// Emite el codigo con el que un familiar creara su cuenta.
+  Future<Acompanante> invitarFamiliar({
+    required String nombre,
+    required Parentesco parentesco,
+  }) async {
+    final datos = await _enviar(
+      () => _cliente.post(
+        _uri('/api/familiares/invitaciones'),
+        headers: _cabeceras,
+        body: jsonEncode({
+          'nombre_invitado': nombre,
+          'parentesco': parentesco.codigo,
+        }),
+      ),
+    ) as Map<String, dynamic>;
+    return Acompanante.desdeJson(datos);
+  }
+
+  Future<List<Acompanante>> miGrupoFamiliar() async {
+    final datos = await _enviar(
+      () => _cliente.get(_uri('/api/familiares'), headers: _cabeceras),
+    ) as List<dynamic>;
+    return datos
+        .whereType<Map<String, dynamic>>()
+        .map(Acompanante.desdeJson)
+        .toList();
+  }
+
+  Future<void> retirarFamiliar(String idAcompanante) async {
+    await _enviar(
+      () => _cliente.delete(
+        _uri('/api/familiares/$idAcompanante'),
+        headers: _cabeceras,
+      ),
+    );
+  }
+
+  /// Canjea el codigo creando la cuenta del acompanante.
+  ///
+  /// Es la unica via de alta de cuentas: sin una invitacion vigente emitida
+  /// por un paciente, esta llamada no crea nada.
+  Future<({String token, Usuario usuario})> registrarFamiliar({
+    required String codigo,
+    required String nombres,
+    required String apellidos,
+    required String correo,
+    required String contrasena,
+  }) async {
+    final datos = await _enviar(
+      () => _cliente.post(
+        _uri('/api/familiares/registro'),
+        headers: _cabeceras,
+        body: jsonEncode({
+          'codigo': codigo,
+          'nombres': nombres,
+          'apellidos': apellidos,
+          'correo': correo,
+          'contrasena': contrasena,
+        }),
+      ),
+    ) as Map<String, dynamic>;
+
+    return (
+      token: datos['access_token'] as String,
+      usuario: Usuario.desdeJson(datos['usuario'] as Map<String, dynamic>),
+    );
+  }
+
+  /// Anade otro paciente al acompanante que ya tiene cuenta.
+  Future<PacienteAcompanado> unirseConCodigo(String codigo) async {
+    final datos = await _enviar(
+      () => _cliente.post(
+        _uri('/api/familiares/vinculaciones'),
+        headers: _cabeceras,
+        body: jsonEncode({'codigo': codigo}),
+      ),
+    ) as Map<String, dynamic>;
+    return PacienteAcompanado.desdeJson(datos);
+  }
+
+  Future<List<PacienteAcompanado>> misPacientes() async {
+    final datos = await _enviar(
+      () => _cliente.get(
+        _uri('/api/familiares/mis-pacientes'),
+        headers: _cabeceras,
+      ),
+    ) as List<dynamic>;
+    return datos
+        .whereType<Map<String, dynamic>>()
+        .map(PacienteAcompanado.desdeJson)
+        .toList();
+  }
+
+  Future<List<TomaPorConfirmar>> tomasPorConfirmar() async {
+    final datos = await _enviar(
+      () => _cliente.get(
+        _uri('/api/familiares/tomas-por-confirmar'),
+        headers: _cabeceras,
+      ),
+    ) as List<dynamic>;
+    return datos
+        .whereType<Map<String, dynamic>>()
+        .map(TomaPorConfirmar.desdeJson)
+        .toList();
+  }
+
+  /// Anade el testimonio del acompanante a una toma ya reportada.
+  Future<void> confirmarToma(String idRegistro) async {
+    await _enviar(
+      () => _cliente.post(
+        _uri('/api/familiares/tomas/$idRegistro/confirmacion'),
+        headers: _cabeceras,
+      ),
     );
   }
 

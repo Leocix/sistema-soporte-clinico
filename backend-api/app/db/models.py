@@ -68,10 +68,19 @@ def _enum(enum_cls, nombre: str) -> SAEnum:
 # Enumeraciones del dominio clinico (Anexo n.o 04)
 # ---------------------------------------------------------------------------
 class Rol(str, enum.Enum):
-    """Perfiles del control de acceso basado en roles (RBAC)."""
+    """Perfiles del control de acceso basado en roles (RBAC).
+
+    ``FAMILIAR`` es el acompanante del paciente en el hogar (RF09). Se modela
+    como un perfil propio y no como un paciente con permisos anadidos: no
+    tiene ficha clinica, no registra tomas y solo puede corroborar las que el
+    paciente ya reporto. Confundir ambos perfiles permitiria a un tercero
+    reportar tomas en nombre del paciente, que es justo lo contrario de lo que
+    busca la corroboracion.
+    """
 
     MEDICO = "medico"
     PACIENTE = "paciente"
+    FAMILIAR = "familiar"
 
 
 class Sexo(str, enum.Enum):
@@ -100,6 +109,30 @@ class Diagnostico(str, enum.Enum):
     HTA = "hta"
     DM2 = "dm2"
     AMBAS = "ambas"
+
+
+class Parentesco(str, enum.Enum):
+    """Vinculo del acompanante con el paciente.
+
+    Es una variable de la dimension *social y familiar* del modelo
+    multidimensional de la OMS: el apoyo del entorno es uno de los factores
+    que la literatura asocia a la adherencia, de modo que el parentesco no es
+    un adorno de la interfaz sino un dato del estudio.
+    """
+
+    CONYUGE = "conyuge"
+    HIJO = "hijo"
+    HERMANO = "hermano"
+    CUIDADOR = "cuidador"
+    OTRO = "otro"
+
+
+class EstadoAcompanante(str, enum.Enum):
+    """Ciclo de vida de la pertenencia al grupo familiar."""
+
+    INVITADO = "invitado"
+    ACTIVO = "activo"
+    REVOCADO = "revocado"
 
 
 class EstadoToma(str, enum.Enum):
@@ -265,6 +298,11 @@ class Paciente(Base):
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
+    acompanantes: Mapped[list[Acompanante]] = relationship(
+        back_populates="paciente",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
 
     @property
     def nombre_completo(self) -> str:
@@ -331,6 +369,18 @@ class RegistroAdherencia(Base):
     )
     motivo_omision: Mapped[str | None] = mapped_column(Text)
 
+    # --- Corroboracion por el grupo familiar (RF09) -----------------------
+    # El autorreporte es el punto debil reconocido de toda medicion de
+    # adherencia: el paciente puede marcar una toma que no ocurrio, por olvido
+    # de lo que hizo o por deseo de agradar a su medico. Que un conviviente
+    # confirme el evento no lo convierte en una medida objetiva, pero anade un
+    # segundo testigo y permite distinguir en el analisis las tomas
+    # corroboradas de las que solo tienen la palabra del paciente.
+    id_confirmante: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("usuarios.id_usuario", ondelete="SET NULL")
+    )
+    fecha_confirmacion: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
     # Trazabilidad de la sincronizacion offline de la app Flutter.
     sincronizado: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
     fecha_sincronizacion: Mapped[datetime] = mapped_column(
@@ -338,6 +388,12 @@ class RegistroAdherencia(Base):
     )
 
     paciente: Mapped[Paciente] = relationship(back_populates="registros")
+    confirmante: Mapped[Usuario | None] = relationship(foreign_keys=[id_confirmante])
+
+    @property
+    def corroborada(self) -> bool:
+        """La toma cuenta con el testimonio de un acompanante, no solo el propio."""
+        return self.id_confirmante is not None
 
     @property
     def cumplida(self) -> bool:
@@ -355,3 +411,103 @@ class RegistroAdherencia(Base):
 
     def __repr__(self) -> str:  # pragma: no cover - ayuda de depuracion
         return f"<RegistroAdherencia medicamento={self.medicamento} estado={self.estado.value}>"
+
+
+# ---------------------------------------------------------------------------
+# RF09 - Grupo familiar de acompanamiento
+# ---------------------------------------------------------------------------
+class Acompanante(Base):
+    """Familiar o cuidador que acompana al paciente en el domicilio (RF09).
+
+    Responde a la debilidad de fondo del registro de adherencia: hasta ahora
+    la unica fuente de la toma era el propio paciente. El acompanante corrobora
+    lo reportado, de modo que el evento pase de autorreporte a reporte con
+    testigo.
+
+    La invitacion y la pertenencia son **la misma fila** en dos momentos de su
+    ciclo de vida, no dos tablas. El paciente crea la fila con un codigo y sin
+    usuario (``INVITADO``); cuando el familiar canjea ese codigo, la misma fila
+    recibe la cuenta recien creada y pasa a ``ACTIVO``. Separarlas obligaria a
+    mantener sincronizados dos estados que siempre describen lo mismo.
+
+    El codigo es ademas la unica puerta de alta de cuentas del sistema: no hay
+    registro abierto: sin una invitacion vigente emitida por un paciente no se
+    puede crear ninguna cuenta de familiar.
+    """
+
+    __tablename__ = "acompanantes"
+    __table_args__ = (
+        # Un mismo familiar no puede figurar dos veces en el grupo del mismo
+        # paciente. Las invitaciones sin canjear llevan `id_usuario` nulo y no
+        # colisionan entre si, que es lo deseable: pueden coexistir varias.
+        UniqueConstraint(
+            "id_paciente", "id_usuario", name="uq_acompanante_paciente_usuario"
+        ),
+        # Una invitacion no canjeada no tiene cuenta detras; una pertenencia ya
+        # establecida no puede quedarse sin ella.
+        CheckConstraint(
+            "(estado = 'invitado' AND id_usuario IS NULL) "
+            "OR (estado <> 'invitado' AND id_usuario IS NOT NULL)",
+            name="ck_acompanante_vinculo_coherente",
+        ),
+        Index("ix_acompanante_paciente_estado", "id_paciente", "estado"),
+    )
+
+    id_acompanante: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=_uuid
+    )
+    id_paciente: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("pacientes.id_paciente", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    # Nulo mientras la invitacion no se canjea.
+    id_usuario: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("usuarios.id_usuario", ondelete="CASCADE")
+    )
+
+    # Como llama el paciente a quien invita, para que la invitacion pendiente
+    # sea legible antes de que exista la cuenta.
+    nombre_invitado: Mapped[str] = mapped_column(String(120), nullable=False)
+    parentesco: Mapped[Parentesco] = mapped_column(
+        _enum(Parentesco, "parentesco_acompanante"), nullable=False
+    )
+    estado: Mapped[EstadoAcompanante] = mapped_column(
+        _enum(EstadoAcompanante, "estado_acompanante"),
+        nullable=False,
+        default=EstadoAcompanante.INVITADO,
+    )
+
+    codigo_invitacion: Mapped[str] = mapped_column(
+        String(12), unique=True, index=True, nullable=False
+    )
+    # Una invitacion que no caduca es una credencial permanente circulando por
+    # WhatsApp: el codigo deja de servir aunque nadie lo revoque.
+    expira_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+    fecha_invitacion: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_ahora
+    )
+    fecha_vinculacion: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    paciente: Mapped[Paciente] = relationship(back_populates="acompanantes")
+    usuario: Mapped[Usuario | None] = relationship(foreign_keys=[id_usuario])
+
+    @property
+    def vigente(self) -> bool:
+        """La invitacion todavia admite ser canjeada."""
+        if self.estado is not EstadoAcompanante.INVITADO:
+            return False
+        expira = self.expira_en
+        if expira.tzinfo is None:
+            # SQLite devuelve la marca sin zona; se interpreta en UTC, que es
+            # como se escribio.
+            expira = expira.replace(tzinfo=timezone.utc)
+        return expira > _ahora()
+
+    def __repr__(self) -> str:  # pragma: no cover - ayuda de depuracion
+        return (
+            f"<Acompanante paciente={self.id_paciente} "
+            f"parentesco={self.parentesco.value} estado={self.estado.value}>"
+        )

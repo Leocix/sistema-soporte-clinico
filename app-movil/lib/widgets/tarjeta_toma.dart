@@ -197,6 +197,24 @@ class _Respuesta extends StatelessWidget {
                     'Motivo: ${registro.motivoOmision}',
                     style: const TextStyle(fontSize: 15, color: Tema.neutro),
                   ),
+                // Se muestra solo cuando existe. Anunciar «sin confirmar» en
+                // cada dosis convertiria el acompanamiento en una sospecha
+                // permanente sobre la palabra del paciente.
+                if (registro.corroborada)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.verified_user_outlined,
+                            size: 18, color: Tema.exito),
+                        SizedBox(width: 6),
+                        Text(
+                          'Confirmada por su familia',
+                          style: TextStyle(fontSize: 15, color: Tema.exito),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),

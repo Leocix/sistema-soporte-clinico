@@ -18,7 +18,7 @@ del repositorio.
 | **OE1** Caracterizar el proceso actual y los factores de incumplimiento | — (es la fuente del diagnóstico) | Define B1–B4 |
 | **OE2** Determinar requisitos funcionales y no funcionales | B1–B4 | RF01–RF08, RNF01–RNF06 |
 | **OE3** Determinar el algoritmo con mayor capacidad predictiva | B3 falta de analítica predictiva | RF04, RF06 |
-| **OE4** Construir el sistema integrando web, móvil y modelo | B1, B2, B4 | RF01, RF02, RF03, RF05, RF07, RF08 |
+| **OE4** Construir el sistema integrando web, móvil y modelo | B1, B2, B4 | RF01, RF02, RF03, RF05, RF07, RF08, RF09 |
 | **OE5** Evaluar la usabilidad mediante la escala SUS | — (verificación del producto) | RNF03 |
 
 ---
@@ -40,7 +40,10 @@ del repositorio.
 | RF05 | Alertas tempranas al médico | Web | — | Sprint 3 | ○ |
 | RF06 | Explicabilidad SHAP | ML/Web | — | Sprint 3 | ○ |
 | RF07 | Panel de auditoría de adherencia | Web | `frontend-web/src/pages/Dashboard.jsx` | Verificado en navegador | ◐ |
-| RF08 | Recordatorios de toma | Móvil | `app-movil/lib/services/notification_service.dart` (interfaz) | Sprint 4 | ○ |
+| RF08 | Alertas de toma programadas en el dispositivo | Móvil | `app-movil/lib/services/notification_service.dart` | 7 pruebas · permisos verificados en el APK | ✅ |
+| RF09 | Grupo familiar: invitación, alta por código y corroboración | API | `backend-api/app/api/familiares.py` | 19 pruebas | ✅ |
+| RF09 | Invitación y ciclo de vida de la pertenencia como una sola fila | Datos | `backend-api/app/db/models.py` (`Acompanante`) | Migración Alembic | ✅ |
+| RF09 | Grupo familiar del paciente y recorrido del acompañante | Móvil | `app-movil/lib/screens/familia_screen.dart`, `inicio_familiar.dart` | 7 pruebas | ✅ |
 
 ✅ terminado · ◐ parcial · ○ pendiente
 

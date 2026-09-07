@@ -15,7 +15,11 @@ import '../widgets/mensaje_estado.dart';
 /// pasara a mostrar lo prescrito en lugar de pedirselo al paciente, y lo que
 /// hoy se escribe aqui servira para migrar los datos.
 class PlanScreen extends StatefulWidget {
-  const PlanScreen({super.key});
+  const PlanScreen({super.key, this.alCambiarPlan});
+
+  /// Avisa al contenedor de que el plan cambio, para que la pestana de hoy
+  /// vuelva a construir la lista de dosis.
+  final VoidCallback? alCambiarPlan;
 
   @override
   State<PlanScreen> createState() => _PlanScreenState();
@@ -34,22 +38,39 @@ class _PlanScreenState extends State<PlanScreen> {
 
   Future<void> _cargar() async {
     final plan = await Almacenamiento.instancia.leerPlan();
-    final programados = await ServicioNotificaciones.instancia.programados();
+    // Tener avisos en cola no basta: el paciente pudo retirar el permiso desde
+    // los ajustes del telefono y esos avisos ya no sonarian.
+    final estado = await ServicioNotificaciones.instancia.estado();
     if (!mounted) return;
     setState(() {
       _plan = plan;
-      _avisosActivos = programados > 0;
+      _avisosActivos = estado.permitido && estado.avisos > 0;
       _cargando = false;
     });
   }
 
   Future<void> _guardar(List<Medicamento> plan) async {
     await Almacenamiento.instancia.guardarPlan(plan);
+
+    // El permiso se pide justo aqui, la primera vez que hay algo que recordar.
+    // Es el unico momento en que la peticion se explica sola: el paciente
+    // acaba de escribir a que hora toma su medicamento. Pedirselo al arrancar,
+    // antes de que exista un plan, es la forma mas segura de que lo deniegue.
+    if (plan.isNotEmpty && !ServicioNotificaciones.instancia.permitido) {
+      await ServicioNotificaciones.instancia.solicitarPermiso();
+    }
+
     // Los recordatorios se rehacen con cada cambio del plan: un aviso de un
     // medicamento retirado le diria al paciente que tome algo que ya no toma.
     await ServicioNotificaciones.instancia.reprogramar(plan);
+    final estado = await ServicioNotificaciones.instancia.estado();
+
     if (!mounted) return;
-    setState(() => _plan = plan);
+    setState(() {
+      _plan = plan;
+      _avisosActivos = estado.permitido && estado.avisos > 0;
+    });
+    widget.alCambiarPlan?.call();
   }
 
   /// Pide el permiso de avisos y programa los recordatorios del plan actual.
@@ -58,16 +79,17 @@ class _PlanScreenState extends State<PlanScreen> {
     if (concedido) {
       await ServicioNotificaciones.instancia.reprogramar(_plan);
     }
+    final avisos = await ServicioNotificaciones.instancia.programados();
     if (!mounted) return;
-    setState(() => _avisosActivos = concedido);
+    setState(() => _avisosActivos = concedido && avisos > 0);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           concedido
               ? 'Listo. Le avisaremos a la hora de cada toma.'
-              : 'No se activaron los avisos. Puede permitirlos desde los '
-                  'ajustes del teléfono.',
+              : 'No se activaron las alertas. Puede permitirlas desde los '
+                  'ajustes del teléfono, en Notificaciones.',
           style: const TextStyle(fontSize: 17),
         ),
         backgroundColor: concedido ? Tema.exito : Tema.aviso,
@@ -143,10 +165,10 @@ class _PlanScreenState extends State<PlanScreen> {
                 if (_plan.isNotEmpty)
                   MensajeEstado(
                     texto: _avisosActivos
-                        ? 'Sus recordatorios están activos: le avisaremos a la '
-                            'hora de cada toma.'
-                        : 'Active los recordatorios y le avisaremos a la hora '
-                            'de cada toma.',
+                        ? 'Sus alertas están activas: le avisaremos a la hora '
+                            'de cada toma, aunque no tenga internet.'
+                        : 'Las alertas están desactivadas. Actívelas y le '
+                            'avisaremos a la hora de cada toma.',
                     tono:
                         _avisosActivos ? TonoMensaje.exito : TonoMensaje.aviso,
                     textoAccion: _avisosActivos ? null : 'Activar',

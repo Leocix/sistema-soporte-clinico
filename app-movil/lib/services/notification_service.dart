@@ -69,6 +69,31 @@ class ServicioNotificaciones {
     );
 
     _iniciado = true;
+    // Se consulta el estado real del sistema, no se asume. El permiso vive en
+    // los ajustes del telefono y sobrevive al cierre de la aplicacion: darlo
+    // por denegado en cada arranque hacia que `reprogramar` no hiciera nada
+    // hasta que el paciente volviera a pulsar «Activar», de modo que cambiar
+    // una hora de toma dejaba en pie el aviso viejo sin que nada lo indicara.
+    await comprobarPermiso();
+  }
+
+  /// Estado actual del permiso segun el sistema operativo.
+  ///
+  /// El paciente puede haberlo concedido en una sesion anterior, o haberlo
+  /// retirado desde los ajustes sin pasar por la aplicacion. La unica fuente
+  /// fiable es el propio sistema.
+  Future<bool> comprobarPermiso() async {
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android = _plugin.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+      _permitido = await android?.areNotificationsEnabled() ?? false;
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin.resolvePlatformSpecificImplementation<
+          IOSFlutterLocalNotificationsPlugin>();
+      final estado = await ios?.checkPermissions();
+      _permitido = estado?.isEnabled ?? false;
+    }
+    return _permitido;
   }
 
   /// Solicita el permiso del sistema para mostrar avisos.
@@ -98,7 +123,7 @@ class ServicioNotificaciones {
   /// que tome algo que ya no toma.
   Future<void> reprogramar(List<Medicamento> plan) async {
     await iniciar();
-    if (!_permitido) return;
+    if (!_permitido && !await comprobarPermiso()) return;
 
     await _plugin.cancelAll();
 
@@ -207,6 +232,16 @@ class ServicioNotificaciones {
     await iniciar();
     final pendientes = await _plugin.pendingNotificationRequests();
     return pendientes.length;
+  }
+
+  /// Estado de los recordatorios tal como debe verlo el paciente.
+  ///
+  /// Que el permiso este concedido y que haya avisos en cola son dos cosas
+  /// distintas —se puede tener permiso y ningun medicamento registrado— y la
+  /// pantalla necesita distinguirlas para decir algo util en cada caso.
+  Future<({bool permitido, int avisos})> estado() async {
+    await iniciar();
+    return (permitido: await comprobarPermiso(), avisos: await programados());
   }
 
   Future<void> cancelarTodos() async {

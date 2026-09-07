@@ -1,4 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Sin este permiso la aplicacion no alcanza al API Gateway. Flutter lo
+         declara por su cuenta en los manifiestos de depuracion y de perfil,
+         de modo que en desarrollo todo funciona y el fallo solo aparece en la
+         version de publicacion, donde esos manifiestos no se fusionan: la
+         aplicacion arranca, inicia sesion contra la sesion guardada y muestra
+         "sin conexion" para siempre. Debe declararse aqui. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <!-- RF08 - Recordatorios de toma.
          POST_NOTIFICATIONS lo exige Android 13 (API 33) en tiempo de ejecucion.
          RECEIVE_BOOT_COMPLETED permite reprogramar los avisos tras reiniciar el

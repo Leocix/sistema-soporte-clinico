@@ -86,6 +86,33 @@ class Tema {
           ),
         ),
       ),
+      // Barra inferior de navegacion: sustituye al menu de tres puntos, que
+      // escondia funciones enteras detras de un icono sin etiqueta. Las
+      // etiquetas se muestran siempre y los iconos van a 28 puntos, por la
+      // misma razon que el resto de la interfaz (RNF03).
+      navigationBarTheme: NavigationBarThemeData(
+        height: 76,
+        backgroundColor: Colors.white,
+        indicatorColor: const Color(0xFFE8F1F8),
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (estados) => IconThemeData(
+            size: 28,
+            color: estados.contains(WidgetState.selected)
+                ? primarioOscuro
+                : neutro,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (estados) => TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: estados.contains(WidgetState.selected)
+                ? primarioOscuro
+                : neutro,
+          ),
+        ),
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,

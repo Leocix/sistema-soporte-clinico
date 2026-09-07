@@ -22,7 +22,7 @@ antes de la cita.
 | :--- | :--- | :--- |
 | [`backend-api/`](backend-api/) | API Gateway (FastAPI + PostgreSQL) | RF01–RF03 operativos |
 | [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Acceso, auditoría y ficha clínica |
-| [`app-movil/`](app-movil/) | App del paciente (Flutter) | Acceso, registro de tomas sin conexión y recordatorios |
+| [`app-movil/`](app-movil/) | App del paciente y su familia (Flutter) | Acceso, registro de tomas sin conexión, alertas y grupo familiar |
 | [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación, comparación de algoritmos y modelo en servicio |
 | [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe al 50 % |
 
@@ -38,6 +38,7 @@ antes de la cita.
 | RF06 | Explicabilidad de la predicción (SHAP) | Should | Parcial: importancia global |
 | RF07 | Panel de auditoría con reportes exportables | Should | Parcial |
 | RF08 | Recordatorios de toma al paciente | Could | Implementado |
+| RF09 | Corroboración de la toma por el grupo familiar | Should | Implementado |
 
 ## Puesta en marcha
 
@@ -71,6 +72,19 @@ cd app-movil && flutter test
 SCRUM integrado con CRISP-DM: las fases de CRISP-DM se ejecutan como sprints
 especializados dentro del flujo iterativo, sincronizando los entregables de
 software con los del modelo predictivo (enfoque MLOps).
+
+## Grupo familiar
+
+Toda la traza de adherencia del sistema es autorreporte: el paciente marca su
+propia toma. Es una mejora sustancial frente al recuerdo verbal en consulta,
+pero conserva el sesgo del autorreporte. El paciente puede invitar hasta cinco
+familiares con un código de un solo uso; el acompañante corrobora desde su
+propio teléfono las dosis que el paciente ya reportó, dentro de una ventana de
+48 horas.
+
+El acompañante **no** puede registrar tomas, cambiar su estado ni ver la ficha
+clínica: solo da fe de lo que el paciente declaró. La invitación es además la
+única vía de alta de cuentas del sistema; no existe registro abierto.
 
 ## Nota sobre los datos
 

@@ -7,6 +7,8 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cdss_adherencia/models/familia.dart';
+import 'package:cdss_adherencia/models/sesion.dart';
 import 'package:cdss_adherencia/models/toma.dart';
 import 'package:cdss_adherencia/services/api_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -31,7 +33,7 @@ http.Response _json(Object cuerpo, int estado) => http.Response(
 
 void main() {
   group('inicio de sesión', () {
-    test('envía siempre el perfil paciente y devuelve token y usuario',
+    test('por defecto entra como paciente y devuelve token y usuario',
         () async {
       late Map<String, dynamic> enviado;
 
@@ -53,10 +55,55 @@ void main() {
 
       final sesion = await api.iniciarSesion('jose@correo.pe', 'Clave12345');
 
-      // La app no ofrece elegir perfil: es exclusiva del paciente.
       expect(enviado['perfil'], 'paciente');
       expect(sesion.token, 'jwt-de-prueba');
       expect(sesion.usuario.nombreCompleto, 'José Vásquez');
+      expect(sesion.usuario.esFamiliar, isFalse);
+    });
+
+    test('el acompañante entra declarando su propio perfil', () async {
+      late Map<String, dynamic> enviado;
+
+      final api = _apiQueResponde((peticion) {
+        enviado = jsonDecode(peticion.body) as Map<String, dynamic>;
+        return _json({
+          'access_token': 'jwt-familiar',
+          'token_type': 'bearer',
+          'expira_en_minutos': 60,
+          'usuario': {
+            'id_usuario': 'u-2',
+            'nombres': 'Rosa',
+            'apellidos': 'Vásquez',
+            'correo': 'rosa@correo.pe',
+            'rol': 'familiar',
+          },
+        }, 200);
+      });
+
+      final sesion = await api.iniciarSesion(
+        'rosa@correo.pe',
+        'Clave12345',
+        perfil: PerfilUsuario.familiar,
+      );
+
+      expect(enviado['perfil'], 'familiar');
+      // Quien decide el recorrido es el rol que devuelve el servidor.
+      expect(sesion.usuario.esFamiliar, isTrue);
+    });
+
+    test('una sesión guardada sin perfil se lee como paciente', () {
+      // Las sesiones anteriores al perfil familiar no llevan el campo; darlas
+      // por familiares dejaría al paciente sin su plan de tomas.
+      final usuario = Usuario.desdeJson(const {
+        'id_usuario': 'u-1',
+        'nombres': 'José',
+        'apellidos': 'Vásquez',
+        'correo': 'jose@correo.pe',
+      });
+
+      expect(usuario.perfil, PerfilUsuario.paciente);
+      // Y al volver a guardarla ya queda con su perfil explícito.
+      expect(usuario.aJson()['rol'], 'paciente');
     });
 
     test('un 401 se reconoce como sesión expirada', () async {
@@ -256,6 +303,143 @@ void main() {
 
       expect(resultado.creados, 2);
       expect(resultado.actualizados, 1);
+    });
+  });
+
+  group('grupo familiar (RF09)', () {
+    test('la invitación viaja con el nombre y el parentesco', () async {
+      late Map<String, dynamic> enviado;
+
+      final api = _apiQueResponde((peticion) {
+        enviado = jsonDecode(peticion.body) as Map<String, dynamic>;
+        return _json({
+          'id_acompanante': 'a-1',
+          'nombre': 'Rosa Vásquez',
+          'parentesco': 'hijo',
+          'estado': 'invitado',
+          'codigo_invitacion': 'ABCD2345',
+          'expira_en': DateTime.now()
+              .add(const Duration(days: 7))
+              .toUtc()
+              .toIso8601String(),
+          'tomas_corroboradas': 0,
+        }, 201);
+      });
+
+      final acompanante = await api.invitarFamiliar(
+        nombre: 'Rosa Vásquez',
+        parentesco: Parentesco.hijo,
+      );
+
+      expect(enviado['nombre_invitado'], 'Rosa Vásquez');
+      expect(enviado['parentesco'], 'hijo');
+      expect(acompanante.pendiente, isTrue);
+      expect(acompanante.codigoInvitacion, 'ABCD2345');
+      // Se le muestra al paciente cuánto le queda para dárselo a su familiar.
+      expect(acompanante.diasParaVencer, 7);
+    });
+
+    test('un acompañante ya vinculado no expone ningún código', () {
+      final acompanante = Acompanante.desdeJson(const {
+        'id_acompanante': 'a-1',
+        'nombre': 'Rosa Vásquez',
+        'parentesco': 'hijo',
+        'estado': 'activo',
+        'correo': 'rosa@correo.pe',
+        'codigo_invitacion': null,
+        'tomas_corroboradas': 12,
+      });
+
+      expect(acompanante.pendiente, isFalse);
+      expect(acompanante.codigoInvitacion, isNull);
+      expect(acompanante.tomasCorroboradas, 12);
+    });
+
+    test('la confirmación se envía contra el registro indicado', () async {
+      late http.Request peticionRecibida;
+
+      final api = _apiQueResponde((peticion) {
+        peticionRecibida = peticion;
+        return _json({
+          'id_registro': 'r-1',
+          'paciente': 'José Vásquez',
+          'medicamento': 'Losartán 50 mg',
+          'dosis': '1 tableta',
+          'fecha_hora_programada': '2026-09-07T13:00:00Z',
+          'fecha_hora_registro': '2026-09-07T13:05:00Z',
+          'corroborada': true,
+        }, 200);
+      });
+
+      await api.confirmarToma('r-1');
+
+      expect(peticionRecibida.method, 'POST');
+      expect(
+        peticionRecibida.url.path,
+        '/api/familiares/tomas/r-1/confirmacion',
+      );
+    });
+
+    test('la toma por confirmar muestra la hora que declaró el paciente', () {
+      final toma = TomaPorConfirmar.desdeJson({
+        'id_registro': 'r-1',
+        'paciente': 'José Vásquez',
+        'medicamento': 'Losartán',
+        'dosis': '50 mg',
+        'fecha_hora_programada':
+            DateTime(2026, 9, 7, 8).toUtc().toIso8601String(),
+        'fecha_hora_registro':
+            DateTime(2026, 9, 7, 8, 25).toUtc().toIso8601String(),
+        'corroborada': false,
+      });
+
+      expect(toma.descripcion, 'Losartán · 50 mg');
+      // No la programada: el acompañante corrobora lo que el paciente declaró.
+      expect(toma.horaReportada, '08:25');
+    });
+
+    test('una toma sin hora de registro cae en la programada', () {
+      final toma = TomaPorConfirmar.desdeJson({
+        'id_registro': 'r-2',
+        'paciente': 'José Vásquez',
+        'medicamento': 'Enalapril',
+        'dosis': '',
+        'fecha_hora_programada':
+            DateTime(2026, 9, 7, 20).toUtc().toIso8601String(),
+        'fecha_hora_registro': null,
+        'corroborada': false,
+      });
+
+      expect(toma.descripcion, 'Enalapril');
+      expect(toma.horaReportada, '20:00');
+    });
+  });
+
+  group('corroboración en el historial del paciente', () {
+    test('el historial trae si la toma fue confirmada por la familia', () {
+      final toma = Toma.desdeJsonApi({
+        'medicamento': 'Losartán 50 mg',
+        'dosis': '1 tableta',
+        'fecha_hora_programada': '2026-09-07T13:00:00Z',
+        'fecha_hora_registro': '2026-09-07T13:05:00Z',
+        'estado': 'tomada',
+        'motivo_omision': null,
+        'corroborada': true,
+      });
+
+      expect(toma.corroborada, isTrue);
+    });
+
+    test('una toma recién creada en el teléfono nace sin corroborar', () {
+      final toma = Toma.cumplida(
+        medicamento: 'Losartán 50 mg',
+        dosis: '1 tableta',
+        programada: DateTime.now(),
+      );
+
+      // La corroboración la hace otra persona en su propio dispositivo.
+      expect(toma.corroborada, isFalse);
+      expect(toma.aJsonApi().containsKey('corroborada'), isFalse);
     });
   });
 }

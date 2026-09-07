@@ -12,21 +12,35 @@ import '../utils/tema.dart';
 import '../widgets/mensaje_estado.dart';
 import '../widgets/tarjeta_toma.dart';
 import 'login_screen.dart';
-import 'plan_screen.dart';
 import 'registro_toma.dart';
 
-/// Pantalla principal: las tomas de hoy y como va el cumplimiento.
+/// Pestana principal del paciente: las tomas de hoy y como va el cumplimiento.
+///
+/// Es una de las pestanas de [InicioPaciente], no una pantalla suelta: por eso
+/// no lleva ni menu de opciones ni cierre de sesion, que viven en la barra
+/// inferior. El estado se declara publico para que el contenedor pueda pedirle
+/// que se recargue al volver de la pestana de medicamentos, donde el plan del
+/// dia pudo cambiar.
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key, required this.api, required this.usuario});
+  const HomeScreen({
+    super.key,
+    required this.api,
+    required this.usuario,
+    required this.alIrAMedicamentos,
+  });
 
   final ServicioApi api;
   final Usuario usuario;
 
+  /// Lleva a la pestana del plan de tomas, en lugar de apilar otra pantalla
+  /// encima y esconder la barra inferior.
+  final VoidCallback alIrAMedicamentos;
+
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> {
   late final ServicioSincronizacion _sync = ServicioSincronizacion(widget.api);
 
   List<Medicamento> _plan = const [];
@@ -48,6 +62,10 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _cargar();
   }
+
+  /// Vuelve a leer el plan y el historial. La invoca el contenedor cuando el
+  /// paciente regresa a esta pestana.
+  Future<void> recargar() => _cargar();
 
   /// Carga el plan local y, si hay conexion, lo contrasta con el servidor.
   ///
@@ -273,22 +291,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   : const Icon(Icons.cloud_upload_outlined),
               onPressed: _sincronizando ? null : () => _sincronizar(),
             ),
-          PopupMenuButton<String>(
-            onSelected: (opcion) async {
-              if (opcion == 'plan') {
-                await Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const PlanScreen()),
-                );
-                await _cargar();
-              } else if (opcion == 'salir') {
-                await _cerrarSesion();
-              }
-            },
-            itemBuilder: (_) => const [
-              PopupMenuItem(value: 'plan', child: Text('Mis medicamentos')),
-              PopupMenuItem(value: 'salir', child: Text('Cerrar sesión')),
-            ],
-          ),
         ],
       ),
       body: RefreshIndicator(
@@ -328,16 +330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_resumen != null) _Resumen(resumen: _resumen!),
                   const SizedBox(height: 8),
                   if (_plan.isEmpty)
-                    _SinPlan(
-                      alConfigurar: () async {
-                        await Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const PlanScreen(),
-                          ),
-                        );
-                        await _cargar();
-                      },
-                    )
+                    _SinPlan(alConfigurar: widget.alIrAMedicamentos)
                   else
                     ...dosis.map(
                       (d) => TarjetaToma(

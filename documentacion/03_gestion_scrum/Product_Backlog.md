@@ -40,6 +40,7 @@ incumplimiento.
 | RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Parcial** |
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 3 | **Parcial** |
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 4 | **Terminado** |
+| RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | B1 | OE4 | 3 | **Terminado** |
 
 **Brechas del diagnóstico (OE1):** B1 ausencia de registro estructurado ·
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
@@ -56,6 +57,15 @@ RF07 figura como **parcial**: el panel de auditoría existe con indicadores,
 listado priorizado por riesgo y ficha individual, pero la exportación de
 reportes queda para el Sprint 3.
 
+RF09 no estaba en la pila inicial. Se incorporó al detectar, durante la
+construcción de RF03, que la brecha B1 quedaba solo a medias: el sistema
+sustituye el recuerdo verbal por una traza digital fechada, pero la fuente de
+esa traza sigue siendo únicamente el paciente. La corroboración por un
+conviviente añade un segundo testigo al evento y permite distinguir, en el
+análisis, las tomas respaldadas por dos personas de las que solo tienen la
+palabra del paciente. Se clasifica como **Should**: la hipótesis puede
+contrastarse sin ella, pero la calidad de la evidencia mejora con ella.
+
 ---
 
 ## 3. Requisitos no funcionales
@@ -64,7 +74,7 @@ reportes queda para el Sprint 3.
 | :---: | :--- | :--- | :--- |
 | RNF01 | Cifrado en tránsito (TLS) y en reposo (AES-256) | Seguridad | **Verificado** |
 | RNF02 | Inferencia del modelo en tiempo aceptable (≤ 2 s) | Eficiencia de desempeño | Instrumentado |
-| RNF03 | Interfaz usable para personal médico y adultos mayores | Usabilidad | Sprint 4 (SUS) |
+| RNF03 | Interfaz usable para personal médico y adultos mayores | Usabilidad | Barra inferior rotulada; medición SUS en el Sprint 4 |
 | RNF04 | Disponibilidad continua para la consulta clínica | Fiabilidad | **Verificado** |
 | RNF05 | Código modular y mantenible | Mantenibilidad | **Verificado** |
 | RNF06 | Escalado ante mayor concurrencia | Eficiencia / Portabilidad | Arquitectura preparada |
@@ -115,6 +125,22 @@ reportes queda para el Sprint 3.
 - El paciente no puede registrar tomas de un tercero.
 
 **Estado:** terminado · 12 pruebas en el API y 14 en la aplicación.
+
+### HU04 — Corroboración de la toma por un familiar
+
+> Como **paciente**, quiero que un familiar mío pueda confirmar que tomé mi
+> medicación, para que el registro no dependa solo de mi palabra.
+
+**Criterios de aceptación**
+
+- Solo el paciente invita, y puede retirar a cualquier miembro cuando quiera.
+- El código de invitación es de un solo uso y caduca a los siete días.
+- Sin un código vigente no se crea ninguna cuenta: no hay registro abierto.
+- El acompañante solo corrobora tomas que el paciente reportó como cumplidas,
+  de los pacientes que acompaña y dentro de las 48 horas siguientes.
+- El acompañante no accede a la ficha clínica ni puede registrar tomas.
+
+**Estado:** terminado · 19 pruebas en el API y 7 en la aplicación.
 
 ---
 

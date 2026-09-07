@@ -5,6 +5,7 @@
 // las pruebas del backend, que ya verifican la idempotencia del envio.
 
 import 'package:cdss_adherencia/main.dart';
+import 'package:cdss_adherencia/models/sesion.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -47,5 +48,63 @@ void main() {
     await tester.pump();
 
     expect(find.text('El correo no parece válido.'), findsOneWidget);
+  });
+
+  testWidgets('el acceso deja elegir entre paciente y familiar',
+      (tester) async {
+    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpAndSettle();
+
+    final selector = find.byType(SegmentedButton<PerfilUsuario>);
+    expect(selector, findsOneWidget);
+    expect(find.text('Soy el paciente'), findsOneWidget);
+    expect(find.text('Soy familiar'), findsOneWidget);
+
+    // Entra como paciente mientras no se toque nada: es el caso mayoritario y
+    // el usuario que menos debe tener que configurar.
+    SegmentedButton<PerfilUsuario> leer() =>
+        tester.widget(selector) as SegmentedButton<PerfilUsuario>;
+    expect(leer().selected, {PerfilUsuario.paciente});
+
+    await tester.tap(find.text('Soy familiar'));
+    await tester.pumpAndSettle();
+    expect(leer().selected, {PerfilUsuario.familiar});
+  });
+
+  testWidgets('desde el acceso se llega al alta con código', (tester) async {
+    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpAndSettle();
+
+    // El enlace queda al pie de un formulario que puede desbordar la
+    // pantalla: hay que traerlo a la vista antes de pulsarlo.
+    await tester.ensureVisible(find.text('Un familiar me dio un código'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Un familiar me dio un código'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Crear mi cuenta'), findsWidgets);
+    expect(find.text('Código'), findsOneWidget);
+  });
+
+  testWidgets('el alta con código exige el código completo', (tester) async {
+    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpAndSettle();
+
+    // El enlace queda al pie de un formulario que puede desbordar la
+    // pantalla: hay que traerlo a la vista antes de pulsarlo.
+    await tester.ensureVisible(find.text('Un familiar me dio un código'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Un familiar me dio un código'));
+    await tester.pumpAndSettle();
+
+    await tester.enterText(find.byType(TextFormField).first, 'ABC');
+
+    final boton = find.widgetWithText(FilledButton, 'Crear mi cuenta');
+    await tester.ensureVisible(boton);
+    await tester.pumpAndSettle();
+    await tester.tap(boton);
+    await tester.pump();
+
+    expect(find.text('Escriba el código completo.'), findsOneWidget);
   });
 }

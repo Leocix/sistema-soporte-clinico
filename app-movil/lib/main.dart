@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'models/sesion.dart';
-import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'services/almacenamiento.dart';
 import 'services/api_service.dart';
@@ -18,10 +17,11 @@ void main() async {
   runApp(const AplicacionPaciente());
 }
 
-/// Aplicacion del paciente del sistema de soporte clinico.
+/// Aplicacion movil del sistema de soporte clinico.
 ///
-/// Cubre RF01 (acceso con perfil de paciente) y RF03 (registro de la toma de
-/// medicamentos). Los recordatorios (RF08) llegan en el Sprint 4.
+/// Cubre RF01 (acceso con perfil diferenciado), RF03 (registro de la toma de
+/// medicamentos), RF08 (recordatorios en el dispositivo) y RF09 (grupo
+/// familiar de acompanamiento).
 class AplicacionPaciente extends StatelessWidget {
   const AplicacionPaciente({super.key});
 
@@ -124,6 +124,6 @@ class _ArranqueState extends State<_Arranque> {
     final usuario = _usuario;
     return usuario == null
         ? LoginScreen(api: _api)
-        : HomeScreen(api: _api, usuario: usuario);
+        : pantallaDeInicio(_api, usuario);
   }
 }
