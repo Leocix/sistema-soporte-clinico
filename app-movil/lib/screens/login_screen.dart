@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../services/almacenamiento.dart';
 import '../services/api_service.dart';
-import '../utils/constantes.dart';
 import '../utils/tema.dart';
 import '../widgets/mensaje_estado.dart';
 import 'home_screen.dart';
@@ -169,12 +168,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   'consultorio.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 15, color: Tema.neutro),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  Constantes.urlApi,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 12, color: Tema.neutro),
                 ),
               ],
             ),
