@@ -86,6 +86,13 @@ python scripts/seed.py
 Añade `--demo` si quieres además cinco pacientes ficticios con historial para
 recorrer el panel. Se distinguen por el prefijo `D-` frente a los reales `P-`.
 
+Ese mismo `--demo` deja preparado el grupo familiar (RF09): crea la cuenta
+`rosa.d-001@ejemplo.pe`, acompañante del paciente D-001, con parte de su
+historial ya corroborado y alguna toma pendiente de confirmar. Sirve para
+mostrar el acompañamiento desde un solo teléfono, sin necesitar un segundo
+dispositivo que canjee el código. El script puede ejecutarse las veces que
+haga falta: completa lo que falte y no duplica nada.
+
 ### 1.5. Verificar en DBeaver
 
 ```sql

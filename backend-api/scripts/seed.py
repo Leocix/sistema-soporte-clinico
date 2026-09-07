@@ -5,7 +5,7 @@ pacientes y registros de demostracion para poder recorrer el panel clinico y
 la app movil sin esperar a la extraccion documental.
 
     python scripts/seed.py                 # solo la cuenta del medico
-    python scripts/seed.py --demo          # ademas, 5 pacientes de ejemplo
+    python scripts/seed.py --demo          # ademas, 5 pacientes y un familiar
 
 Los pacientes de demostracion son ficticios y llevan codigos de la serie
 D-0NN para distinguirlos a simple vista de los pacientes reales (P-0NN): no
@@ -26,12 +26,15 @@ sys.path.insert(0, str(RAIZ))
 from app.core.security import hash_password  # noqa: E402
 from app.db.database import SessionLocal  # noqa: E402
 from app.db.models import (  # noqa: E402
+    Acompanante,
     Aseguramiento,
     Diagnostico,
+    EstadoAcompanante,
     EstadoToma,
     NivelSocioeconomico,
     OrigenRegistro,
     Paciente,
+    Parentesco,
     RegistroAdherencia,
     Rol,
     Sexo,
@@ -40,6 +43,11 @@ from app.db.models import (  # noqa: E402
 )
 
 CORREO_MEDICO = "milko.ugaz@consultorio.pe"
+
+# Acompanante de demostracion, vinculado al primer paciente ficticio. Permite
+# recorrer el grupo familiar (RF09) con un solo dispositivo, sin necesidad de
+# un segundo telefono para el familiar.
+CORREO_ACOMPANANTE = "rosa.d-001@ejemplo.pe"
 
 # Marca que deja la migracion de identidad en las fichas anteriores a ella.
 # Una ficha con este valor esta a medio completar, no completa.
@@ -206,6 +214,78 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
         print(f"  {codigo.lower()}@ejemplo.pe")
 
 
+def crear_acompanante_demo(db, clave: str) -> None:
+    """Vincula un familiar ficticio al paciente D-001 y corrobora sus tomas.
+
+    Sin esto, mostrar el acompanamiento exigiria dos telefonos: uno que invite
+    y otro que canjee el codigo. Aqui el vinculo nace ya establecido, de modo
+    que baste con entrar como familiar para ver las tomas por confirmar.
+    """
+    paciente = (
+        db.query(Paciente).filter(Paciente.codigo_anonimizado == "D-001").first()
+    )
+    if paciente is None:
+        return
+
+    cuenta = db.query(Usuario).filter(Usuario.correo == CORREO_ACOMPANANTE).first()
+    if cuenta is None:
+        cuenta = Usuario(
+            nombres="Rosa",
+            apellidos="Vasquez Diaz",
+            correo=CORREO_ACOMPANANTE,
+            hash_contrasena=hash_password(clave),
+            rol=Rol.FAMILIAR,
+        )
+        db.add(cuenta)
+        db.flush()
+
+    vinculo = (
+        db.query(Acompanante)
+        .filter(
+            Acompanante.id_paciente == paciente.id_paciente,
+            Acompanante.id_usuario == cuenta.id_usuario,
+        )
+        .first()
+    )
+    if vinculo is None:
+        db.add(
+            Acompanante(
+                id_paciente=paciente.id_paciente,
+                id_usuario=cuenta.id_usuario,
+                nombre_invitado="Rosa",
+                parentesco=Parentesco.HIJO,
+                estado=EstadoAcompanante.ACTIVO,
+                # El vinculo nace ya canjeado, pero la columna es obligatoria:
+                # el codigo forma parte de la historia de la fila.
+                codigo_invitacion="DEMOD001",
+                expira_en=datetime.now(timezone.utc) + timedelta(days=7),
+                fecha_vinculacion=datetime.now(timezone.utc),
+            )
+        )
+    elif vinculo.estado is not EstadoAcompanante.ACTIVO:
+        vinculo.estado = EstadoAcompanante.ACTIVO
+
+    # Se corroboran las tomas cumplidas mas antiguas y se dejan sin corroborar
+    # las recientes: asi el panel del familiar tiene algo que confirmar y la
+    # ficha del paciente ya muestra tomas con dos testigos.
+    corroborables = (
+        db.query(RegistroAdherencia)
+        .filter(
+            RegistroAdherencia.id_paciente == paciente.id_paciente,
+            RegistroAdherencia.estado.in_((EstadoToma.TOMADA, EstadoToma.TOMADA_TARDE)),
+            RegistroAdherencia.id_confirmante.is_(None),
+        )
+        .order_by(RegistroAdherencia.fecha_hora_programada.asc())
+        .all()
+    )
+    for registro in corroborables[:-2]:
+        registro.id_confirmante = cuenta.id_usuario
+        registro.fecha_confirmacion = registro.fecha_hora_programada
+
+    db.commit()
+    print(f"Cuenta de acompanante familiar: {CORREO_ACOMPANANTE}  (paciente D-001)")
+
+
 def crear_cuentas_pendientes(db, clave: str) -> None:
     """Crea la cuenta movil de toda ficha que tenga correo y aun no la tenga.
 
@@ -256,6 +336,7 @@ def main() -> int:
         medico = crear_medico(db, clave)
         if args.demo:
             crear_demo(db, medico, clave)
+            crear_acompanante_demo(db, clave)
         if args.cuentas:
             crear_cuentas_pendientes(db, clave)
     finally:
