@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { mensajeDeError, servicioPacientes } from '../services/api'
 
 /**
- * Alta de un paciente polimedicado (HU02).
+ * Alta y edicion de la ficha de un paciente polimedicado (HU02).
  *
- * Los limites replican los del esquema Pydantic del API para que el medico
- * reciba el aviso mientras escribe; la validacion que manda sigue siendo la
- * del backend, que ademas responde con el detalle campo por campo.
+ * El mismo formulario sirve para las dos operaciones: duplicarlo significaria
+ * mantener dos copias de las mismas reglas y que una se quedara atras. Los
+ * limites replican los del esquema Pydantic del API para que el medico reciba
+ * el aviso mientras escribe; la validacion que manda sigue siendo la del
+ * backend, que ademas responde con el detalle campo por campo.
  */
 
 const VALORES_INICIALES = {
@@ -37,26 +39,85 @@ const ENTEROS = [
   'controles_programados_6m', 'controles_perdidos_6m', 'puntaje_morisky',
 ]
 
-/** Convierte el formulario al cuerpo que espera el API, omitiendo lo vacio. */
-function construirPayload(valores) {
+/** Convierte un valor del formulario al tipo que espera el API. */
+function convertir(campo, valor) {
+  if (ENTEROS.includes(campo)) return Number.parseInt(valor, 10)
+  if (campo === 'tiempo_enfermedad_anios') return Number.parseFloat(valor)
+  if (campo === 'incumplimiento_basal') return valor === 'si'
+  return valor
+}
+
+/** Cuerpo del alta: se omite todo opcional que se dejó sin completar. */
+function payloadDeAlta(valores) {
   const payload = {}
-
   for (const [campo, valor] of Object.entries(valores)) {
-    // El API rechaza campos con cadena vacia; un opcional sin completar
-    // simplemente no se envia.
+    // El API rechaza campos con cadena vacía; un opcional sin completar
+    // simplemente no se envía.
     if (valor === '' || valor === null) continue
-
-    if (ENTEROS.includes(campo)) payload[campo] = Number.parseInt(valor, 10)
-    else if (campo === 'tiempo_enfermedad_anios') payload[campo] = Number.parseFloat(valor)
-    else if (campo === 'incumplimiento_basal') payload[campo] = valor === 'si'
-    else payload[campo] = valor
+    payload[campo] = convertir(campo, valor)
   }
-
   return payload
 }
 
-export default function FormularioPaciente({ alGuardar, alCancelar }) {
-  const [valores, setValores] = useState(VALORES_INICIALES)
+/**
+ * Cuerpo de la edición: solo lo que cambió respecto a la ficha original.
+ *
+ * El API distingue «no enviado» de «enviado como nulo», así que un campo que
+ * el médico vacía se manda explícitamente como `null` para borrarlo, mientras
+ * que lo que no tocó ni siquiera viaja. Enviar la ficha entera sobrescribiría
+ * con valores viejos cualquier cambio hecho entretanto desde otro lugar.
+ */
+function payloadDeEdicion(valores, iniciales) {
+  const payload = {}
+  for (const [campo, valor] of Object.entries(valores)) {
+    // El código anonimizado no se puede reasignar: es la clave con la que el
+    // paciente viaja al conjunto de datos y a los registros de adherencia.
+    if (campo === 'codigo_anonimizado') continue
+    if (valor === iniciales[campo]) continue
+    payload[campo] = valor === '' ? null : convertir(campo, valor)
+  }
+  return payload
+}
+
+/** Rellena el formulario con la ficha que se va a editar. */
+function valoresDesdeFicha(paciente) {
+  const texto = (v) => (v === null || v === undefined ? '' : String(v))
+  return {
+    ...VALORES_INICIALES,
+    nombres: texto(paciente.nombres),
+    apellidos: texto(paciente.apellidos),
+    documento_identidad: texto(paciente.documento_identidad),
+    telefono: texto(paciente.telefono),
+    correo: texto(paciente.correo),
+    codigo_anonimizado: texto(paciente.codigo_anonimizado),
+    edad: texto(paciente.edad),
+    sexo: paciente.sexo,
+    diagnostico: paciente.diagnostico,
+    nivel_socioeconomico: texto(paciente.nivel_socioeconomico),
+    aseguramiento: texto(paciente.aseguramiento),
+    zona_residencia: texto(paciente.zona_residencia),
+    tiempo_enfermedad_anios: texto(paciente.tiempo_enfermedad_anios),
+    comorbilidades: texto(paciente.comorbilidades),
+    numero_farmacos: texto(paciente.numero_farmacos),
+    tomas_dia: texto(paciente.tomas_dia),
+    controles_programados_6m: texto(paciente.controles_programados_6m),
+    controles_perdidos_6m: texto(paciente.controles_perdidos_6m),
+    puntaje_morisky: texto(paciente.puntaje_morisky),
+    incumplimiento_basal:
+      paciente.incumplimiento_basal === null || paciente.incumplimiento_basal === undefined
+        ? ''
+        : paciente.incumplimiento_basal
+          ? 'si'
+          : 'no',
+  }
+}
+
+export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) {
+  const edicion = Boolean(paciente)
+  const [iniciales] = useState(() =>
+    edicion ? valoresDesdeFicha(paciente) : VALORES_INICIALES,
+  )
+  const [valores, setValores] = useState(iniciales)
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
 
@@ -70,8 +131,18 @@ export default function FormularioPaciente({ alGuardar, alCancelar }) {
     setError(null)
     setEnviando(true)
     try {
-      const { data } = await servicioPacientes.crear(construirPayload(valores))
-      alGuardar(data)
+      if (edicion) {
+        const cambios = payloadDeEdicion(valores, iniciales)
+        if (Object.keys(cambios).length === 0) {
+          alCancelar()
+          return
+        }
+        const { data } = await servicioPacientes.actualizar(paciente.id_paciente, cambios)
+        alGuardar(data)
+      } else {
+        const { data } = await servicioPacientes.crear(payloadDeAlta(valores))
+        alGuardar(data)
+      }
     } catch (fallo) {
       setError(mensajeDeError(fallo))
     } finally {
@@ -83,7 +154,11 @@ export default function FormularioPaciente({ alGuardar, alCancelar }) {
     <div className="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-alta">
       <div className="modal__panel">
         <header className="modal__cabecera">
-          <h2 id="titulo-alta">Registrar paciente polimedicado</h2>
+          <h2 id="titulo-alta">
+            {edicion
+              ? `Editar ficha · ${paciente.codigo_anonimizado}`
+              : 'Registrar paciente polimedicado'}
+          </h2>
           <button type="button" className="modal__cerrar" onClick={alCancelar} aria-label="Cerrar">
             ×
           </button>
@@ -135,9 +210,13 @@ export default function FormularioPaciente({ alGuardar, alCancelar }) {
                 <input
                   name="codigo_anonimizado" value={valores.codigo_anonimizado}
                   onChange={cambiar} placeholder="Se asigna solo (P-002)"
-                  pattern="P-\d{3,6}"
+                  pattern="P-\d{3,6}" disabled={edicion} readOnly={edicion}
                 />
-                <small>Opcional. Si lo deja vacío, el sistema asigna el correlativo.</small>
+                <small>
+                  {edicion
+                    ? 'No se puede cambiar: es la clave con la que el paciente aparece en el conjunto de datos.'
+                    : 'Opcional. Si lo deja vacío, el sistema asigna el correlativo.'}
+                </small>
               </label>
 
             </div>
@@ -281,7 +360,7 @@ export default function FormularioPaciente({ alGuardar, alCancelar }) {
               Cancelar
             </button>
             <button type="submit" className="boton boton--primario" disabled={enviando}>
-              {enviando ? 'Guardando…' : 'Registrar paciente'}
+              {enviando ? 'Guardando…' : edicion ? 'Guardar cambios' : 'Registrar paciente'}
             </button>
           </footer>
         </form>

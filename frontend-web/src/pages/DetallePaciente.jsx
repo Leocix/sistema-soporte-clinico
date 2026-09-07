@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import AlertaRiesgo from '../components/AlertaRiesgo'
+import FormularioPaciente from '../components/FormularioPaciente'
 import PrediccionRiesgo from '../components/PrediccionRiesgo'
 import {
   mensajeDeError,
@@ -96,6 +97,7 @@ export default function DetallePaciente() {
   const [resumen, setResumen] = useState(null)
   const [registros, setRegistros] = useState([])
   const [prediccion, setPrediccion] = useState(null)
+  const [editando, setEditando] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
 
@@ -166,6 +168,13 @@ export default function DetallePaciente() {
             {!paciente.activo && <span className="distintivo distintivo--sin_datos"> Dado de baja</span>}
           </p>
         </div>
+        <button
+          type="button"
+          className="boton boton--primario"
+          onClick={() => setEditando(true)}
+        >
+          Editar ficha
+        </button>
       </div>
 
       <div className="detalle">
@@ -273,6 +282,20 @@ export default function DetallePaciente() {
           </section>
         </aside>
       </div>
+
+      {editando && (
+        <FormularioPaciente
+          paciente={paciente}
+          alCancelar={() => setEditando(false)}
+          alGuardar={(actualizado) => {
+            setEditando(false)
+            setPaciente(actualizado)
+            // La predicción depende de las variables que se acaban de editar,
+            // así que se recalcula en lugar de mostrar la anterior.
+            cargar()
+          }}
+        />
+      )}
     </>
   )
 }
