@@ -78,7 +78,34 @@ def crear_medico(db, clave: str) -> Usuario:
     return medico
 
 
-def crear_demo(db, medico: Usuario) -> None:
+def crear_cuenta_de_paciente(db, paciente: Paciente, clave: str) -> Usuario | None:
+    """Crea la cuenta con la que el paciente entra en la aplicacion movil.
+
+    La ficha clinica y la cuenta de acceso son entidades distintas: se puede
+    tener ficha sin cuenta —un paciente que no usa el telefono— pero no al
+    reves. Sin este paso la aplicacion movil no tiene con que iniciar sesion.
+    """
+    if not paciente.correo:
+        return None
+
+    existente = db.query(Usuario).filter(Usuario.correo == paciente.correo).first()
+    if existente is not None:
+        return existente
+
+    cuenta = Usuario(
+        nombres=paciente.nombres,
+        apellidos=paciente.apellidos,
+        correo=paciente.correo,
+        hash_contrasena=hash_password(clave),
+        rol=Rol.PACIENTE,
+    )
+    db.add(cuenta)
+    db.flush()
+    paciente.id_usuario = cuenta.id_usuario
+    return cuenta
+
+
+def crear_demo(db, medico: Usuario, clave: str) -> None:
     if db.query(Paciente).filter(Paciente.codigo_anonimizado.like("D-%")).first():
         print("Los pacientes de demostracion ya existen; no se duplican.")
         return
@@ -127,8 +154,15 @@ def crear_demo(db, medico: Usuario) -> None:
                 )
             )
 
+        # Cada paciente de demostracion recibe su cuenta movil, de modo que la
+        # aplicacion se pueda recorrer de extremo a extremo.
+        crear_cuenta_de_paciente(db, paciente, clave)
+
     db.commit()
     print(f"{len(PACIENTES_DEMO)} pacientes de demostracion creados con 14 dias de historial.")
+    print("Cuentas de la aplicacion movil (misma contrasena que el medico):")
+    for codigo, *_ in PACIENTES_DEMO:
+        print(f"  {codigo.lower()}@ejemplo.pe")
 
 
 def main() -> int:
@@ -155,7 +189,7 @@ def main() -> int:
     try:
         medico = crear_medico(db, clave)
         if args.demo:
-            crear_demo(db, medico)
+            crear_demo(db, medico, clave)
     finally:
         db.close()
     return 0

@@ -11,7 +11,19 @@ dispositivo real.
 
 ## Puesta en marcha
 
-### 1. Instalar dependencias y ejecutar
+### 1. Antes de nada: crear la cuenta del paciente
+
+La ficha clínica y la cuenta de acceso son entidades distintas. Sin cuenta no
+hay con qué iniciar sesión, así que la carga inicial la crea:
+
+```bash
+python scripts/seed.py --demo
+```
+
+Imprime los correos de acceso (`d-001@ejemplo.pe` … `d-005@ejemplo.pe`), con la
+misma contraseña que definiste en `SEED_PASSWORD`.
+
+### 2. Instalar dependencias y ejecutar
 
 ```bash
 flutter pub get
@@ -32,7 +44,7 @@ flutter run --dart-define=API_URL=http://10.0.2.2:8000
 `localhost` apuntaría al propio emulador. En un dispositivo físico usa la IP
 del equipo en la red local.
 
-### 2. Pruebas
+### 3. Pruebas
 
 ```bash
 flutter test
@@ -47,6 +59,29 @@ doctor` reporta como pendientes:
 
 ```bash
 flutter doctor --android-licenses
+```
+
+## Instalar en un teléfono Android
+
+Para la sustentación o para entregársela a un paciente, lo práctico es el APK
+en lugar del cable:
+
+```bash
+flutter build apk --release
+```
+
+Queda en `build/app/outputs/flutter-apk/app-release.apk` (~52 MB) y una copia
+lista para compartir en `entregable/cdss-adherencia.apk`.
+
+Pásalo al teléfono por cable, correo o nube, ábrelo desde el gestor de archivos
+y acepta **«Instalar aplicaciones desconocidas»** cuando Android lo pida: es lo
+normal para un APK que no viene de Play Store.
+
+El APK apunta al API en producción, así que **funciona sin el PC encendido**.
+Para que apunte a un servidor distinto hay que recompilar:
+
+```bash
+flutter build apk --release --dart-define=API_URL=https://otro-servidor
 ```
 
 ## Cómo funciona

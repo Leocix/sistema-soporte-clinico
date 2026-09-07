@@ -17,3 +17,6 @@ ml-pipeline/models/*.pkl
 node_modules/
 dist/
 .vercel
+
+# El APK se regenera con `flutter build apk --release`; no se versiona.
+app-movil/entregable/
