@@ -20,3 +20,6 @@ dist/
 
 # El APK se regenera con `flutter build apk --release`; no se versiona.
 app-movil/entregable/
+
+# Archivos de bloqueo que Word crea mientras un documento esta abierto.
+~$*
