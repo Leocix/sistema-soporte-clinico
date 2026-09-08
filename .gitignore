@@ -23,3 +23,6 @@ app-movil/entregable/
 
 # Archivos de bloqueo que Word crea mientras un documento esta abierto.
 ~$*
+
+# Dependencias del generador de diapositivas.
+documentacion/04_exposicion/node_modules/

@@ -33,15 +33,31 @@ lámina, qué programa y qué decir en cada momento— se entrega aparte.
 
 ## Regenerar
 
+La primera vez hay que instalar la dependencia; el generador la necesita y no
+viene con el repositorio:
+
 ```bash
 cd documentacion/04_exposicion
-npm install pptxgenjs
-node generar_diapositivas.js
+npm install
+npm run build
 ```
 
-El `.pptx` se regenera desde el script; si lo editas a mano, la siguiente
-ejecución sobrescribe los cambios. Para retoques puntuales antes de exponer,
-edita el `.pptx` y no vuelvas a ejecutar el generador.
+Después basta con `npm run build`. Si al ejecutarlo aparece
+`Cannot find module 'pptxgenjs'`, es que falta el `npm install` de la primera
+línea, o que se está ejecutando desde otra carpeta: el generador resuelve la
+dependencia desde el directorio en el que vive.
+
+**Cierre el `.pptx` en PowerPoint antes de regenerar.** Windows bloquea el
+archivo mientras está abierto y la escritura falla con «recurso ocupado».
+
+El `.pptx` se produce desde el script: si lo edita a mano, la siguiente
+ejecución sobrescribe los cambios. Para retoques puntuales de última hora,
+edite el `.pptx` y no vuelva a ejecutar el generador.
 
 Las cifras del guion —115 pruebas, 13 incidencias, 7 de 10 requisitos— proceden
 del pre informe final y deben actualizarse a la vez que él.
+
+## Requisitos
+
+Node 18 o superior y `pptxgenjs` 4.0.1, fijado en `package.json`. `node_modules`
+no se versiona.
