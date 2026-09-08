@@ -36,13 +36,12 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 | Autor |
 | :-: |
-| Leonardo Guzmán Salazar |
+| Leonardo Jesús Guzmán Salazar |
 | _______________________ |
 
 **4. Línea y área de la investigación**
 
-- **Área (OCDE):** Ingeniería y Tecnología – Ingeniería Eléctrica, Electrónica e Informática.
-- **Línea de investigación:** «*completar con la línea oficial registrada por la Escuela de Ingeniería de Sistemas y Computación para el ciclo 2026-II*».
+**Línea de investigación:** Desarrollo e innovación tecnológica. **Área:** Ingeniería y tecnología.
 
 **5. Fecha de presentación**
 
