@@ -44,12 +44,20 @@ class ErrorDeConexion implements Exception {
 
 /// Cliente del API Gateway.
 class ServicioApi {
-  ServicioApi({http.Client? cliente, String? urlBase})
-      : _cliente = cliente ?? http.Client(),
-        _urlBase = urlBase ?? Constantes.urlApi;
+  ServicioApi({
+    http.Client? cliente,
+    String? urlBase,
+    List<Duration>? esperasDeReintento,
+  })  : _cliente = cliente ?? http.Client(),
+        _urlBase = urlBase ?? Constantes.urlApi,
+        _esperas = esperasDeReintento ?? Constantes.esperasDeReintento;
 
   final http.Client _cliente;
   final String _urlBase;
+
+  /// Pausas antes de cada reintento de una lectura. Se inyectan para que las
+  /// pruebas no tengan que esperar de verdad.
+  final List<Duration> _esperas;
 
   String? _token;
 
@@ -65,7 +73,34 @@ class ServicioApi {
 
   /// Ejecuta la peticion y normaliza cualquier fallo a una de las dos
   /// excepciones del servicio.
-  Future<dynamic> _enviar(Future<http.Response> Function() peticion) async {
+  ///
+  /// `reintentable` solo se activa en las **lecturas**. El alojamiento gratuito
+  /// suspende el servicio tras un rato sin trafico, y mientras arranca corta las
+  /// primeras conexiones: sin reintento, abrir la aplicacion despues de unas
+  /// horas mostraba «sin conexion» a un paciente que tenia internet perfecto.
+  /// Las escrituras no se reintentan solas: un envio que fallo en el socket
+  /// pudo haber llegado igualmente al servidor, y repetirlo a ciegas es como se
+  /// duplican los datos. Para ellas esta la cola local, que reintenta de forma
+  /// explicita y con la clave de idempotencia por delante.
+  Future<dynamic> _enviar(
+    Future<http.Response> Function() peticion, {
+    bool reintentable = false,
+  }) async {
+    final intentos = reintentable ? _esperas.length + 1 : 1;
+    ErrorDeConexion? ultimoFallo;
+
+    for (var intento = 0; intento < intentos; intento++) {
+      if (intento > 0) await Future<void>.delayed(_esperas[intento - 1]);
+      try {
+        return await _enviarUnaVez(peticion);
+      } on ErrorDeConexion catch (e) {
+        ultimoFallo = e;
+      }
+    }
+    throw ultimoFallo!;
+  }
+
+  Future<dynamic> _enviarUnaVez(Future<http.Response> Function() peticion) async {
     late final http.Response respuesta;
     try {
       respuesta = await peticion().timeout(Constantes.tiempoDeEspera);
@@ -164,6 +199,7 @@ class ServicioApi {
   Future<Usuario> perfil() async {
     final datos = await _enviar(
       () => _cliente.get(_uri('/api/auth/me'), headers: _cabeceras),
+      reintentable: true,
     ) as Map<String, dynamic>;
     return Usuario.desdeJson(datos);
   }
@@ -178,6 +214,7 @@ class ServicioApi {
   Future<FichaPaciente> miFicha() async {
     final datos = await _enviar(
       () => _cliente.get(_uri('/api/pacientes/mi-ficha'), headers: _cabeceras),
+      reintentable: true,
     ) as Map<String, dynamic>;
     return FichaPaciente.desdeJson(datos);
   }
@@ -190,6 +227,7 @@ class ServicioApi {
         }),
         headers: _cabeceras,
       ),
+      reintentable: true,
     ) as Map<String, dynamic>;
     return ResumenAdherencia.desdeJson(datos);
   }
@@ -203,6 +241,7 @@ class ServicioApi {
         }),
         headers: _cabeceras,
       ),
+      reintentable: true,
     ) as List<dynamic>;
 
     return datos
@@ -291,6 +330,7 @@ class ServicioApi {
   Future<List<Acompanante>> miGrupoFamiliar() async {
     final datos = await _enviar(
       () => _cliente.get(_uri('/api/familiares'), headers: _cabeceras),
+      reintentable: true,
     ) as List<dynamic>;
     return datos
         .whereType<Map<String, dynamic>>()
@@ -356,6 +396,7 @@ class ServicioApi {
         _uri('/api/familiares/mis-pacientes'),
         headers: _cabeceras,
       ),
+      reintentable: true,
     ) as List<dynamic>;
     return datos
         .whereType<Map<String, dynamic>>()
@@ -369,6 +410,7 @@ class ServicioApi {
         _uri('/api/familiares/tomas-por-confirmar'),
         headers: _cabeceras,
       ),
+      reintentable: true,
     ) as List<dynamic>;
     return datos
         .whereType<Map<String, dynamic>>()

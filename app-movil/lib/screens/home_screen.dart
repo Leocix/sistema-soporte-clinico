@@ -86,8 +86,11 @@ class HomeScreenState extends State<HomeScreen> {
       registros = await widget.api.misRegistros(desde: _inicioDelDia);
       resumen = await widget.api.miResumen();
     } on ErrorDeConexion {
-      error = 'Sin conexión. Puede registrar sus tomas igual: se enviarán '
-          'cuando vuelva a tener internet.';
+      // No se afirma que el paciente no tenga internet: la causa mas frecuente
+      // es que el servicio este arrancando, y decirle que revise su conexion
+      // cuando su conexion esta bien es mandarlo a buscar donde no hay nada.
+      error = 'No se pudo conectar con el servidor. Puede registrar sus tomas '
+          'igual: se enviarán solas en cuanto vuelva la conexión.';
     } on ErrorApi catch (e) {
       if (e.sesionExpirada) {
         await _cerrarSesion();

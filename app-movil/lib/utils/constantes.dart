@@ -18,6 +18,18 @@ class Constantes {
   /// trafico; la primera peticion puede tardar cerca de un minuto en volver.
   static const Duration tiempoDeEspera = Duration(seconds: 90);
 
+  /// Pausas antes de cada reintento de una lectura.
+  ///
+  /// Mientras el servicio arranca no responde despacio: corta la conexion. Un
+  /// unico intento hacia que abrir la aplicacion tras unas horas mostrara «sin
+  /// conexion» a un paciente con internet perfecto. Dos reintentos espaciados
+  /// cubren el arranque sin dejar la pantalla colgada cuando de verdad no hay
+  /// red.
+  static const List<Duration> esperasDeReintento = [
+    Duration(seconds: 3),
+    Duration(seconds: 8),
+  ];
+
   // --- Claves del almacenamiento local ---
   static const String claveToken = 'cdss.token';
   static const String claveUsuario = 'cdss.usuario';

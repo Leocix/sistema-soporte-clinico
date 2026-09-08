@@ -442,4 +442,79 @@ void main() {
       expect(toma.aJsonApi().containsKey('corroborada'), isFalse);
     });
   });
+
+  group('reintento cuando el servicio está arrancando', () {
+    ServicioApi _conFallos(int fallosPrevios, {List<Duration>? esperas}) {
+      var intentos = 0;
+      return ServicioApi(
+        urlBase: _urlBase,
+        // Sin pausas reales: la prueba verifica la política, no el reloj.
+        esperasDeReintento: esperas ?? const [Duration.zero, Duration.zero],
+        cliente: MockClient((peticion) async {
+          intentos++;
+          if (intentos <= fallosPrevios) {
+            throw http.ClientException('Connection reset by peer', peticion.url);
+          }
+          return _json({
+            'id_paciente': 'p-1', 'codigo_anonimizado': 'P-001',
+            'desde': null, 'hasta': null, 'total_eventos': 4, 'cumplidos': 3,
+            'omitidos': 1, 'tasa_adherencia': 75.0, 'retraso_promedio_min': 12.0,
+            'omisiones_consecutivas': 0, 'ultima_toma_registrada': null,
+          }, 200);
+        }),
+      );
+    }
+
+    test('una lectura sobrevive a que el servicio corte las dos primeras',
+        () async {
+      // Es lo que hace el alojamiento gratuito al despertar: no responde
+      // despacio, corta la conexión. Sin reintento, el paciente veía «sin
+      // conexión» teniendo internet perfecto.
+      final resumen = await _conFallos(2).miResumen();
+
+      expect(resumen.tasaAdherencia, 75.0);
+    });
+
+    test('si el fallo persiste, se rinde y lo informa', () async {
+      await expectLater(
+        _conFallos(99).miResumen(),
+        throwsA(isA<ErrorDeConexion>()),
+      );
+    });
+
+    test('el mensaje del fallo no culpa a la conexión del paciente', () async {
+      try {
+        await _conFallos(99).miResumen();
+        fail('debía fallar');
+      } on ErrorDeConexion catch (e) {
+        expect(e.mensaje, contains('No se pudo conectar con el servidor'));
+        expect(e.mensaje.toLowerCase(), isNot(contains('su registro se guardo')));
+      }
+    });
+
+    test('una escritura NO se reintenta sola', () async {
+      // Un envío que falló en el socket pudo haber llegado igualmente:
+      // repetirlo a ciegas es como se duplican los datos. Para eso está la
+      // cola local, que reintenta con la clave de idempotencia por delante.
+      var intentos = 0;
+      final api = ServicioApi(
+        urlBase: _urlBase,
+        esperasDeReintento: const [Duration.zero, Duration.zero],
+        cliente: MockClient((peticion) async {
+          intentos++;
+          throw http.ClientException('Connection reset by peer', peticion.url);
+        }),
+      );
+
+      await expectLater(
+        api.registrarToma(Toma.cumplida(
+          medicamento: 'Losartán 50 mg',
+          dosis: '1 tableta',
+          programada: DateTime.now(),
+        )),
+        throwsA(isA<ErrorDeConexion>()),
+      );
+      expect(intentos, 1);
+    });
+  });
 }
