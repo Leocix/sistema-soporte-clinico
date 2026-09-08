@@ -77,9 +77,9 @@ void main() {
 
     // El enlace queda al pie de un formulario que puede desbordar la
     // pantalla: hay que traerlo a la vista antes de pulsarlo.
-    await tester.ensureVisible(find.text('Un familiar me dio un código'));
+    await tester.ensureVisible(find.text('Crear mi cuenta con el código'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Un familiar me dio un código'));
+    await tester.tap(find.text('Crear mi cuenta con el código'));
     await tester.pumpAndSettle();
 
     expect(find.text('Crear mi cuenta'), findsWidgets);
@@ -92,9 +92,9 @@ void main() {
 
     // El enlace queda al pie de un formulario que puede desbordar la
     // pantalla: hay que traerlo a la vista antes de pulsarlo.
-    await tester.ensureVisible(find.text('Un familiar me dio un código'));
+    await tester.ensureVisible(find.text('Crear mi cuenta con el código'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Un familiar me dio un código'));
+    await tester.tap(find.text('Crear mi cuenta con el código'));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).first, 'ABC');
@@ -106,5 +106,52 @@ void main() {
     await tester.pump();
 
     expect(find.text('Escriba el código completo.'), findsOneWidget);
+  });
+
+  testWidgets('el acceso separa entrar de crear la cuenta', (tester) async {
+    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpAndSettle();
+
+    // Arriba se entra con una cuenta que ya existe; abajo se crea la del
+    // familiar por primera vez. Sin ese rótulo las dos cosas se confunden.
+    expect(find.text('Soy familiar'), findsOneWidget);
+    expect(find.text('¿Es la primera vez que entra como familiar?'),
+        findsOneWidget);
+    expect(find.text('Crear mi cuenta con el código'), findsOneWidget);
+  });
+
+  testWidgets('el acceso ofrece recuperar la contraseña', (tester) async {
+    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpAndSettle();
+
+    final enlace = find.text('¿Olvidó su contraseña?');
+    expect(enlace, findsOneWidget);
+
+    await tester.ensureVisible(enlace);
+    await tester.pumpAndSettle();
+    await tester.tap(enlace);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recuperar el acceso'), findsOneWidget);
+    expect(
+      find.text('Le enviaremos un enlace para crear una contraseña nueva.'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('el correo escrito se arrastra al diálogo de recuperación',
+      (tester) async {
+    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpAndSettle();
+
+    // Quien pulsa «olvidé mi contraseña» suele haberlo intentado ya: repetir
+    // el correo es un paso que se le puede ahorrar.
+    await tester.enterText(
+        find.byType(TextFormField).first, 'jose@correo.pe');
+    await tester.tap(find.text('¿Olvidó su contraseña?'));
+    await tester.pumpAndSettle();
+
+    final campo = tester.widget<TextField>(find.byType(TextField).last);
+    expect(campo.controller?.text, 'jose@correo.pe');
   });
 }

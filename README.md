@@ -39,6 +39,7 @@ antes de la cita.
 | RF07 | Panel de auditoría con reportes exportables | Should | Parcial |
 | RF08 | Recordatorios de toma al paciente | Could | Implementado |
 | RF09 | Corroboración de la toma por el grupo familiar | Should | Implementado |
+| RF10 | Restablecimiento de la contraseña por correo | Should | Implementado |
 
 ## Puesta en marcha
 
@@ -85,6 +86,23 @@ propio teléfono las dosis que el paciente ya reportó, dentro de una ventana de
 El acompañante **no** puede registrar tomas, cambiar su estado ni ver la ficha
 clínica: solo da fe de lo que el paciente declaró. La invitación es además la
 única vía de alta de cuentas del sistema; no existe registro abierto.
+
+## Recuperar el acceso
+
+Olvidar la contraseña obligaba a acercarse al consultorio. Para el paciente
+tipo del estudio —adulto mayor, con frecuencia de zona rural— eso no es un
+trámite menor sino un viaje, y para el consultorio significaba ejecutar un
+script a mano por cada olvido.
+
+El sistema envía ahora un enlace de un solo uso, válido media hora, que sirve a
+los tres perfiles. La respuesta del API es idéntica exista o no la cuenta, para
+que la ruta no se convierta en un buscador de correos registrados; del enlace
+solo se guarda su resumen SHA-256, nunca el enlace.
+
+Requiere configurar un servidor de correo saliente (`SMTP_*` en
+[`DESPLIEGUE.md`](DESPLIEGUE.md)). Sin él la función se desactiva sola y el
+sistema remite al consultorio, en lugar de prometer un mensaje que nadie
+enviará.
 
 ## Nota sobre los datos
 

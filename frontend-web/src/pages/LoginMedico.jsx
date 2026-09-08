@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
 import { mensajeDeError } from '../services/api'
 
@@ -121,6 +121,10 @@ export default function LoginMedico() {
           <button type="submit" className="boton boton--primario boton--ancho" disabled={enviando}>
             {enviando ? 'Verificando…' : 'Ingresar'}
           </button>
+
+          <p className="acceso__pie">
+            <Link to="/recuperar">¿Olvidó su contraseña?</Link>
+          </p>
 
           <p className="acceso__pie">
             Los pacientes acceden desde la aplicación móvil.

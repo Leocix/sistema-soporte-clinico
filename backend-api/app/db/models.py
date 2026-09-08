@@ -511,3 +511,63 @@ class Acompanante(Base):
             f"<Acompanante paciente={self.id_paciente} "
             f"parentesco={self.parentesco.value} estado={self.estado.value}>"
         )
+
+
+# ---------------------------------------------------------------------------
+# RF10 - Restablecimiento de la contrasena
+# ---------------------------------------------------------------------------
+class Restablecimiento(Base):
+    """Permiso de un solo uso para fijar una contrasena nueva (RF10).
+
+    Del enlace que recibe el usuario **no se guarda nada legible**: la columna
+    conserva el SHA-256 del testigo, igual que la tabla de usuarios conserva el
+    hash de la contrasena y no la contrasena. Quien consiguiera leer esta tabla
+    obtendria una lista de resumenes inservibles para entrar en ninguna cuenta.
+
+    Tres condiciones lo invalidan y las tres importan: que caduque, porque un
+    enlace de recuperacion vive en una bandeja de correo que puede quedar
+    abierta; que solo sirva una vez, para que reenviar el mismo mensaje no
+    conceda un segundo acceso; y que emitir uno nuevo anule los anteriores, de
+    modo que quien no recuerda si ya lo pidio no deje varios activos a la vez.
+    """
+
+    __tablename__ = "restablecimientos"
+    __table_args__ = (
+        Index("ix_restablecimiento_usuario_uso", "id_usuario", "usado_en"),
+    )
+
+    id_restablecimiento: Mapped[str] = mapped_column(
+        String(36), primary_key=True, default=_uuid
+    )
+    id_usuario: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("usuarios.id_usuario", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # SHA-256 en hexadecimal del testigo que viaja en el enlace.
+    hash_testigo: Mapped[str] = mapped_column(
+        String(64), unique=True, index=True, nullable=False
+    )
+
+    expira_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    usado_en: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    fecha_solicitud: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_ahora
+    )
+
+    usuario: Mapped[Usuario] = relationship()
+
+    @property
+    def vigente(self) -> bool:
+        if self.usado_en is not None:
+            return False
+        expira = self.expira_en
+        if expira.tzinfo is None:
+            expira = expira.replace(tzinfo=timezone.utc)
+        return expira > _ahora()
+
+    def __repr__(self) -> str:  # pragma: no cover - ayuda de depuracion
+        # Nunca el testigo, ni siquiera su hash: este repr acaba en los logs.
+        return f"<Restablecimiento usuario={self.id_usuario} usado={self.usado_en is not None}>"

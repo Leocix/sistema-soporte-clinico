@@ -44,3 +44,47 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expira_en_minutos: int
     usuario: UsuarioOut
+
+
+# ---------------------------------------------------------------------------
+# RF10 - Restablecimiento de la contrasena
+# ---------------------------------------------------------------------------
+class RecuperacionRequest(BaseModel):
+    """Peticion de un enlace para volver a entrar."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    correo: EmailStr
+
+
+class RecuperacionResponse(BaseModel):
+    """Respuesta deliberadamente identica exista o no la cuenta.
+
+    ``correo_habilitado`` no dice nada del usuario: informa de si el servicio
+    tiene configurado un servidor de correo saliente. Sin el, la interfaz debe
+    dirigir al consultorio en lugar de prometer un mensaje que nadie enviara.
+    """
+
+    mensaje: str
+    correo_habilitado: bool
+
+
+class ConfirmarRecuperacionRequest(BaseModel):
+    """Fijacion de la contrasena nueva con el testigo del enlace."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    testigo: str = Field(min_length=20, max_length=200)
+    contrasena: str = Field(min_length=8, max_length=128)
+
+    @field_validator("contrasena")
+    @classmethod
+    def _contrasena_util(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("La contrasena no puede estar vacia.")
+        if v.strip() != v:
+            # Se escribe en un telefono, donde el teclado anade espacios al
+            # completar palabras: un espacio final invisible dejaria al usuario
+            # sin poder entrar con la contrasena que cree haber puesto.
+            raise ValueError("La contrasena no puede empezar ni terminar con espacios.")
+        return v

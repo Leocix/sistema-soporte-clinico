@@ -44,6 +44,9 @@ del repositorio.
 | RF09 | Grupo familiar: invitación, alta por código y corroboración | API | `backend-api/app/api/familiares.py` | 19 pruebas | ✅ |
 | RF09 | Invitación y ciclo de vida de la pertenencia como una sola fila | Datos | `backend-api/app/db/models.py` (`Acompanante`) | Migración Alembic | ✅ |
 | RF09 | Grupo familiar del paciente y recorrido del acompañante | Móvil | `app-movil/lib/screens/familia_screen.dart`, `inicio_familiar.dart` | 7 pruebas | ✅ |
+| RF10 | Enlace de restablecimiento de un solo uso y con caducidad | API | `backend-api/app/api/auth.py`, `services/correo.py` | 13 pruebas | ✅ |
+| RF10 | Solicitud del enlace y fijación de la contraseña nueva | Web | `frontend-web/src/pages/RecuperarClave.jsx`, `RestablecerClave.jsx` | Verificado en navegador | ✅ |
+| RF10 | Solicitud del enlace desde el acceso de la app | Móvil | `app-movil/lib/screens/login_screen.dart` | 3 pruebas | ✅ |
 
 ✅ terminado · ◐ parcial · ○ pendiente
 
@@ -57,6 +60,8 @@ del repositorio.
 | RNF01 | Secretos fuera del código; `.env` excluido del control de versiones | `core/config.py`, `.gitignore` | Auditoría previa al primer *push* |
 | RNF01 | Conexión cifrada a PostgreSQL (`sslmode=require`) | `DATABASE_URL` en Render | Conexión verificada |
 | RNF01 | Seudonimización: el dataset viaja con `codigo_anonimizado` | `app/db/models.py` | Revisión del esquema |
+| RNF01 | Del enlace de recuperación solo se guarda su resumen SHA-256 | `app/db/models.py` (`Restablecimiento`) | Prueba dedicada |
+| RNF01 | Ni el acceso ni la recuperación permiten enumerar cuentas | `app/api/auth.py` | Respuesta idéntica, verificada |
 | RNF01 | Host confiable: se rechazan cabeceras `Host` falsificadas | `app/main.py` | `403` con `Host` falso |
 | RNF02 | Latencia medida y expuesta por petición | `TrazaPeticionMiddleware` | Cabecera `X-Tiempo-Respuesta-ms` |
 | RNF03 | Tipografía de 18 pt y áreas táctiles de 56 pt en la app | `app-movil/lib/utils/tema.dart` | Pendiente de medición SUS (semana 7) |

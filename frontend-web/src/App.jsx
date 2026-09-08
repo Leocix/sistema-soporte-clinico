@@ -3,6 +3,8 @@ import { AuthProvider } from './context/AuthContext'
 import Layout from './components/Layout'
 import RutaProtegida from './components/RutaProtegida'
 import LoginMedico from './pages/LoginMedico'
+import RecuperarClave from './pages/RecuperarClave'
+import RestablecerClave from './pages/RestablecerClave'
 import Dashboard from './pages/Dashboard'
 import DetallePaciente from './pages/DetallePaciente'
 
@@ -13,6 +15,11 @@ export default function App() {
       <AuthProvider>
         <Routes>
           <Route path="/" element={<LoginMedico />} />
+
+          {/* Publicas: quien las abre es, por definicion, quien no puede
+              iniciar sesion. El enlace del correo lleva a /restablecer. */}
+          <Route path="/recuperar" element={<RecuperarClave />} />
+          <Route path="/restablecer" element={<RestablecerClave />} />
 
           <Route
             path="/panel"

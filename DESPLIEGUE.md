@@ -146,6 +146,30 @@ mano en **Environment** del panel de Render:
 | `CORS_ORIGINS` | La URL del panel en Vercel (paso 3). Déjala vacía en el primer despliegue y complétala después |
 | `ALLOWED_HOSTS` | El host que asigna Render, p. ej. `cdss-adherencia-api.onrender.com` |
 
+### 2.2.1. Correo saliente para el restablecimiento (opcional)
+
+Sin estas variables la recuperación de contraseña queda desactivada: el API lo
+dice con claridad y remite al consultorio, en vez de fingir un envío. Para
+activarla:
+
+| Variable | Valor |
+| :--- | :--- |
+| `FRONTEND_URL` | La URL del panel en Vercel, sin barra final |
+| `SMTP_HOST` | El servidor de su proveedor, p. ej. `smtp.gmail.com` |
+| `SMTP_PORT` | `587` (STARTTLS) o `465` (TLS directo) |
+| `SMTP_USUARIO` | La cuenta con la que autenticarse |
+| `SMTP_CONTRASENA` | Su contraseña o, en Gmail, una **contraseña de aplicación** |
+| `SMTP_REMITENTE` | La dirección que verá el paciente como remitente |
+
+Con Gmail hace falta verificación en dos pasos y una contraseña de aplicación
+—la contraseña normal de la cuenta no sirve para SMTP—. Se genera en
+<https://myaccount.google.com/apppasswords>. Un servicio transaccional
+(Brevo, Resend, Mailgun) funciona igual y evita que los mensajes acaben en
+correo no deseado, que es el riesgo real de enviar desde Gmail.
+
+Escriba esos valores **solo en el panel de Render**: no los pegue en el
+repositorio ni en una conversación.
+
 `ENVIRONMENT=produccion` ya viene fijado en el blueprint. Eso activa HSTS y
 **oculta `/docs`, `/redoc` y `/openapi.json`**: la documentación interactiva no
 queda expuesta en un servicio público.
@@ -234,3 +258,4 @@ el Sprint 3.
 - [ ] Servicio de Render despierto
 - [ ] Pacientes de demostración (`D-`) retirados si se muestran datos reales
 - [ ] APK reconstruido tras el último cambio: `flutter build apk --release`
+- [ ] `FRONTEND_URL` apuntando al dominio real del panel, si se activó el correo

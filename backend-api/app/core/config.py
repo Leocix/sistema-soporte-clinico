@@ -45,6 +45,22 @@ class Settings(BaseSettings):
     # --- Cabecera Host permitida (mitigacion de Host header injection) ----
     allowed_hosts: str = "*"
 
+    # --- Restablecimiento de contrasena por correo (RF10) -----------------
+    # El enlace apunta al panel web, que es la unica interfaz con navegador.
+    # El paciente y el familiar lo abren desde el correo en su telefono.
+    frontend_url: str = "http://localhost:5173"
+    minutos_vigencia_restablecimiento: int = 30
+
+    # Credenciales del servicio de correo saliente. Vacias por defecto: sin
+    # ellas la funcion se desactiva sola y el API responde que hay que acudir
+    # al consultorio, en lugar de fingir que envio un mensaje que nadie
+    # recibira.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_usuario: str = ""
+    smtp_contrasena: str = ""
+    smtp_remitente: str = ""
+
     # --- Microservicio de inferencia (RF04, RF06) -------------------------
     model_path: str = "../ml-pipeline/models/risk_model_v1.pkl"
     umbral_riesgo_alto: float = 0.70
@@ -84,6 +100,11 @@ class Settings(BaseSettings):
     @property
     def es_produccion(self) -> bool:
         return self.environment == "produccion"
+
+    @property
+    def correo_configurado(self) -> bool:
+        """Hay un servidor de correo saliente con el que enviar el enlace."""
+        return bool(self.smtp_host and self.smtp_remitente)
 
 
 @lru_cache

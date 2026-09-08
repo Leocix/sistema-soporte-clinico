@@ -46,3 +46,26 @@ services:
       # Host publico del servicio, para el middleware de host confiable.
       - key: ALLOWED_HOSTS
         sync: false
+
+      # --- Restablecimiento de contrasena por correo (RF10) ---------------
+      # Destino del enlace que se envia al usuario: el panel en Vercel, sin
+      # barra final. La ruta /restablecer la sirve el propio frontend.
+      - key: FRONTEND_URL
+        sync: false
+
+      - key: MINUTOS_VIGENCIA_RESTABLECIMIENTO
+        value: "30"
+
+      # Servidor de correo saliente. Mientras SMTP_HOST este vacio, la
+      # recuperacion se desactiva sola y el API responde que hay que acudir al
+      # consultorio, en lugar de fingir un envio que nadie recibira.
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USUARIO
+        sync: false
+      - key: SMTP_CONTRASENA
+        sync: false
+      - key: SMTP_REMITENTE
+        sync: false

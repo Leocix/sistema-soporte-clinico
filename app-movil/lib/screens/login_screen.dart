@@ -77,6 +77,57 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  /// Pide el enlace de restablecimiento para el correo que indique.
+  ///
+  /// Antes, la unica salida era acercarse al consultorio. Para el paciente
+  /// tipico del estudio —adulto mayor, a menudo de zona rural— eso no es un
+  /// tramite menor sino un viaje.
+  Future<void> _recuperarContrasena() async {
+    final correo = await showDialog<String>(
+      context: context,
+      builder: (_) => _DialogoRecuperacion(correoInicial: _correo.text.trim()),
+    );
+    if (correo == null || correo.isEmpty) return;
+
+    setState(() {
+      _enviando = true;
+      _error = null;
+    });
+
+    try {
+      final respuesta = await widget.api.solicitarRecuperacion(correo);
+      if (!mounted) return;
+      showDialog<void>(
+        context: context,
+        builder: (contexto) => AlertDialog(
+          title: Text(
+            respuesta.correoHabilitado ? 'Revise su correo' : 'Acuda al consultorio',
+          ),
+          content: Text(
+            respuesta.correoHabilitado
+                ? '${respuesta.mensaje}\n\nEl enlace vence a la media hora. '
+                    'Si no lo encuentra, mire en la carpeta de correo no '
+                    'deseado.'
+                : respuesta.mensaje,
+            style: const TextStyle(fontSize: 17, height: 1.4),
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(contexto).pop(),
+              child: const Text('Entendido'),
+            ),
+          ],
+        ),
+      );
+    } on ErrorApi catch (e) {
+      setState(() => _error = e.mensaje);
+    } on ErrorDeConexion catch (e) {
+      setState(() => _error = e.mensaje);
+    } finally {
+      if (mounted) setState(() => _enviando = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -199,15 +250,37 @@ class _LoginScreenState extends State<LoginScreen> {
                         )
                       : const Text('Ingresar'),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _enviando ? null : _recuperarContrasena,
+                  child: const Text(
+                    '¿Olvidó su contraseña?',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+
+                // Los dos caminos se separan a proposito. Arriba se *entra*
+                // con una cuenta que ya existe; aqui abajo se *crea* la del
+                // familiar por primera vez. Sin esta linea, el selector de
+                // perfil y el enlace del codigo parecen la misma cosa.
+                const Divider(height: 40),
                 const Text(
-                  'Si no recuerda sus datos de acceso, consúltelos en el '
-                  'consultorio.',
+                  '¿Es la primera vez que entra como familiar?',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Tema.primarioOscuro,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'El paciente le dio un código desde su aplicación.',
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 15, color: Tema.neutro),
                 ),
-                const Divider(height: 36),
-                TextButton.icon(
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
                   onPressed: _enviando
                       ? null
                       : () => Navigator.of(context).push(
@@ -217,16 +290,73 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                   icon: const Icon(Icons.key_outlined, size: 22),
-                  label: const Text(
-                    'Un familiar me dio un código',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  label: const Text('Crear mi cuenta con el código'),
                 ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Pide el correo al que enviar el enlace de restablecimiento.
+class _DialogoRecuperacion extends StatefulWidget {
+  const _DialogoRecuperacion({required this.correoInicial});
+
+  final String correoInicial;
+
+  @override
+  State<_DialogoRecuperacion> createState() => _DialogoRecuperacionState();
+}
+
+class _DialogoRecuperacionState extends State<_DialogoRecuperacion> {
+  late final TextEditingController _correo =
+      TextEditingController(text: widget.correoInicial);
+
+  @override
+  void dispose() {
+    _correo.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Recuperar el acceso'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Le enviaremos un enlace para crear una contraseña nueva.',
+            style: TextStyle(fontSize: 17, height: 1.4),
+          ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _correo,
+            autofocus: true,
+            keyboardType: TextInputType.emailAddress,
+            autocorrect: false,
+            style: const TextStyle(fontSize: 19),
+            decoration: const InputDecoration(
+              labelText: 'Correo electrónico',
+              prefixIcon: Icon(Icons.mail_outline),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancelar', style: TextStyle(fontSize: 17)),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(context).pop(_correo.text.trim()),
+          child: const Text('Enviar'),
+        ),
+      ],
     );
   }
 }

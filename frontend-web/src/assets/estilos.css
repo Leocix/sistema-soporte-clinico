@@ -444,6 +444,17 @@ p { margin: 0; }
 
 .campo--linea { flex-direction: column; max-width: 220px; }
 
+/* Casilla con su etiqueta al lado: el campo por defecto apila etiqueta y
+   control, que para una casilla deja el texto flotando encima. */
+.campo--casilla {
+  flex-direction: row; align-items: center; gap: 0.55rem;
+  font-size: 0.9rem; color: var(--texto-suave); cursor: pointer;
+}
+.campo--casilla input { width: auto; }
+
+/* Paginas publicas sin panel de presentacion al lado (enlace incompleto). */
+.acceso__formulario--solo { grid-column: 1 / -1; }
+
 .campo__con-boton { position: relative; display: flex; }
 .campo__con-boton input { padding-right: 3rem; }
 .campo__ojo {
@@ -542,6 +553,14 @@ p { margin: 0; }
 .mensaje--error {
   background: var(--alto-fondo); color: var(--alto);
   border: 1px solid rgba(179, 38, 30, 0.25);
+}
+.mensaje--exito {
+  background: var(--bajo-fondo); color: var(--bajo);
+  border: 1px solid rgba(18, 112, 74, 0.25);
+}
+.mensaje--aviso {
+  background: var(--medio-fondo); color: var(--medio);
+  border: 1px solid rgba(145, 97, 10, 0.25);
 }
 
 .vacio, .nota {

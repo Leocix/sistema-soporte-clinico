@@ -238,6 +238,31 @@ class ServicioApi {
     );
   }
 
+  // --- Recuperacion de la contrasena (RF10) --------------------------------
+
+  /// Pide el enlace de restablecimiento.
+  ///
+  /// La respuesta es la misma exista o no la cuenta: el servidor no confirma
+  /// que direcciones estan registradas. `correoHabilitado` no habla del
+  /// usuario sino del servicio: dice si hay un servidor de correo detras o si
+  /// hay que dirigir al paciente al consultorio.
+  Future<({String mensaje, bool correoHabilitado})> solicitarRecuperacion(
+    String correo,
+  ) async {
+    final datos = await _enviar(
+      () => _cliente.post(
+        _uri('/api/auth/recuperacion'),
+        headers: _cabeceras,
+        body: jsonEncode({'correo': correo}),
+      ),
+    ) as Map<String, dynamic>;
+
+    return (
+      mensaje: datos['mensaje'] as String,
+      correoHabilitado: (datos['correo_habilitado'] as bool?) ?? false,
+    );
+  }
+
   // --- Grupo familiar de acompanamiento (RF09) -----------------------------
 
   /// Emite el codigo con el que un familiar creara su cuenta.

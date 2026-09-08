@@ -41,6 +41,7 @@ incumplimiento.
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 3 | **Parcial** |
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 4 | **Terminado** |
 | RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | B1 | OE4 | 3 | **Terminado** |
+| RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | B4 | OE4 | 3 | **Terminado** |
 
 **Brechas del diagnóstico (OE1):** B1 ausencia de registro estructurado ·
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
@@ -56,6 +57,14 @@ explícita.
 RF07 figura como **parcial**: el panel de auditoría existe con indicadores,
 listado priorizado por riesgo y ficha individual, pero la exportación de
 reportes queda para el Sprint 3.
+
+RF10 tampoco figuraba en la pila inicial, y su origen es una observación de
+usabilidad: la pantalla de acceso remitía al consultorio a quien olvidara su
+contraseña. Para una población de adultos mayores, buena parte de ella rural,
+eso convierte un olvido en un desplazamiento; y para el consultorio, en una
+intervención manual sobre la base de datos. La recuperación por correo elimina
+las dos cosas. Es **Should** y no **Must** porque el sistema funciona sin ella,
+pero su ausencia degrada RNF03 de forma medible en la escala SUS.
 
 RF09 no estaba en la pila inicial. Se incorporó al detectar, durante la
 construcción de RF03, que la brecha B1 quedaba solo a medias: el sistema
@@ -73,6 +82,7 @@ contrastarse sin ella, pero la calidad de la evidencia mejora con ella.
 | ID | Requisito | Atributo ISO/IEC 25010 | Estado |
 | :---: | :--- | :--- | :--- |
 | RNF01 | Cifrado en tránsito (TLS) y en reposo (AES-256) | Seguridad | **Verificado** |
+| RNF01 | Credenciales y enlaces de recuperación persistidos solo como resumen | Seguridad | **Verificado** |
 | RNF02 | Inferencia del modelo en tiempo aceptable (≤ 2 s) | Eficiencia de desempeño | Instrumentado |
 | RNF03 | Interfaz usable para personal médico y adultos mayores | Usabilidad | Barra inferior rotulada; medición SUS en el Sprint 4 |
 | RNF04 | Disponibilidad continua para la consulta clínica | Fiabilidad | **Verificado** |
@@ -141,6 +151,23 @@ contrastarse sin ella, pero la calidad de la evidencia mejora con ella.
 - El acompañante no accede a la ficha clínica ni puede registrar tomas.
 
 **Estado:** terminado · 19 pruebas en el API y 7 en la aplicación.
+
+### HU05 — Recuperación del acceso
+
+> Como **usuario del sistema**, quiero recuperar mi contraseña desde mi propio
+> teléfono, para no tener que acercarme al consultorio por un olvido.
+
+**Criterios de aceptación**
+
+- La respuesta es idéntica exista o no la cuenta, de modo que la ruta no
+  permita averiguar qué direcciones están registradas.
+- El enlace caduca a los treinta minutos y solo puede usarse una vez.
+- Pedir un enlace nuevo anula los anteriores que siguieran sin usar.
+- Del enlace se persiste únicamente su resumen SHA-256.
+- Sin servidor de correo configurado, el sistema lo dice y remite al
+  consultorio en lugar de simular un envío.
+
+**Estado:** terminado · 13 pruebas en el API y 3 en la aplicación.
 
 ---
 
