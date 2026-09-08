@@ -309,6 +309,16 @@ class Paciente(Base):
         return f"{self.nombres} {self.apellidos}".strip()
 
     @property
+    def tiene_acceso_movil(self) -> bool:
+        """La ficha tiene detras una cuenta con la que entrar en la aplicacion.
+
+        Ficha y cuenta son entidades distintas: hay pacientes que no usan el
+        telefono y su ficha existe igual. El panel necesita distinguirlo para
+        ofrecer «generar acceso» o «restablecer la contrasena».
+        """
+        return self.id_usuario is not None
+
+    @property
     def es_polimedicado(self) -> bool:
         """Criterio de inclusion del estudio: cinco o mas farmacos."""
         return self.numero_farmacos >= 5

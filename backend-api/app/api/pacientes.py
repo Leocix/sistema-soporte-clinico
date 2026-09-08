@@ -8,16 +8,18 @@ su carga terapeutica". Criterio de aceptacion (Tabla V del proyecto):
 from __future__ import annotations
 
 import re
+import secrets
 
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 
 from ..core.exceptions import ConflictoError, RecursoNoEncontradoError
-from ..core.security import get_current_user, requiere_rol
+from ..core.security import get_current_user, hash_password, requiere_rol
 from ..db.database import get_db
 from ..db.models import Diagnostico, Paciente, Rol, Usuario
 from ..schemas.paciente_schema import (
+    AccesoMovilOut,
     PacienteCreate,
     PacienteOut,
     PacienteUpdate,
@@ -226,3 +228,101 @@ def dar_de_baja(
     db.commit()
     db.refresh(paciente)
     return paciente
+
+
+# ---------------------------------------------------------------------------
+# Acceso del paciente a la aplicacion movil
+# ---------------------------------------------------------------------------
+# La ficha clinica y la cuenta de acceso son entidades distintas: se puede
+# tener ficha sin cuenta —un paciente que no usa el telefono— pero no al reves.
+# Esta ruta cierra el hueco: hasta ahora la cuenta solo podia crearla un script
+# en el servidor, de modo que el medico daba de alta al paciente y no tenia con
+# que decirle como entrar.
+
+# Alfabeto sin caracteres que se confundan al dictarse o al teclearse en un
+# telefono: ni O frente a 0, ni I o l frente a 1.
+_ALFABETO_CLAVE = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+LONGITUD_CLAVE = 10
+
+
+def _clave_temporal() -> str:
+    """Contrasena legible y suficientemente larga para dictarla una vez."""
+    return "".join(secrets.choice(_ALFABETO_CLAVE) for _ in range(LONGITUD_CLAVE))
+
+
+@router.post(
+    "/{id_paciente}/acceso",
+    response_model=AccesoMovilOut,
+    status_code=status.HTTP_201_CREATED,
+    summary="Generar o restablecer el acceso del paciente a la app movil",
+)
+def generar_acceso_movil(
+    id_paciente: str,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(requiere_rol(Rol.MEDICO)),
+) -> AccesoMovilOut:
+    """Crea la cuenta movil del paciente, o le asigna una contrasena nueva.
+
+    Una sola ruta para las dos cosas a proposito. Desde la consulta, «darle
+    acceso» y «volver a darle acceso porque la olvido» son el mismo gesto, y
+    separarlos obligaria al medico a saber de antemano si la cuenta ya existia.
+
+    La contrasena se devuelve **una unica vez**. En la base queda su hash, de
+    modo que ni el medico ni el administrador pueden consultarla despues: si se
+    pierde, se genera otra.
+    """
+    paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
+
+    if not paciente.correo:
+        raise ConflictoError(
+            "La ficha no tiene correo electronico. Anadalo antes de generar el "
+            "acceso: es el usuario con el que el paciente entrara."
+        )
+    if not paciente.activo:
+        raise ConflictoError(
+            "El paciente esta dado de baja del seguimiento; no admite acceso a "
+            "la aplicacion."
+        )
+
+    correo = paciente.correo.strip().lower()
+    clave = _clave_temporal()
+
+    cuenta = paciente.usuario
+    if cuenta is None:
+        # La ficha aun no tiene cuenta. Puede existir una con ese correo si el
+        # paciente ya figuraba en el sistema por otra via.
+        ajena = db.query(Usuario).filter(func.lower(Usuario.correo) == correo).first()
+        if ajena is not None:
+            raise ConflictoError(
+                "Ese correo ya pertenece a otra cuenta del sistema. Use una "
+                "direccion distinta para este paciente."
+            )
+        cuenta = Usuario(
+            nombres=paciente.nombres,
+            apellidos=paciente.apellidos,
+            correo=correo,
+            hash_contrasena=hash_password(clave),
+            rol=Rol.PACIENTE,
+        )
+        db.add(cuenta)
+        db.flush()
+        paciente.id_usuario = cuenta.id_usuario
+        creada = True
+    else:
+        # La cuenta existe: se le asigna una contrasena nueva y se sincroniza el
+        # correo, que el medico pudo corregir en la ficha despues de crearla.
+        cuenta.hash_contrasena = hash_password(clave)
+        cuenta.correo = correo
+        cuenta.nombres = paciente.nombres
+        cuenta.apellidos = paciente.apellidos
+        cuenta.activo = True
+        creada = False
+
+    db.commit()
+
+    return AccesoMovilOut(
+        correo=correo,
+        contrasena_temporal=clave,
+        nombre_completo=paciente.nombre_completo,
+        creada=creada,
+    )

@@ -547,6 +547,31 @@ p { margin: 0; }
 .modal__cerrar:hover { color: var(--texto); }
 .modal .formulario { padding: 1.5rem 1.6rem; }
 
+/* --- Acceso a la app móvil --------------------------------------------------- */
+
+.acceso-movil h3 { margin-bottom: 0.35rem; }
+.acceso-movil__acciones { display: flex; gap: 0.6rem; margin-top: 0.9rem; }
+.acceso-movil__acciones .boton { flex: 1; }
+
+.credenciales {
+  margin: 0.9rem 0 0; display: grid; gap: 0.7rem;
+  background: var(--superficie-alt); border: 1px solid var(--borde);
+  border-radius: var(--radio-chico); padding: 0.9rem 1rem;
+}
+.credenciales > div { display: grid; gap: 0.15rem; }
+.credenciales dt {
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--texto-tenue);
+}
+.credenciales dd { margin: 0; font-size: 0.95rem; word-break: break-all; }
+/* La contraseña se dicta o se teclea a mano: monoespaciada y espaciada, para
+   que no se confundan caracteres al leerla en voz alta. */
+.credenciales__clave {
+  font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 1.15rem; font-weight: 600; letter-spacing: 0.09em;
+  color: var(--primario-oscuro);
+}
+
 /* --- Estados ---------------------------------------------------------------- */
 
 .mensaje { padding: 0.7rem 0.9rem; border-radius: var(--radio-chico); font-size: 0.88rem; }

@@ -153,6 +153,11 @@ class PacienteOut(PacienteBase):
 
     correo: str | None = None
 
+    # Si la ficha tiene ya una cuenta con la que entrar en la aplicacion. No se
+    # expone el identificador de la cuenta: al panel solo le hace falta saber
+    # si el boton debe decir «generar acceso» o «restablecer contrasena».
+    tiene_acceso_movil: bool = False
+
     id_paciente: str
     codigo_anonimizado: str
     id_usuario: str | None = None
@@ -169,3 +174,20 @@ class PaginaPacientes(BaseModel):
     pagina: int
     tamano: int
     items: list[PacienteOut]
+
+
+class AccesoMovilOut(BaseModel):
+    """Credenciales recién generadas para la aplicación del paciente.
+
+    La contraseña viaja **una sola vez**, en esta respuesta, y no vuelve a
+    estar disponible: en la base solo queda su hash. Si el paciente la pierde,
+    el médico genera otra; no hay forma de recuperarla, que es justamente lo
+    que se espera de una contraseña bien guardada.
+    """
+
+    correo: str
+    contrasena_temporal: str
+    nombre_completo: str
+    # Distingue el alta de la regeneración, para que la interfaz pueda decir
+    # con precisión qué acaba de ocurrir.
+    creada: bool

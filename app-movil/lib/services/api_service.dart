@@ -74,16 +74,21 @@ class ServicioApi {
       // (SocketException incluida) en ClientException, asi que capturar
       // SocketException directamente no atrapa nada: es este el tipo que
       // llega cuando el telefono no alcanza al servidor.
+      // Mensaje neutro a proposito. Antes hablaba de un registro guardado en el
+      // telefono, que es cierto al enviar una toma pero absurdo al iniciar
+      // sesion, que es donde mas se ve este error: el paciente leia que su
+      // registro se habia guardado cuando lo unico que habia ocurrido es que no
+      // pudo entrar. Cada pantalla anade su propio matiz.
       throw ErrorDeConexion(
-        'No se pudo conectar con el servidor. Su registro se guardo en el '
-        'telefono y se enviara automaticamente.',
+        'No se pudo conectar con el servidor. Revise su conexion a internet e '
+        'intentelo de nuevo.',
       );
     } on TimeoutException {
       // Para el paciente agotar el tiempo de espera equivale a no tener
       // conexion: en ambos casos el evento debe quedar en la cola.
       throw ErrorDeConexion(
-        'El servidor tardo demasiado en responder. Se guardo su registro y se '
-        'enviara automaticamente.',
+        'El servidor tardo demasiado en responder. Intentelo de nuevo en un '
+        'momento.',
       );
     }
 

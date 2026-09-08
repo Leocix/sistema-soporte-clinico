@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import AccesoMovil from '../components/AccesoMovil'
 import AlertaRiesgo from '../components/AlertaRiesgo'
 import FormularioPaciente from '../components/FormularioPaciente'
 import PrediccionRiesgo from '../components/PrediccionRiesgo'
@@ -275,6 +276,8 @@ export default function DetallePaciente() {
         </div>
 
         <aside className="detalle__lateral">
+          <AccesoMovil paciente={paciente} alGenerar={cargar} />
+
           <section className="tarjeta">
             <h3>Variables del Anexo n.° 04</h3>
             <p className="seccion__descripcion">
