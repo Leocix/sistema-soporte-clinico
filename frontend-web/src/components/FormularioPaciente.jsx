@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { mensajeDeError, servicioPacientes } from '../services/api'
+import { normalizarFicha, validarFicha } from '../services/validacionPaciente'
 
 /**
  * Alta y edicion de la ficha de un paciente polimedicado (HU02).
@@ -120,19 +121,65 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
   const [valores, setValores] = useState(iniciales)
   const [error, setError] = useState(null)
   const [enviando, setEnviando] = useState(false)
+  // Un campo se marca «tocado» al salir de él o al intentar guardar. Sin esto,
+  // el formulario se pintaría de rojo mientras el médico escribe la primera
+  // letra de un campo obligatorio, que es la forma más rápida de que deje de
+  // leer los avisos.
+  const [tocados, setTocados] = useState({})
+
+  const { errores, avisos } = validarFicha(valores, { edicion })
+  const hayErrores = Object.keys(errores).length > 0
 
   const cambiar = (evento) => {
     const { name, value } = evento.target
     setValores((previos) => ({ ...previos, [name]: value }))
   }
 
+  const marcarTocado = (evento) => {
+    const { name } = evento.target
+    setTocados((previos) => ({ ...previos, [name]: true }))
+  }
+
+  /** Clase del contenedor: colorea el campo solo si el médico ya pasó por él. */
+  const claseCampo = (campo) =>
+    tocados[campo] && errores[campo] ? 'campo campo--error' : 'campo'
+
+  /** Mensaje bajo el campo: el error manda sobre el aviso. */
+  const notaCampo = (campo) => {
+    if (tocados[campo] && errores[campo]) {
+      return <small className="campo__error" role="alert">{errores[campo]}</small>
+    }
+    if (avisos[campo]) {
+      return <small className="campo__aviso">{avisos[campo]}</small>
+    }
+    return null
+  }
+
   const enviar = async (evento) => {
     evento.preventDefault()
+
+    if (hayErrores) {
+      // Se marcan todos como tocados para que los mensajes aparezcan de golpe:
+      // si solo se señalara el primero, el médico corregiría uno y volvería a
+      // chocar con el siguiente.
+      setTocados(Object.fromEntries(Object.keys(errores).map((c) => [c, true])))
+      setError(
+        `Revise ${Object.keys(errores).length} dato(s) señalado(s) en rojo antes de guardar.`,
+      )
+      // Tras el repintado: en este mismo ciclo el marcado en rojo todavía no
+      // existe en el DOM, así que el foco no encontraría a dónde ir.
+      requestAnimationFrame(() => {
+        document.querySelector('.campo--error input, .campo--error select')?.focus()
+      })
+      return
+    }
+
     setError(null)
     setEnviando(true)
+    const limpios = normalizarFicha(valores)
     try {
       if (edicion) {
-        const cambios = payloadDeEdicion(valores, iniciales)
+        const cambios = payloadDeEdicion(limpios, iniciales)
         if (Object.keys(cambios).length === 0) {
           alCancelar()
           return
@@ -140,7 +187,7 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
         const { data } = await servicioPacientes.actualizar(paciente.id_paciente, cambios)
         alGuardar(data)
       } else {
-        const { data } = await servicioPacientes.crear(payloadDeAlta(valores))
+        const { data } = await servicioPacientes.crear(payloadDeAlta(limpios))
         alGuardar(data)
       }
     } catch (fallo) {
@@ -164,7 +211,14 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           </button>
         </header>
 
-        <form className="formulario" onSubmit={enviar}>
+        {/* `noValidate` deja una sola voz validando. Sin él, el navegador
+            bloquea el envío con sus propios mensajes —genéricos y en el idioma
+            del navegador— antes de que corra esta validación, y el médico ve
+            dos sistemas de avisos distintos para el mismo formulario. Los
+            atributos `min`, `max` y `required` se conservan: siguen dando las
+            flechas de los campos numéricos y el estado a los lectores de
+            pantalla. */}
+        <form className="formulario" onSubmit={enviar} noValidate>
           <p className="formulario__ayuda">
             Variables del Anexo n.°&nbsp;04. Solo se admiten pacientes con
             cinco o más fármacos prescritos (criterio de polimedicación).
@@ -173,50 +227,56 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           <fieldset className="formulario__grupo">
             <legend>Identificación del paciente</legend>
             <div className="rejilla">
-              <label className="campo">
+              <label className={claseCampo('nombres')}>
                 <span>Nombres *</span>
                 <input name="nombres" required minLength={2} maxLength={120}
-                  value={valores.nombres} onChange={cambiar} placeholder="José Luis" />
+                  value={valores.nombres} onChange={cambiar} onBlur={marcarTocado} placeholder="José Luis" />
+                {notaCampo('nombres')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('apellidos')}>
                 <span>Apellidos *</span>
                 <input name="apellidos" required minLength={2} maxLength={120}
-                  value={valores.apellidos} onChange={cambiar} placeholder="Vásquez Ríos" />
+                  value={valores.apellidos} onChange={cambiar} onBlur={marcarTocado} placeholder="Vásquez Ríos" />
+                {notaCampo('apellidos')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('documento_identidad')}>
                 <span>Documento de identidad</span>
                 <input name="documento_identidad" maxLength={20}
-                  value={valores.documento_identidad} onChange={cambiar} />
+                  value={valores.documento_identidad} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('documento_identidad')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('telefono')}>
                 <span>Teléfono</span>
                 <input name="telefono" type="tel" maxLength={25}
-                  value={valores.telefono} onChange={cambiar} placeholder="987654321" />
+                  value={valores.telefono} onChange={cambiar} onBlur={marcarTocado} placeholder="987654321" />
                 <small>Necesario para contactarle ante una alerta de riesgo.</small>
+                {notaCampo('telefono')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('correo')}>
                 <span>Correo electrónico</span>
                 <input name="correo" type="email" maxLength={180}
-                  value={valores.correo} onChange={cambiar} />
+                  value={valores.correo} onChange={cambiar} onBlur={marcarTocado} />
                 <small>Con él se le crea la cuenta de la aplicación móvil.</small>
+                {notaCampo('correo')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('codigo_anonimizado')}>
                 <span>Código anonimizado</span>
                 <input
                   name="codigo_anonimizado" value={valores.codigo_anonimizado}
-                  onChange={cambiar} placeholder="Se asigna solo (P-002)"
-                  pattern="P-\d{3,6}" disabled={edicion} readOnly={edicion}
+                  onChange={cambiar} onBlur={marcarTocado} placeholder="Se asigna solo (P-002)"
+                  pattern="[A-Z]-\d{3,6}" disabled={edicion} readOnly={edicion}
                 />
                 <small>
                   {edicion
                     ? 'No se puede cambiar: es la clave con la que el paciente aparece en el conjunto de datos.'
                     : 'Opcional. Si lo deja vacío, el sistema asigna el correlativo.'}
                 </small>
+                {notaCampo('codigo_anonimizado')}
               </label>
 
             </div>
@@ -225,18 +285,20 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           <fieldset className="formulario__grupo">
             <legend>Datos del paciente</legend>
             <div className="rejilla">
-              <label className="campo">
+              <label className={claseCampo('edad')}>
                 <span>Edad *</span>
                 <input name="edad" type="number" min="18" max="120" required
-                  value={valores.edad} onChange={cambiar} />
+                  value={valores.edad} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('edad')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('sexo')}>
                 <span>Sexo *</span>
-                <select name="sexo" value={valores.sexo} onChange={cambiar}>
+                <select name="sexo" value={valores.sexo} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="M">Masculino</option>
                   <option value="F">Femenino</option>
                 </select>
+                {notaCampo('sexo')}
               </label>
             </div>
           </fieldset>
@@ -244,25 +306,28 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           <fieldset className="formulario__grupo">
             <legend>Enfermedad</legend>
             <div className="rejilla">
-              <label className="campo">
+              <label className={claseCampo('diagnostico')}>
                 <span>Diagnóstico *</span>
-                <select name="diagnostico" value={valores.diagnostico} onChange={cambiar}>
+                <select name="diagnostico" value={valores.diagnostico} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="hta">Hipertensión arterial</option>
                   <option value="dm2">Diabetes mellitus tipo 2</option>
                   <option value="ambas">Ambas</option>
                 </select>
+                {notaCampo('diagnostico')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('tiempo_enfermedad_anios')}>
                 <span>Tiempo de enfermedad (años)</span>
                 <input name="tiempo_enfermedad_anios" type="number" step="0.5" min="0" max="80"
-                  value={valores.tiempo_enfermedad_anios} onChange={cambiar} />
+                  value={valores.tiempo_enfermedad_anios} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('tiempo_enfermedad_anios')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('comorbilidades')}>
                 <span>Comorbilidades</span>
                 <input name="comorbilidades" type="number" min="0" max="15"
-                  value={valores.comorbilidades} onChange={cambiar} />
+                  value={valores.comorbilidades} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('comorbilidades')}
               </label>
             </div>
           </fieldset>
@@ -270,17 +335,19 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           <fieldset className="formulario__grupo">
             <legend>Carga terapéutica</legend>
             <div className="rejilla">
-              <label className="campo">
+              <label className={claseCampo('numero_farmacos')}>
                 <span>N.° de fármacos prescritos *</span>
                 <input name="numero_farmacos" type="number" min="5" max="30" required
-                  value={valores.numero_farmacos} onChange={cambiar} />
+                  value={valores.numero_farmacos} onChange={cambiar} onBlur={marcarTocado} />
                 <small>Mínimo 5 (criterio de elegibilidad).</small>
+                {notaCampo('numero_farmacos')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('tomas_dia')}>
                 <span>Tomas por día *</span>
                 <input name="tomas_dia" type="number" min="1" max="20" required
-                  value={valores.tomas_dia} onChange={cambiar} />
+                  value={valores.tomas_dia} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('tomas_dia')}
               </label>
             </div>
           </fieldset>
@@ -288,33 +355,36 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           <fieldset className="formulario__grupo">
             <legend>Contexto socioeconómico</legend>
             <div className="rejilla">
-              <label className="campo">
+              <label className={claseCampo('nivel_socioeconomico')}>
                 <span>Nivel socioeconómico</span>
-                <select name="nivel_socioeconomico" value={valores.nivel_socioeconomico} onChange={cambiar}>
+                <select name="nivel_socioeconomico" value={valores.nivel_socioeconomico} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">Sin dato</option>
                   <option value="bajo">Bajo</option>
                   <option value="medio">Medio</option>
                   <option value="alto">Alto</option>
                 </select>
+                {notaCampo('nivel_socioeconomico')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('aseguramiento')}>
                 <span>Aseguramiento</span>
-                <select name="aseguramiento" value={valores.aseguramiento} onChange={cambiar}>
+                <select name="aseguramiento" value={valores.aseguramiento} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">Sin dato</option>
                   <option value="sis">SIS</option>
                   <option value="essalud">EsSalud</option>
                   <option value="ninguno">Ninguno</option>
                 </select>
+                {notaCampo('aseguramiento')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('zona_residencia')}>
                 <span>Zona de residencia</span>
-                <select name="zona_residencia" value={valores.zona_residencia} onChange={cambiar}>
+                <select name="zona_residencia" value={valores.zona_residencia} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">Sin dato</option>
                   <option value="urbana">Urbana</option>
                   <option value="rural">Rural</option>
                 </select>
+                {notaCampo('zona_residencia')}
               </label>
             </div>
           </fieldset>
@@ -322,44 +392,59 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           <fieldset className="formulario__grupo">
             <legend>Seguimiento y línea base</legend>
             <div className="rejilla">
-              <label className="campo">
+              <label className={claseCampo('controles_programados_6m')}>
                 <span>Controles programados (6 meses)</span>
                 <input name="controles_programados_6m" type="number" min="0" max="30"
-                  value={valores.controles_programados_6m} onChange={cambiar} />
+                  value={valores.controles_programados_6m} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('controles_programados_6m')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('controles_perdidos_6m')}>
                 <span>Controles perdidos (6 meses)</span>
                 <input name="controles_perdidos_6m" type="number" min="0" max="30"
-                  value={valores.controles_perdidos_6m} onChange={cambiar} />
+                  value={valores.controles_perdidos_6m} onChange={cambiar} onBlur={marcarTocado} />
                 <small>No puede superar a los programados.</small>
+                {notaCampo('controles_perdidos_6m')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('puntaje_morisky')}>
                 <span>Puntaje Morisky-Green (0–4)</span>
                 <input name="puntaje_morisky" type="number" min="0" max="4"
-                  value={valores.puntaje_morisky} onChange={cambiar} />
+                  value={valores.puntaje_morisky} onChange={cambiar} onBlur={marcarTocado} />
+                {notaCampo('puntaje_morisky')}
               </label>
 
-              <label className="campo">
+              <label className={claseCampo('incumplimiento_basal')}>
                 <span>Adherencia basal</span>
-                <select name="incumplimiento_basal" value={valores.incumplimiento_basal} onChange={cambiar}>
+                <select name="incumplimiento_basal" value={valores.incumplimiento_basal} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">No evaluada</option>
                   <option value="no">Adherente</option>
                   <option value="si">Incumplimiento</option>
                 </select>
                 <small>Según el patrón de respuestas del test, no un umbral automático.</small>
+                {notaCampo('incumplimiento_basal')}
               </label>
             </div>
           </fieldset>
 
-          {error && <p className="mensaje mensaje--error" role="alert">{error}</p>}
+          {error && (
+            <p id="resumen-errores" className="mensaje mensaje--error" role="alert">
+              {error}
+            </p>
+          )}
 
           <footer className="formulario__pie">
             <button type="button" className="boton boton--sutil" onClick={alCancelar}>
               Cancelar
             </button>
-            <button type="submit" className="boton boton--primario" disabled={enviando}>
+            <button
+              type="submit"
+              className="boton boton--primario"
+              disabled={enviando}
+              // No se deshabilita cuando hay errores: un botón inerte no explica
+              // por qué lo está. Al pulsarlo, el formulario señala qué falta.
+              aria-describedby={hayErrores ? 'resumen-errores' : undefined}
+            >
               {enviando ? 'Guardando…' : edicion ? 'Guardar cambios' : 'Registrar paciente'}
             </button>
           </footer>

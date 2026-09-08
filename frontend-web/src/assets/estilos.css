@@ -426,6 +426,27 @@ p { margin: 0; }
 .campo > span { font-weight: 600; color: var(--texto); }
 .campo small { color: var(--texto-tenue); font-size: 0.76rem; }
 
+/* Un campo con error se señala por el borde y por el texto, no solo por el
+   color: quien no distingue el rojo debe poder localizarlo igual. */
+.campo--error input,
+.campo--error select {
+  border-color: var(--alto);
+  background: var(--alto-fondo);
+}
+.campo--error input:focus,
+.campo--error select:focus { outline-color: var(--alto); }
+
+.campo__error {
+  color: var(--alto) !important;
+  font-weight: 600;
+}
+.campo__error::before { content: '⚠ '; }
+
+.campo__aviso {
+  color: var(--medio) !important;
+}
+.campo__aviso::before { content: '· '; }
+
 .campo input, .campo select {
   font: inherit;
   font-size: 0.94rem;
