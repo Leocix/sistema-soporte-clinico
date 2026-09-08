@@ -11,9 +11,11 @@ export function DistintivoRiesgo({ resumen }) {
 /**
  * Aviso de riesgo en la ficha del paciente.
  *
- * Deja explicito que la clasificacion proviene de la adherencia YA OBSERVADA
- * y no del modelo predictivo: mientras RF04 no este desplegado, el panel no
- * debe insinuar una capacidad de anticipacion que todavia no tiene.
+ * Deja explicito que esta clasificacion proviene de la adherencia YA
+ * OBSERVADA y no del modelo. Las dos conviven en la ficha y responden a
+ * preguntas distintas: esta resume lo que el paciente hizo; la prediccion
+ * (RF04) estima lo que hara antes del proximo control. Fundirlas en un solo
+ * indicador ocultaria de donde sale cada cifra.
  */
 export default function AlertaRiesgo({ resumen }) {
   const nivel = clasificarRiesgo(resumen)
@@ -36,9 +38,9 @@ export default function AlertaRiesgo({ resumen }) {
       )}
 
       <p className="alerta__pie">
-        Clasificación provisional calculada sobre las tomas registradas. La
-        predicción del modelo de aprendizaje automático (RF04) y sus factores
-        influyentes (SHAP, RF06) sustituirán este cálculo en el Sprint&nbsp;3.
+        Calculado sobre las tomas ya registradas: resume el comportamiento
+        pasado. La estimación de lo que ocurrirá antes del próximo control es
+        la predicción del modelo, arriba.
       </p>
     </section>
   )

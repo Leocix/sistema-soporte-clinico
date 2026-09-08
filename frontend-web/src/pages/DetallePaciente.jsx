@@ -209,6 +209,7 @@ export default function DetallePaciente() {
             <h3>Historial de tomas registradas</h3>
             <p className="seccion__descripcion">
               Traza digital enviada desde la aplicación móvil del paciente (RF03).
+              La columna «Testigo» indica si un familiar corroboró la toma (RF09).
             </p>
 
             {registros.length === 0 ? (
@@ -226,6 +227,7 @@ export default function DetallePaciente() {
                       <th scope="col">Hora registrada</th>
                       <th scope="col" className="num">Retraso</th>
                       <th scope="col">Estado</th>
+                      <th scope="col">Testigo</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -247,6 +249,19 @@ export default function DetallePaciente() {
                             </span>
                             {registro.motivo_omision && (
                               <span className="nota nota--inline"> {registro.motivo_omision}</span>
+                            )}
+                          </td>
+                          {/* De donde procede el dato. Una toma corroborada por
+                              un familiar tiene dos fuentes; el resto, solo la
+                              palabra del paciente (RF09). Es una diferencia de
+                              calidad de la evidencia, no un adorno. */}
+                          <td>
+                            {registro.corroborada ? (
+                              <span className="distintivo distintivo--bajo">
+                                Familiar
+                              </span>
+                            ) : (
+                              <span className="nota nota--inline">Autorreporte</span>
                             )}
                           </td>
                         </tr>

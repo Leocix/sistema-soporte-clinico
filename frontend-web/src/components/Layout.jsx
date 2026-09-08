@@ -21,8 +21,9 @@ export default function Layout() {
         </nav>
 
         <p className="lateral__nota">
-          La predicción de riesgo con aprendizaje automático (RF04) y la
-          explicabilidad SHAP (RF06) se incorporan en el Sprint&nbsp;3.
+          La ficha muestra la predicción del modelo (RF04) junto a la adherencia
+          ya observada. La atribución individual con SHAP (RF06) queda para el
+          Sprint&nbsp;3.
         </p>
       </aside>
 
