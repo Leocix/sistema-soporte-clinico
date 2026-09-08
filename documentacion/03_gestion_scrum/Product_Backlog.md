@@ -171,6 +171,23 @@ contrastarse sin ella, pero la calidad de la evidencia mejora con ella.
 
 ---
 
+## 4 bis. Dónde vive cada artefacto
+
+Para que el repositorio y la memoria no se contradigan:
+
+| Artefacto | Este archivo | Pre informe |
+| :--- | :--- | :--- |
+| Product Backlog general | Sección 2 (pila viva, se edita) | Apartado 1.1.1, Tabla 2 (corte del 50 %) |
+| Sprint Backlog de cada sprint | — | Apartados 1.1.2 a 1.1.5, Tablas 6, 8, 16 y 21 |
+| Registro de incidencias | — | Cierre de cada sprint y consolidado en 1.1.6, Tabla 22 |
+| Actas de ceremonias | `Actas_Sprint.md` | Resumen en el cierre de cada sprint |
+
+Este archivo es la **pila viva**: se edita al refinar. El pre informe congela el
+estado al corte que evidencia y no debe editarse para reflejar cambios
+posteriores.
+
+---
+
 ## 5. Pila pendiente por sprint
 
 **Sprint 3 (semanas 5–6)**
