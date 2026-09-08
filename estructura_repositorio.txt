@@ -81,7 +81,7 @@ sistema-soporte-clinico/
     │   ├── Silabo_Seminario_Tesis.md   # Rúbricas de evaluación del curso
     │   └── Cronograma_Proyecto.md      # Planificación integral SCRUM, CRISP-DM, MOBILE D, RUP
     ├── 01_preinforme/
-    │   └── Pre_informe_50.md           # Informe documentando iteraciones y cumplimiento de OEs
+    │   └── Pre_informe_final.md        # Memoria: sprints, backlogs, incidencias y cumplimiento de OEs
     ├── 02_instrumentos/
     │   ├── Anexo_04_Ficha_Extraccion.md# Instrumento formal para historias clínicas
     │   ├── Test_Morisky.md             # Instrumento validado de línea base de adherencia

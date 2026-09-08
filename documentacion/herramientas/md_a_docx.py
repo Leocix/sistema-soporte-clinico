@@ -22,8 +22,8 @@ from docx.shared import Pt, RGBColor
 
 RAIZ = Path(r"C:\Users\Leona\OneDrive\Desktop\Sistema-Soporte-Clinico\documentacion\01_preinforme")
 PLANTILLA = RAIZ / "Pre_informe_40.docx"
-ORIGEN = RAIZ / "Pre_informe_50.md"
-DESTINO = RAIZ / "Pre_informe_50.docx"
+ORIGEN = RAIZ / "Pre_informe_final.md"
+DESTINO = RAIZ / "Pre_informe_final.docx"
 
 # Ancho útil de la página, en pulgadas, para repartir las columnas de las tablas.
 ANCHO_UTIL = 6.3

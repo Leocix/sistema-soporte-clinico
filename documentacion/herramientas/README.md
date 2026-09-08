@@ -2,7 +2,7 @@
 
 ## `md_a_docx.py`
 
-Genera `01_preinforme/Pre_informe_50.docx` a partir de `Pre_informe_50.md`.
+Genera `01_preinforme/Pre_informe_final.docx` a partir de `Pre_informe_final.md`.
 
 ```bash
 cd documentacion/01_preinforme
