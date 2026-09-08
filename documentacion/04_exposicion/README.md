@@ -4,22 +4,32 @@
 
 ## Recorrido
 
-| # | Diapositiva | Qué evidencia |
+Las láminas siguen el **orden de la lista de cotejo**, no el de los requisitos:
+el evaluador recorre la rúbrica del ítem 1 al 20 y la baraja avanza con él. Cada
+lámina lleva marcada arriba a la derecha la dimensión y los ítems que evidencia.
+
+| # | Lámina | Dimensión · ítems |
 | :---: | :--- | :--- |
-| 1 | Portada | Identificación, plataforma y metodología |
-| 2 | El problema | Diagnóstico (OE1) y las cuatro brechas |
-| 3 | El escenario evaluado | El ciclo de una dosis, de inicio a fin |
-| 4 | Scrum con CRISP-DM dentro | Metodología y estado de los cuatro sprints |
-| 5 | Product Backlog | Los diez requisitos y su estado |
-| 6 | Arquitectura y despliegue | Cinco componentes y verificación de seguridad |
-| 7 | RF01 · RF02 | Acceso por perfil y reglas clínicas del alta |
-| 8 | RF03 | Registro sin conexión e idempotencia |
-| 9 | RF08 · RNF03 | Alertas en el dispositivo y navegación |
-| 10 | RF09 | Grupo familiar: la toma con dos testigos |
-| 11 | RF04 | El componente de IA integrado |
-| 12 | Evidencia de calidad | 115 pruebas y registro de incidencias |
-| 13 | Objetivos específicos | Avance de OE1 a OE5 |
-| 14 | Cierre | Entregado frente a pendiente |
+| 1 | Portada | — |
+| 2 | Hoja de ruta de la lista de cotejo | — |
+| 3 | El seguimiento se hacía de memoria | 1 · ítem 1 |
+| 4 | El escenario evaluado: el ciclo de una dosis | 1 · ítems 1-2 |
+| 5 | La toma deja de tener una sola fuente | 1 · ítems 2-3 |
+| 6 | Product Backlog | 1 · ítems 1-3 |
+| 7 | Una aplicación pensada para un adulto mayor | 2 · ítems 4-6 |
+| 8 | Lo que sostiene cada afirmación | 3 · ítems 7-8 |
+| 9 | La toma se registra aunque no haya internet | 3 · ítems 8-9 |
+| 10 | El sistema mide su propio tiempo de respuesta | 4 · ítems 10-11 |
+| 11 | El rol no basta para autorizar | 5 · ítems 12-14 |
+| 12 | Datos protegidos, operaciones impedidas | 5 · ítems 13-14 |
+| 13 | Cinco componentes, todos ejecutables | 6 · ítems 15-16 |
+| 14 | Scrum con CRISP-DM dentro | 6 · ítem 17 |
+| 15 | El modelo vive dentro del sistema | 7 · ítems 18-20 |
+| 16 | Estado de los objetivos específicos | — |
+| 17 | Al corte del 50 % | — |
+
+Todas llevan notas del orador. El guion paso a paso de la sustentación —qué
+lámina, qué programa y qué decir en cada momento— se entrega aparte.
 
 ## Regenerar
 
