@@ -64,10 +64,12 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 - **I. RESULTADOS**
   - **1.1. En base a la metodología utilizada**
-    - 1.1.1. Sprint 1: Comprensión del negocio y de los datos, y primer incremento funcional
-    - 1.1.2. Sprint 2: Preparación de datos, cierre del núcleo funcional y modelado inicial
-    - 1.1.3. Sprint 3: Integración del modelo, aplicación móvil y acompañamiento familiar *(en ejecución)*
-    - 1.1.4. Sprint 4: Cierre, rendimiento y validación de usabilidad *(programado)*
+    - 1.1.1. Product Backlog general
+    - 1.1.2. Sprint 1: Comprensión del negocio y de los datos, y primer incremento funcional
+    - 1.1.3. Sprint 2: Preparación de datos, cierre del núcleo funcional y modelado inicial
+    - 1.1.4. Sprint 3: Integración del modelo, aplicación móvil y acompañamiento familiar *(en ejecución)*
+    - 1.1.5. Sprint 4: Cierre, rendimiento y validación de usabilidad *(programado)*
+    - 1.1.6. Registro consolidado de incidencias
   - **1.2. En base a los objetivos del proyecto**
     - 1.2.1. OE1 – Caracterización del proceso actual de seguimiento terapéutico
     - 1.2.2. OE2 – Determinación de los requisitos funcionales y no funcionales
@@ -96,11 +98,51 @@ La integración es deliberada y no meramente terminológica. Un sprint que solo 
 | **3** | Integración del modelo y funcionalidades complementarias | *Modeling* (selección) + *Evaluation* | 5–6 | 65 % / 80 % | **En ejecución** (adelantado) |
 | **4** | Finalización, rendimiento y validación de usabilidad | *Deployment* y monitoreo | 7–8 | 90 % / 100 % (Hito 3) | Programado |
 
-El Sprint 3 figura **en ejecución y no programado**: parte de su alcance se adelantó al corte del 50 %, según se documenta en el apartado 1.1.3. El detalle de las ceremonias de cada sprint —planificación, revisión y retrospectiva, con sus acuerdos y compromisos— consta en el Anexo n.° 11.
+El Sprint 3 figura **en ejecución y no programado**: parte de su alcance se adelantó al corte del 50 %, según se documenta en el apartado 1.1.4. El detalle de las ceremonias de cada sprint —planificación, revisión y retrospectiva, con sus acuerdos y compromisos— consta en el Anexo n.° 11.
 
 ---
 
-### 1.1.1. Sprint 1: Comprensión del negocio y de los datos, y primer incremento funcional
+### 1.1.1. Product Backlog general
+
+La pila de producto es el artefacto que gobierna todo lo demás: de ella salen los
+Sprint Backlog, y a ella vuelven los requisitos que emergen al inspeccionar cada
+incremento. Se presenta antes que los sprints porque ninguno de ellos se entiende
+sin saber de dónde sale lo que compromete.
+
+**Criterio de priorización.** Las prioridades no se asignaron por dificultad
+técnica sino por su relación con las brechas del diagnóstico (OE1). Un requisito
+es **Must** cuando sin él la hipótesis de la investigación no puede contrastarse;
+**Should** cuando aporta valor clínico sustancial pero su ausencia no invalida el
+estudio; **Could** cuando mejora la experiencia y se implementa si el cronograma
+lo permite.
+
+**Tabla 2.** Product Backlog general priorizado con MoSCoW y su trazabilidad.
+
+| ID | Historia / requisito funcional | Prioridad | Objetivo | Sprint | Estado al corte |
+| :---: | :--- | :---: | :---: | :---: | :--- |
+| RF01 | Autenticar y autorizar a médicos y pacientes con perfiles diferenciados | Must | OE2/OE4 | 1 | **Implementado** |
+| RF02 | Registrar y gestionar pacientes polimedicados y su esquema farmacológico | Must | OE4 | 2 | **Implementado y verificado** |
+| RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | OE4 | 2 | **Implementado y verificado** |
+| RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | OE3/OE5 | 3 | **Implementado y verificado** |
+| RF05 | Generar alertas tempranas al médico ante riesgo alto de incumplimiento | Must | OE4 | 3 | Pendiente |
+| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | OE3 | 3 | **Parcial**: importancia global del modelo; atribución individual pendiente |
+| RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | OE2/OE4 | 3 | **Parcial**: panel operativo; exportación pendiente |
+| RF08 | Enviar recordatorios de toma al paciente | Could | OE4 | 3 | **Implementado y verificado** |
+| RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | OE4 | 3 | **Implementado y verificado** |
+| RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | OE4 | 3 | **Implementado y verificado** |
+
+Los requisitos **RF09 y RF10 no figuraban en la pila inicial**. Se incorporaron durante el desarrollo y su origen queda documentado aquí porque forma parte del resultado metodológico: RF09 nace al constatar que la brecha B1 quedaba a medias —el sistema sustituye el autorreporte verbal por una traza digital, pero la fuente de esa traza sigue siendo únicamente el paciente—; RF10, al constatar que remitir al consultorio a quien olvida su contraseña convierte un olvido en un desplazamiento para una población mayoritariamente rural. Ambos se clasifican como *Should*: la hipótesis puede contrastarse sin ellos, pero su ausencia degrada la calidad de la evidencia y la usabilidad, respectivamente. La incorporación de requisitos emergentes a partir de la inspección del incremento es, precisamente, el comportamiento que SCRUM prescribe para el Product Backlog [1].
+
+**Refinamiento de la pila.** El Product Backlog no se congeló al final del
+Sprint 1. Se revisó al cierre de cada sprint, y esa revisión produjo dos altas
+—RF09 y RF10— y dos reclasificaciones: RF06 y RF07 pasaron de «pendiente» a
+«parcial» al comprobarse que una parte de su alcance quedaba cubierta y que
+declararlos terminados habría sido inexacto. El detalle de lo comprometido en
+cada sprint figura en el Sprint Backlog correspondiente.
+
+---
+
+### 1.1.2. Sprint 1: Comprensión del negocio y de los datos, y primer incremento funcional
 
 **Sprint 1 · Semanas 2–3 · CRISP-DM: *Business Understanding* y *Data Understanding*.**
 
@@ -118,7 +160,7 @@ Se aplicó la **guía de entrevista semiestructurada (Anexo n.° 03)** al médic
 
 **Brechas tecnológicas identificadas.** El diagnóstico permitió clasificar cuatro brechas que fundamentan directamente la solución propuesta:
 
-**Tabla 2.** Brechas tecnológicas del proceso actual y su traducción en requisitos.
+**Tabla 3.** Brechas tecnológicas del proceso actual y su traducción en requisitos.
 
 | N.° | Brecha identificada | Consecuencia clínica observada | Requisito derivado |
 | :---: | :--- | :--- | :---: |
@@ -133,7 +175,7 @@ Se aplicó la **guía de entrevista semiestructurada (Anexo n.° 03)** al médic
 
 Los factores de incumplimiento se clasificaron según el **modelo multidimensional de adherencia terapéutica de la OMS (2003)** [3], que organiza los determinantes en cinco dimensiones. Esta clasificación es la que gobierna, más adelante, la estructura de variables del dataset (sección 1.1.2.b).
 
-**Tabla 3.** Factores de incumplimiento identificados, clasificados por dimensión OMS.
+**Tabla 4.** Factores de incumplimiento identificados, clasificados por dimensión OMS.
 
 | Dimensión (OMS) | Factores identificados en el consultorio | Variable observable asociada |
 | :--- | :--- | :--- |
@@ -147,24 +189,20 @@ Los factores de incumplimiento se clasificaron según el **modelo multidimension
 
 **Línea base propia del consultorio:** «*completar con el porcentaje de pacientes polimedicados con adherencia deficiente resultante de la aplicación del test de Morisky-Green (Anexo n.° 05) sobre la muestra del consultorio*». El instrumento se encuentra formalizado y su aplicación se ejecuta en paralelo a la extracción documental del Anexo n.° 04.
 
-#### c) Product Backlog priorizado con MoSCoW
+#### c) Construcción del Product Backlog
 
-**Tabla 4.** Product Backlog priorizado (técnica MoSCoW) y trazabilidad al objetivo específico.
+La pila de producto se construyó en este sprint a partir de las brechas del
+diagnóstico y se priorizó con MoSCoW junto al Product Owner, en una sesión de
+refinamiento posterior a la entrevista. El resultado —con su estado al corte del
+presente informe, ya actualizado por los sprints siguientes— es la
+**Tabla 2**, presentada en el apartado 1.1.1.
 
-| ID | Historia / requisito funcional | Prioridad | Objetivo | Sprint | Estado al corte |
-| :---: | :--- | :---: | :---: | :---: | :--- |
-| RF01 | Autenticar y autorizar a médicos y pacientes con perfiles diferenciados | Must | OE2/OE4 | 1 | **Implementado** |
-| RF02 | Registrar y gestionar pacientes polimedicados y su esquema farmacológico | Must | OE4 | 2 | **Implementado y verificado** |
-| RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | OE4 | 2 | **Implementado y verificado** |
-| RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | OE3/OE5 | 3 | **Implementado y verificado** |
-| RF05 | Generar alertas tempranas al médico ante riesgo alto de incumplimiento | Must | OE4 | 3 | Pendiente |
-| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | OE3 | 3 | **Parcial**: importancia global del modelo; atribución individual pendiente |
-| RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | OE2/OE4 | 3 | **Parcial**: panel operativo; exportación pendiente |
-| RF08 | Enviar recordatorios de toma al paciente | Could | OE4 | 3 | **Implementado y verificado** |
-| RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | OE4 | 3 | **Implementado y verificado** |
-| RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | OE4 | 3 | **Implementado y verificado** |
-
-Los requisitos **RF09 y RF10 no figuraban en la pila inicial**. Se incorporaron durante el desarrollo y su origen queda documentado aquí porque forma parte del resultado metodológico: RF09 nace al constatar que la brecha B1 quedaba a medias —el sistema sustituye el autorreporte verbal por una traza digital, pero la fuente de esa traza sigue siendo únicamente el paciente—; RF10, al constatar que remitir al consultorio a quien olvida su contraseña convierte un olvido en un desplazamiento para una población mayoritariamente rural. Ambos se clasifican como *Should*: la hipótesis puede contrastarse sin ellos, pero su ausencia degrada la calidad de la evidencia y la usabilidad, respectivamente. La incorporación de requisitos emergentes a partir de la inspección del incremento es, precisamente, el comportamiento que SCRUM prescribe para el Product Backlog [1].
+Lo relevante de este sprint no es la tabla en sí sino el criterio con el que se
+ordenó: se rechazó priorizar por facilidad de implementación —que habría puesto
+primero el panel de auditoría— y se optó por priorizar por dependencia respecto
+de la hipótesis. Sin registro digital de la toma (RF03) no hay traza, y sin traza
+no hay variable conductual que el modelo pueda aprender; de ahí que el núcleo
+funcional se comprometiera antes que cualquier funcionalidad de visualización.
 
 #### d) Historias de usuario y criterios de aceptación
 
@@ -176,9 +214,28 @@ Los requisitos **RF09 y RF10 no figuraban en la pila inicial**. Se incorporaron 
 | HU02 | Como **médico**, quiero registrar y actualizar la ficha del paciente polimedicado y su esquema farmacológico, para mantener trazable su carga terapéutica. | El alta y la edición quedan persistidas y consultables; se rechaza el alta de un paciente con menos de 5 fármacos. | Prueba unitaria + restricción `ck_paciente_polimedicado` |
 | HU03 | Como **paciente**, quiero registrar desde mi celular cada toma de medicamento, para que mi médico conozca mi cumplimiento real entre citas. | Cada toma queda registrada y sincronizada; un reintento de envío tras pérdida de conectividad no duplica el evento. | Prueba de integración + restricción `uq_registro_toma_programada` |
 
-A las tres historias del escenario principal se sumaron, en el Sprint 3, **HU04** (*«Como paciente, quiero que un familiar mío pueda confirmar que tomé mi medicación, para que el registro no dependa solo de mi palabra»*) y **HU05** (*«Como usuario del sistema, quiero recuperar mi contraseña desde mi propio teléfono, para no tener que acercarme al consultorio por un olvido»*), con sus criterios de aceptación y verificación automatizada, documentadas en el apartado 1.1.3 y en el Anexo n.° 09.
+A las tres historias del escenario principal se sumaron, en el Sprint 3, **HU04** (*«Como paciente, quiero que un familiar mío pueda confirmar que tomé mi medicación, para que el registro no dependa solo de mi palabra»*) y **HU05** (*«Como usuario del sistema, quiero recuperar mi contraseña desde mi propio teléfono, para no tener que acercarme al consultorio por un olvido»*), con sus criterios de aceptación y verificación automatizada, documentadas en el apartado 1.1.4 y en el Anexo n.° 09.
 
 #### e) Sprint Backlog e infraestructura del entorno
+
+**Tabla 6.** Sprint Backlog del Sprint 1 (semanas 2–3).
+
+| Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
+| :---: | :--- | :--- | :---: | :--- |
+| — (OE1) | Entrevista semiestructurada al médico y consolidación del diagnóstico | Documentación | 3 | **Terminada** |
+| — (OE1) | Línea base de adherencia y clasificación de factores por dimensión OMS | Documentación | 3 | **Terminada** |
+| — (OE2) | Product Backlog priorizado con MoSCoW e historias de usuario | Documentación | 2 | **Terminada** |
+| RF01 | Modelo de datos relacional del núcleo (`Usuario`, `Paciente`, `RegistroAdherencia`) | API | 5 | **Terminada** |
+| RF01 | Autenticación JWT y control de acceso por perfil | API | 5 | **Terminada** |
+| RF01 | Pantalla de acceso del panel médico | Web | 3 | **Terminada** |
+| — | Repositorio, entorno de trabajo y migraciones con Alembic | Infraestructura | 3 | **Terminada** |
+| | **Comprometido: 24 · Completado: 24 (100 %)** | | **24** | |
+
+**Sobre la unidad de estimación.** Los puntos siguen una escala relativa de
+Fibonacci y los asigna el propio equipo de desarrollo, que en este proyecto es de
+un solo integrante. Cumplen por tanto una función de ordenación y de control del
+alcance comprometido, no de previsión de capacidad de un equipo: la velocidad que
+de ellos se deriva solo es comparable entre sprints de este mismo proyecto.
 
 Se configuró el repositorio y el entorno de trabajo con la estructura definida en `estructura_repositorio.txt`, que separa cuatro componentes desplegables de forma independiente, coherentes con la arquitectura de microservicios del proyecto:
 
@@ -232,21 +289,54 @@ Se implementó y verificó el módulo de autenticación como primer incremento e
 | Acceso a `/api/auth/me` con token válido | `200` + perfil de la sesión | ✔ `200` |
 | Envío de correo malformado y contraseña corta | `422 VALIDACION_FALLIDA` con detalle por campo | ✔ `422` |
 
+#### i) Cierre del sprint
+
+**Tabla 7.** Registro de incidencias del Sprint 1.
+
+| ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
+| :---: | :--- | :--- | :--- | :--- | :--- | :---: |
+| I-01 | API / Datos | Las validaciones clínicas se estaban implementando dispersas entre el código y la base de datos | Retrospectiva del sprint | Ausencia de un criterio único sobre dónde vive una regla de negocio | Trasladarlas a restricciones declarativas de la base (`CHECK`, `UNIQUE`), ejecutado en el Sprint 2 | Cerrada |
+
+No se detectaron defectos funcionales en este sprint: el incremento comprometido
+—RF01— se entregó con sus seis casos de prueba en verde. La única incidencia
+registrada es de diseño y se detectó en la retrospectiva, no en ejecución; se
+consigna igualmente porque su corrección condicionó el modelo de datos del sprint
+siguiente.
+
 **Sprint Review (Sprint 1).** Se aceptó el incremento RF01 y se validaron con el médico el modelo de datos inicial y el Product Backlog priorizado. **Retrospectiva:** se identificó que la dispersión de las validaciones clínicas entre el código y la base de datos generaba riesgo de inconsistencia; la acción correctiva —trasladarlas a restricciones declarativas— se ejecutó en el Sprint 2.
 
 ---
 
-### 1.1.2. Sprint 2: Preparación de datos, cierre del núcleo funcional y modelado inicial
+### 1.1.3. Sprint 2: Preparación de datos, cierre del núcleo funcional y modelado inicial
 
 **Sprint 2 · Semanas 3–4 · CRISP-DM: *Data Preparation* y *Modeling* inicial.**
 
 **Objetivo del sprint.** Especificar los requisitos y la arquitectura restantes, completar el núcleo funcional RF01–RF03, dejar el dataset clínico depurado y balanceado, y montar la configuración experimental de los cuatro algoritmos candidatos.
 
+**Tabla 8.** Sprint Backlog del Sprint 2 (semanas 3–4).
+
+| Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
+| :---: | :--- | :--- | :---: | :--- |
+| — (OE2) | Especificación de requisitos no funcionales y arquitectura | Documentación | 3 | **Terminada** |
+| RF02 | Servicios REST de alta, consulta, edición y baja lógica de pacientes | API | 5 | **Terminada** |
+| RF02 | Restricciones de integridad clínica como invariantes de la base | Datos | 3 | **Terminada** |
+| RF02 | Formulario de alta y ficha clínica del panel | Web | 5 | **Terminada** |
+| RF03 | Registro de toma idempotente y sincronización en lote | API | 8 | **Terminada** |
+| RF03 | Cola local sin conexión y envío diferido | Móvil | 8 | **Terminada** |
+| RF07 | Panel de auditoría con indicadores y listado por prioridad clínica | Web | 5 | **Parcial**: sin exportación |
+| — (OE3) | `preprocess.py`: depuración, nulos, características derivadas y SMOTE | ML | 8 | **Terminada** |
+| — (OE3) | `train_evaluate.py`: cuatro algoritmos, validación cruzada y McNemar | ML | 8 | **Terminada** |
+| — (RNF01/04) | Despliegue en Aiven, Render y Vercel con verificación de seguridad | Infraestructura | 5 | **Terminada** |
+| | **Comprometido: 58 · Completado: 53 (91 %)** | | **58** | |
+
+Los cinco puntos no completados corresponden a la exportación de reportes de
+RF07, que se trasladó al Sprint 3 sin renegociar el resto del alcance.
+
 #### a) Especificación de requisitos y arquitectura (OE2)
 
-Se consolidaron en este sprint **ocho requisitos funcionales** y **seis requisitos no funcionales** mapeados a atributos de calidad de la norma ISO/IEC 25010 [7]. La pila creció después a diez requisitos funcionales con la incorporación de RF09 y RF10 en el Sprint 3, según se explica bajo la Tabla 4:
+Se consolidaron en este sprint **ocho requisitos funcionales** y **seis requisitos no funcionales** mapeados a atributos de calidad de la norma ISO/IEC 25010 [7]. La pila creció después a diez requisitos funcionales con la incorporación de RF09 y RF10 en el Sprint 3, según se explica bajo la Tabla 2:
 
-**Tabla 6.** Requisitos no funcionales y su materialización técnica al corte.
+**Tabla 9.** Requisitos no funcionales y su materialización técnica al corte.
 
 | Código | Requisito no funcional | Atributo ISO/IEC 25010 | Materialización al corte |
 | :---: | :--- | :--- | :--- |
@@ -277,7 +367,7 @@ Se consolidaron en este sprint **ocho requisitos funcionales** y **seis requisit
 
 La ficha de recolección se formalizó como el **contrato de esquema del dataset**: el script de preparación valida que el CSV extraído contenga exactamente las variables del Anexo n.° 04 y aborta con un mensaje explícito si falta alguna.
 
-**Tabla 7.** Variables del Anexo n.° 04, su dimensión OMS y su tratamiento en el pipeline.
+**Tabla 10.** Variables del Anexo n.° 04, su dimensión OMS y su tratamiento en el pipeline.
 
 | N.° | Variable | Tipo | Dimensión (OMS) | Tratamiento en el pipeline |
 | :---: | :--- | :--- | :--- | :--- |
@@ -321,7 +411,7 @@ clínicas reales del consultorio.
 
 El script `ml-pipeline/src/preprocess.py` automatiza el recorrido completo desde la ficha en bruto hasta las matrices listas para el modelado. Las reglas de limpieza implementadas son:
 
-**Tabla 8.** Reglas de depuración aplicadas y su justificación.
+**Tabla 11.** Reglas de depuración aplicadas y su justificación.
 
 | Regla | Tratamiento | Justificación |
 | :--- | :--- | :--- |
@@ -375,7 +465,7 @@ El preprocesador ajustado se serializa (`models/preprocesador_v1.pkl`) junto al 
 
 #### f) Configuración experimental de los cuatro algoritmos candidatos (OE3)
 
-**Tabla 9.** Configuración experimental de los algoritmos candidatos.
+**Tabla 12.** Configuración experimental de los algoritmos candidatos.
 
 | Algoritmo | Fundamento de la elección | Hiperparámetros de partida |
 | :--- | :--- | :--- |
@@ -406,7 +496,7 @@ Por eso `train_evaluate.py` parte del dataset **crudo** y encadena imputación, 
 
 Se completaron los servicios REST de ambas historias, con validación estricta de esquemas Pydantic y control de acceso por rol.
 
-**Tabla 10.** Servicios REST del núcleo funcional expuestos al corte.
+**Tabla 13.** Servicios REST del núcleo funcional expuestos al corte.
 
 | Método | Ruta | Requisito | Autorización |
 | :--- | :--- | :---: | :--- |
@@ -431,7 +521,7 @@ Se completaron los servicios REST de ambas historias, con validación estricta d
 | `POST` | `/api/auth/recuperacion` | RF10 | Pública |
 | `POST` | `/api/auth/recuperacion/confirmar` | RF10 | Pública, solo con enlace vigente |
 
-Las seis últimas rutas se incorporaron en el Sprint 3 y se documentan en el apartado 1.1.3. Ninguna ruta pública admite crear una cuenta ni cambiar una credencial sin un permiso de un solo uso previamente emitido por el titular.
+Las seis últimas rutas se incorporaron en el Sprint 3 y se documentan en el apartado 1.1.4. Ninguna ruta pública admite crear una cuenta ni cambiar una credencial sin un permiso de un solo uso previamente emitido por el titular.
 
 **Tres decisiones de diseño relevantes.**
 
@@ -443,7 +533,7 @@ Las seis últimas rutas se incorporaron en el Sprint 3 y se documentan en el apa
 
 #### h) Evidencia de pruebas del núcleo funcional
 
-Se construyó una batería automatizada con `pytest` sobre una base de datos en memoria (`backend-api/tests/`). **Resultado al cierre de este sprint: 25 de 25 pruebas en verde.** El recuento acumulado tras el Sprint 3 figura en la Tabla 14.
+Se construyó una batería automatizada con `pytest` sobre una base de datos en memoria (`backend-api/tests/`). **Resultado al cierre de este sprint: 25 de 25 pruebas en verde.** El recuento acumulado tras el Sprint 3 figura en la Tabla 19.
 
 | Grupo | Caso verificado | Resultado |
 | :--- | :--- | :---: |
@@ -475,7 +565,7 @@ lo integran están desplegados y accesibles, lo que permite verificar los
 requisitos no funcionales sobre la infraestructura real y no sobre una
 simulación.
 
-**Tabla 11.** Componentes desplegados y su verificación.
+**Tabla 14.** Componentes desplegados y su verificación.
 
 | Componente | Plataforma | Verificación ejecutada |
 | :--- | :--- | :--- |
@@ -518,11 +608,26 @@ el servicio ya activo durante las pruebas de carga del Sprint 4.
 
 Las actas completas de ambas ceremonias, con los entregables aceptados, las observaciones del Product Owner y los compromisos del sprint siguiente, constan en el Anexo n.° 11.
 
+**Tabla 15.** Registro de incidencias del Sprint 2.
+
+| ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
+| :---: | :--- | :--- | :--- | :--- | :--- | :---: |
+| I-02 | ML | La preparación del dataset se interrumpía al imputar las variables categóricas | Ejecución de `preprocess.py` | `pd.NA` de *pandas* no es reconocido como ausente por los imputadores de *scikit-learn*, que solo interpretan `NaN` | Normalizar las categóricas a tipo `object` con `np.nan` antes de imputar | Cerrada |
+| I-03 | Datos | La base almacenaba el **nombre** del miembro del enumerado (`MASCULINO`) y no su **valor** (`M`) | Inspección del gestor de base de datos tras la primera carga | Comportamiento por omisión de SQLAlchemy para columnas enumeradas | Declarar las columnas con `values_callable`, de modo que persistan los códigos del Anexo n.° 04 | Cerrada |
+| I-04 | Web | El contenido desbordaba el alto de la página en el panel | Verificación en navegador | `height: 100 %` sobre un contenedor cuyo padre no tiene alto definido | Sustituir por `min-height` con unidades `dvh` | Cerrada |
+| I-05 | Móvil | La aplicación no arrancaba: aserción en el tema tipográfico | Ejecución en dispositivo | `TextTheme.apply(fontSizeFactor:)` falla si algún estilo del tema base llega con `fontSize` nulo | Fijar el tamaño de forma explícita en cada texto | Cerrada |
+| I-06 | Móvil | Un fallo de red se comunicaba al paciente como «el servidor tardó demasiado» | Prueba sin conectividad | `package:http` envuelve `SocketException` en `ClientException`, de modo que capturar la primera no atrapaba nada | Capturar `ClientException` y distinguirla del tiempo de espera agotado | Cerrada |
+| I-07 | API | Los mensajes de validación llegaban con el prefijo `Value error,` de *Pydantic* | Prueba de integración | El manejador global no depuraba el texto de la excepción | Retirar el prefijo al construir el detalle del error | Cerrada |
+
+**Densidad del sprint:** seis defectos sobre cinco componentes tocados (1,2 por
+componente). Cinco de los seis se detectaron por pruebas automatizadas o
+verificación dirigida, y ninguno por casualidad. **Cero abiertos al cierre.**
+
 **Sprint Review (Sprint 2).** Se aceptaron el núcleo funcional RF01–RF03, el pipeline de preparación de datos y la configuración experimental. **Retrospectiva:** se detectó que el `pd.NA` de las columnas de texto de pandas no es interpretado por los imputadores de scikit-learn, lo que interrumpía la ejecución; la corrección —normalizar las categóricas a `object` con `np.nan` antes de imputar— se incorporó al script y quedó documentada para evitar su reaparición.
 
 ---
 
-### 1.1.3. Sprint 3: Integración del modelo, aplicación móvil y acompañamiento familiar *(en ejecución)*
+### 1.1.4. Sprint 3: Integración del modelo, aplicación móvil y acompañamiento familiar *(en ejecución)*
 
 **Sprint 3 · Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*.**
 
@@ -530,11 +635,34 @@ Las actas completas de ambas ceremonias, con los entregables aceptados, las obse
 
 **Sobre el adelanto de alcance.** Parte del trabajo de este sprint se ejecutó antes del corte del 50 %. La razón no fue de cronograma sino técnica: el Sprint 2 dejó el modelo entrenado y serializado, pero un artefacto `.pkl` en un directorio no es un componente del sistema. Mientras no exista una ruta que lo cargue, lo alimente con los datos de una ficha real y devuelva una probabilidad, el objetivo OE4 —construir el sistema integrando el modelo— permanece sin evidencia. Se decidió por tanto adelantar la integración, que es lo que convierte el modelo en parte del producto acreditable.
 
+**Tabla 16.** Sprint Backlog del Sprint 3 (semanas 5–6), al corte del 50 %.
+
+| Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
+| :---: | :--- | :--- | :---: | :--- |
+| RF04 | Servicio de inferencia y contrato de la predicción | API | 8 | **Terminada** |
+| RF04 | Tarjeta de predicción y factores influyentes en la ficha | Web | 5 | **Terminada** |
+| RF08 | Alertas de toma programadas en el dispositivo | Móvil | 5 | **Terminada** |
+| RF08 | Empaquetado del APK de publicación | Móvil | 3 | **Terminada** |
+| RF09 | Modelo, servicios REST y reglas del grupo familiar | API | 8 | **Terminada** |
+| RF09 | Recorridos del paciente y del acompañante | Móvil | 8 | **Terminada** |
+| RF09 | Columna de corroboración en el historial clínico | Web | 2 | **Terminada** |
+| RF10 | Restablecimiento de contraseña por enlace de un solo uso | API + Web | 5 | **Terminada** |
+| RNF03 | Barra inferior de navegación en sustitución del menú oculto | Móvil | 3 | **Terminada** |
+| RF05 | Alertas tempranas al médico ante riesgo alto | API + Web | 5 | Pendiente |
+| RF06 | Atribución individual con SHAP | ML + Web | 8 | Pendiente |
+| RF07 | Exportación de reportes del panel *(arrastrado del Sprint 2)* | Web | 5 | Pendiente |
+| — (OE3) | Ejecución de la comparación sobre el dataset real | ML | 5 | **Bloqueada**: depende de la extracción documental |
+| | **Comprometido: 70 · Completado al corte: 47 (67 %)** | | **70** | |
+
+El sprint sigue abierto: su cierre corresponde a la semana 6. Lo completado hasta
+el corte del 50 % es el alcance adelantado que se documenta a continuación; los
+cuatro elementos restantes conservan su compromiso dentro del mismo sprint.
+
 #### a) Del artefacto serializado al servicio: integración del modelo (RF04)
 
 El módulo `backend-api/app/services/ml_inference.py` carga el *pipeline* serializado una sola vez por proceso (`lru_cache`), construye la fila de características a partir de la ficha del paciente y devuelve la probabilidad de incumplimiento junto con su interpretación clínica. La ruta `GET /api/prediccion/pacientes/{id}` la expone al panel médico.
 
-**Tabla 12.** Contrato de la predicción devuelta por el sistema.
+**Tabla 17.** Contrato de la predicción devuelta por el sistema.
 
 | Campo | Contenido | Por qué forma parte del contrato |
 | :--- | :--- | :--- |
@@ -571,7 +699,7 @@ Toda la traza de adherencia construida hasta el Sprint 2 es **autorreporte**: el
 
 Se incorporó un **grupo familiar de acompañamiento**: el paciente invita hasta cinco convivientes con un código de un solo uso; el acompañante corrobora desde su propio dispositivo las dosis que el paciente ya reportó. La corroboración **se añade** al registro, no lo sustituye ni lo modifica.
 
-**Tabla 13.** Reglas del acompañamiento familiar y su fundamento.
+**Tabla 18.** Reglas del acompañamiento familiar y su fundamento.
 
 | Regla implementada | Fundamento |
 | :--- | :--- |
@@ -589,7 +717,7 @@ La pantalla de acceso remitía al consultorio a quien olvidara su contraseña. P
 
 #### e) Evidencia de pruebas del sprint
 
-**Tabla 14.** Batería automatizada al corte, por componente.
+**Tabla 19.** Batería automatizada al corte, por componente.
 
 | Componente | Casos | Alcance verificado | Resultado |
 | :--- | :---: | :--- | :---: |
@@ -600,27 +728,105 @@ La pantalla de acceso remitía al consultorio a quien olvidara su contraseña. P
 
 Las pruebas del acompañamiento familiar y del restablecimiento no verifican únicamente que la función opere: verifican también que **no** haga lo que no debe. Un acompañante no puede corroborar tomas de un paciente ajeno (`403`), ni corroborar dos veces el mismo evento (`409`), ni corroborar fuera de plazo (`409`), ni registrar tomas en nombre del paciente. Y ni el acceso ni la recuperación permiten averiguar qué correos están registrados: la comprobación del código precede a la del correo precisamente por eso.
 
-#### f) Alcance pendiente del sprint
+#### f) Registro de incidencias del sprint
+
+**Tabla 20.** Registro de incidencias del Sprint 3, al corte del 50 %.
+
+| ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
+| :---: | :--- | :--- | :--- | :--- | :--- | :---: |
+| I-08 | Móvil | La aplicación instalada desde el APK quedaba permanentemente «sin conexión» | Prueba sobre el artefacto entregable | El permiso de INTERNET solo lo declaran los manifiestos de depuración y de perfil, que no se fusionan en la compilación de publicación | Declararlo en el manifiesto principal; verificado con `aapt2` sobre el APK | Cerrada |
+| I-09 | API / ML | La inferencia fallaba para casi cualquier ficha con campos opcionales vacíos | Prueba de integración de RF04 | Los campos opcionales llegan como `None` y los imputadores de *scikit-learn* solo reconocen `NaN` | Convertir a `NaN` antes de construir la fila de características | Cerrada |
+| I-10 | Móvil | Cambiar la hora de un medicamento dejaba en pie el aviso anterior | Revisión del servicio de notificaciones | El permiso se daba por denegado en cada arranque, de modo que la reprogramación no hacía nada | Consultar el estado real al sistema operativo con `areNotificationsEnabled()` | Cerrada |
+| I-11 | API | Una sola dirección de correo mal formada devolvía `500` en todo el listado de pacientes | Prueba de regresión | `EmailStr` se aplicaba también en el esquema de salida | Estricto al entrar, tolerante al salir: texto libre en la salida | Cerrada |
+| I-12 | Datos | La carga inicial saltaba las fichas ya existentes y dejaba la base sin cuentas de paciente | Intento de acceso desde la aplicación | El script solo contemplaba el alta, no completar una ficha a medias | Reescribir la carga para que complete lo que falte y sea idempotente | Cerrada |
+| I-13 | Web | El panel anunciaba que la predicción llegaría en el Sprint 3 cuando ya estaba integrada | Revisión previa a la demostración | Texto informativo no actualizado al cerrar RF04 | Reescribir el aviso y distinguir riesgo observado de riesgo predicho | Cerrada |
+
+**Densidad del sprint:** seis defectos sobre cinco componentes tocados (1,2 por
+componente). **Cero abiertos al corte.**
+
+Dos merecen comentario metodológico. **I-08** solo era observable sobre el
+artefacto que se entrega: en desarrollo todo funcionaba, y de ahí la regla que se
+incorporó al procedimiento de verificación —probar el APK de publicación y no
+únicamente la ejecución en depuración—. **I-13** no es un fallo de código sino de
+consistencia entre el producto y su propia documentación en pantalla; se registra
+porque un sistema que se contradice a sí mismo ante el usuario es tan defectuoso
+como uno que calcula mal.
+
+#### g) Alcance pendiente del sprint
 
 Conforme al cronograma, restan dentro del Sprint 3: el módulo de **alertas tempranas al médico** (RF05), la **atribución individual con SHAP** (RF06) en sustitución de la importancia global que hoy muestra la ficha, la **exportación de reportes** del panel (RF07) y —condicionada a la extracción documental— la **ejecución de la comparación de algoritmos sobre el dataset real**, que es lo que cierra el OE3.
 
 ---
 
-### 1.1.4. Sprint 4: Cierre, rendimiento y validación de usabilidad *(programado)*
+### 1.1.5. Sprint 4: Cierre, rendimiento y validación de usabilidad *(programado)*
 
-**Sprint 4 · Semanas 7–8 · CRISP-DM: *Deployment* y monitoreo.** Alcance previsto: pruebas de rendimiento y carga sobre el API y el servicio de inferencia (RNF02, RNF06); **pruebas de usabilidad con la escala SUS y ficha de observación (OE5)**; verificación del cumplimiento de los atributos ISO/IEC 25010; consolidación del repositorio y de las evidencias de la investigación.
+**Sprint 4 · Semanas 7–8 · CRISP-DM: *Deployment* y monitoreo.**
+
+**Objetivo del sprint.** Verificar el producto contra sus requisitos no
+funcionales, medir la usabilidad con usuarios reales y consolidar las evidencias
+de la investigación.
+
+**Tabla 21.** Sprint Backlog previsto del Sprint 4 (semanas 7–8).
+
+| Elemento de la pila | Tarea prevista | Componente | Est. | Estado |
+| :---: | :--- | :--- | :---: | :--- |
+| RNF02 / RNF06 | Pruebas de rendimiento y carga sobre el API y el servicio de inferencia | API | 8 | Programada |
+| — (OE5) | Pruebas de usabilidad con la escala SUS y ficha de observación | Web + Móvil | 8 | Programada |
+| — (RNF01–RNF06) | Verificación del cumplimiento de los atributos ISO/IEC 25010 | Todos | 5 | Programada |
+| — | Consolidación del repositorio y de las evidencias de la investigación | Documentación | 3 | Programada |
+| | **Comprometido previsto: 24** | | **24** | |
+
+La estimación de este sprint es preliminar: se cerrará en su planificación, una
+vez conocido el desenlace de los elementos que el Sprint 3 aún tiene abiertos.
+
+---
+
+### 1.1.6. Registro consolidado de incidencias
+
+El seguimiento de defectos no es un anexo administrativo: es el que sostiene el
+indicador de **densidad de errores por módulo al cierre de cada sprint** del OE4.
+Sin un registro con causa raíz y forma de detección, ese indicador sería un número
+sin respaldo.
+
+**Tabla 22.** Densidad de defectos por sprint y forma de detección.
+
+| Sprint | Defectos registrados | Componentes tocados | Densidad (def./componente) | Detectados por prueba automatizada o verificación dirigida | Abiertos al cierre |
+| :---: | :---: | :---: | :---: | :---: | :---: |
+| 1 | 1 | 4 | 0,25 | 0 (retrospectiva) | 0 |
+| 2 | 6 | 5 | 1,20 | 5 de 6 | 0 |
+| 3 *(al corte)* | 6 | 5 | 1,20 | 6 de 6 | 0 |
+| **Total** | **13** | — | — | **11 de 13** | **0** |
+
+**Lectura del indicador.** La densidad no decrece entre el Sprint 2 y el Sprint 3,
+y sería deshonesto presentarla como si lo hiciera. La explicación es que ambos
+sprints incorporaron componentes nuevos —el pipeline de datos y el panel en el
+segundo; la inferencia, el acompañamiento familiar y el empaquetado móvil en el
+tercero—, y el defecto se concentra en lo que se escribe por primera vez, no en lo
+que ya está cubierto por pruebas. Lo que sí mejoró es la **forma de detección**:
+en el Sprint 2, cinco de seis defectos aparecieron por prueba o verificación
+dirigida; en el Sprint 3, los seis. Ninguno llegó al usuario.
+
+**Clasificación por origen.** De los trece registrados, seis provienen de una
+suposición equivocada sobre el comportamiento de una biblioteca de terceros
+(I-02, I-03, I-05, I-06, I-09, I-10), tres de una diferencia entre el entorno de
+desarrollo y el de entrega (I-08, I-11, I-12), dos de maquetación o de mensajes
+(I-04, I-07), uno de consistencia entre el producto y su propia interfaz (I-13) y
+uno de diseño detectado en retrospectiva (I-01). La concentración en el primer
+grupo motivó una práctica que se mantiene: comprobar en la documentación de la
+versión concreta de cada dependencia el contrato que se está asumiendo, en lugar
+de deducirlo del nombre del método.
 
 ---
 
 ## 1.2. En base a los objetivos del proyecto
 
-**Tabla 15.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
+**Tabla 23.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
 
 | Objetivo | Resultado esperado | Estado al corte | Evidencia principal |
 | :---: | :--- | :---: | :--- |
-| OE1 | Informe de diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base cuantitativa en consolidación) | Anexo n.° 03 aplicado; Tablas 2 y 3 |
-| OE2 | Documento de requisitos y arquitectura | **Cumplido** | Tablas 4 y 6; `backend-api/app/main.py` |
-| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~70 %) | `preprocess.py`, `train_evaluate.py` y modelo integrado en el sistema; Tablas 9 y 12 |
+| OE1 | Informe de diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base cuantitativa en consolidación) | Anexo n.° 03 aplicado; Tablas 3 y 4 |
+| OE2 | Documento de requisitos y arquitectura | **Cumplido** | Tablas 2 y 9; `backend-api/app/main.py` |
+| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~70 %) | `preprocess.py`, `train_evaluate.py` y modelo integrado en el sistema; Tablas 12 y 17 |
 | OE4 | Sistema de soporte clínico funcional | **En ejecución** (~70 %) | RF01–RF04, RF08, RF09 y RF10 operativos y desplegados |
 | OE5 | Informe de validación de usabilidad | **Pendiente** (programado semana 7) | Anexo n.° 05 (SUS) formalizado |
 
@@ -633,10 +839,10 @@ Conforme al cronograma, restan dentro del Sprint 3: el módulo de **alertas temp
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
 | Porcentaje de pacientes polimedicados con adherencia deficiente (línea base) | Medida en el diagnóstico | «*completar con el resultado del test de Morisky-Green sobre la muestra del consultorio*»; referencias de contexto: 37,1 % nacional [4], 44,7 % en Lambayeque [6] |
-| N.° de factores de incumplimiento identificados y clasificados según el modelo OMS | Clasificados en las 5 dimensiones | **5 dimensiones cubiertas**, con al menos un factor observable por dimensión (Tabla 3) |
+| N.° de factores de incumplimiento identificados y clasificados según el modelo OMS | Clasificados en las 5 dimensiones | **5 dimensiones cubiertas**, con al menos un factor observable por dimensión (Tabla 4) |
 | Porcentaje de procesos de seguimiento no digitalizados | Medida en el diagnóstico | **100 %** de los subprocesos de seguimiento de adherencia carecen de soporte digital (registro de toma, verificación entre citas, alerta de riesgo, auditoría) |
 
-**Demostración.** La entrevista semiestructurada al Dr. Milko Ugaz Zegarra (Anexo n.° 03) evidenció que el seguimiento se apoya exclusivamente en el autorreporte verbal y que la detección del incumplimiento es reactiva. De ese diagnóstico se derivaron las **cuatro brechas tecnológicas** de la Tabla 2, cada una trazada a un requisito funcional, y la **clasificación de los factores de incumplimiento en las cinco dimensiones del modelo de la OMS** (Tabla 3), que a su vez gobierna la estructura de variables del Anexo n.° 04 y, por tanto, del dataset de entrenamiento. La cadena diagnóstico → factor → variable → requisito queda así documentada de extremo a extremo.
+**Demostración.** La entrevista semiestructurada al Dr. Milko Ugaz Zegarra (Anexo n.° 03) evidenció que el seguimiento se apoya exclusivamente en el autorreporte verbal y que la detección del incumplimiento es reactiva. De ese diagnóstico se derivaron las **cuatro brechas tecnológicas** de la Tabla 3, cada una trazada a un requisito funcional, y la **clasificación de los factores de incumplimiento en las cinco dimensiones del modelo de la OMS** (Tabla 4), que a su vez gobierna la estructura de variables del Anexo n.° 04 y, por tanto, del dataset de entrenamiento. La cadena diagnóstico → factor → variable → requisito queda así documentada de extremo a extremo.
 
 ### 1.2.2. OE2 – Determinar los requisitos funcionales y no funcionales del sistema
 
@@ -647,7 +853,7 @@ Conforme al cronograma, restan dentro del Sprint 3: el módulo de **alertas temp
 | Porcentaje de requisitos especificados respecto a los identificados | 100 % | **100 %**: 8 RF y 6 RNF especificados con criterio de aceptación y prioridad MoSCoW |
 | Grado de alineación con estándares de arquitectura de software (juicio de expertos, escala 1–5) | Evaluación por 3 expertos | «*completar con el resultado del expediente de juicio de expertos*» (formato disponible en `documentacion/02_instrumentos/Expediente_Expertos.md`) |
 
-**Demostración.** Los **diez requisitos funcionales** de la Tabla 4 —ocho especificados en el Sprint 2 y dos emergentes incorporados en el Sprint 3— se derivan uno a uno de las brechas del diagnóstico y están priorizados con MoSCoW, con criterio de aceptación y objetivo asociado. Los seis requisitos no funcionales (Tabla 6) están mapeados a atributos de la norma ISO/IEC 25010 [7] y —a diferencia de una especificación meramente declarativa— **cuatro de los seis cuentan ya con materialización técnica verificable** en el código del API Gateway: seguridad (RNF01), instrumentación de desempeño (RNF02), fiabilidad mediante manejo global de excepciones y sonda de salud (RNF04) y modularidad por capas (RNF05).
+**Demostración.** Los **diez requisitos funcionales** de la Tabla 2 —ocho especificados en el Sprint 2 y dos emergentes incorporados en el Sprint 3— se derivan uno a uno de las brechas del diagnóstico y están priorizados con MoSCoW, con criterio de aceptación y objetivo asociado. Los seis requisitos no funcionales (Tabla 9) están mapeados a atributos de la norma ISO/IEC 25010 [7] y —a diferencia de una especificación meramente declarativa— **cuatro de los seis cuentan ya con materialización técnica verificable** en el código del API Gateway: seguridad (RNF01), instrumentación de desempeño (RNF02), fiabilidad mediante manejo global de excepciones y sonda de salud (RNF04) y modularidad por capas (RNF05).
 
 La arquitectura de microservicios desacoplados quedó definida en cuatro capas —presentación, lógica/servicios, datos e infraestructura— con el microservicio de ML separado del backend transaccional, lo que permite escalar y reentrenar el modelo sin detener la operación clínica (RNF06).
 
@@ -657,7 +863,7 @@ La arquitectura de microservicios desacoplados quedó definida en cuatro capas �
 
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
-| N.° de algoritmos comparados | ≥ 4 | **4 configurados**: Regresión Logística, Random Forest, XGBoost y SVM (Tabla 9) |
+| N.° de algoritmos comparados | ≥ 4 | **4 configurados**: Regresión Logística, Random Forest, XGBoost y SVM (Tabla 12) |
 | AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); «*completar con la ejecución sobre el dataset real*» |
 | Sensibilidad y especificidad del modelo seleccionado | Reportadas | Calculadas por el script; pendientes de la extracción definitiva |
 | F1-score en datos de prueba independientes | Reportado | Calculado sobre el conjunto apartado; pendiente de la extracción definitiva |
@@ -670,7 +876,7 @@ Tres decisiones metodológicas sostienen la validez de la comparación: **(i)** 
 
 El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el error clínicamente costoso es el falso negativo, un paciente en riesgo que el sistema no detecta y que por tanto no recibe la alerta temprana (RF05).
 
-**El modelo ya no vive fuera del sistema.** El *pipeline* ganador se serializa junto con su preprocesador y el API lo carga para responder la predicción de un paciente concreto (apartado 1.1.3.a). Esto importa para el objetivo por una razón de método: un modelo evaluado únicamente en un cuaderno de análisis no demuestra capacidad predictiva *en el sistema*, porque nada garantiza que la transformación aplicada en producción coincida con la del entrenamiento. Serializar ambos como una sola unidad es lo que hace verificable esa equivalencia.
+**El modelo ya no vive fuera del sistema.** El *pipeline* ganador se serializa junto con su preprocesador y el API lo carga para responder la predicción de un paciente concreto (apartado 1.1.4.a). Esto importa para el objetivo por una razón de método: un modelo evaluado únicamente en un cuaderno de análisis no demuestra capacidad predictiva *en el sistema*, porque nada garantiza que la transformación aplicada en producción coincida con la del entrenamiento. Serializar ambos como una sola unidad es lo que hace verificable esa equivalencia.
 
 **Lo que este avance no demuestra.** El modelo desplegado se entrenó con un conjunto de demostración simulado, declarado como tal en sus metadatos (`datos_reales: false`) y en la propia interfaz. Sus cifras evidencian que el componente funciona de extremo a extremo; **no** responden al indicador del objetivo. Lo pendiente para cerrar el OE3 es la **ejecución sobre el dataset real** una vez concluida la extracción documental del Anexo n.° 04, con el protocolo ya implementado y verificado.
 
@@ -682,7 +888,7 @@ El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el
 | :--- | :--- | :--- |
 | Porcentaje de cumplimiento de historias de usuario | 100 % por sprint | **5 de 5** historias cerradas de extremo a extremo y verificadas (HU01–HU05): **100 %** del alcance comprometido para los Sprints 1 y 2, más el alcance adelantado del Sprint 3 |
 | N.° de módulos construidos frente a módulos requeridos | Todos los módulos | **7 de 10** requisitos funcionales operativos de extremo a extremo (RF01–RF04, RF08, RF09, RF10), con los tres componentes del sistema desplegados y un APK de publicación instalable |
-| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **8 defectos detectados y corregidos**, todos por las pruebas automatizadas, el análisis estático o la verificación sobre el artefacto entregable (imputación de nulos de texto, persistencia de los tipos enumerados, maquetación del panel, escalado tipográfico de la app, `None` frente a `NaN` en la inferencia, validación de correo en la salida del listado, permiso de INTERNET ausente en el manifiesto de publicación, permiso de avisos no consultado al sistema). **0 defectos abiertos** al cierre; 115 de 115 pruebas en verde |
+| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **13 incidencias registradas y cerradas**, con su causa raíz y forma de detección en el registro consolidado del apartado 1.1.6 (Tabla 22). Once de las trece se detectaron por prueba automatizada o verificación dirigida y ninguna llegó al usuario. **0 abiertas** al corte; 115 de 115 pruebas en verde |
 | Porcentaje de cumplimiento de atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación formal programada para el Sprint 4 |
 
 **Demostración del avance.** El núcleo funcional está operativo y verificado:

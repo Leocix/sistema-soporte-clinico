@@ -161,6 +161,11 @@ def insertar_tabla(doc, bloque: list[str]) -> None:
     tabla.alignment = WD_TABLE_ALIGNMENT.CENTER
     tabla.autofit = False
 
+    # Una tabla ancha en vertical no cabe a 9 puntos: el registro de
+    # incidencias tiene siete columnas de texto corrido y, sin bajar el cuerpo,
+    # Word parte las palabras en columnas de dos caracteres.
+    cuerpo_letra = Pt(8) if columnas >= 6 else Pt(9)
+
     def pintar(celda, texto, modo, negrita=False):
         p = celda.paragraphs[0]
         p.alignment = modo
@@ -168,7 +173,7 @@ def insertar_tabla(doc, bloque: list[str]) -> None:
         p.paragraph_format.space_after = Pt(1)
         escribir_inline(p, texto.replace("<br>", " "), base_negrita=negrita)
         for run in p.runs:
-            run.font.size = Pt(9)
+            run.font.size = cuerpo_letra
 
     for i, texto in enumerate(encabezado):
         pintar(tabla.rows[0].cells[i], texto, modos[i] if i < len(modos) else 0, negrita=True)
