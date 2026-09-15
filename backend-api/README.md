@@ -87,7 +87,7 @@ el dataset de entrenamiento ni en los resultados de la tesis**.
 python -m pytest -q
 ```
 
-93 casos sobre una base en memoria: reglas clínicas, idempotencia de la
+91 casos sobre una base en memoria: reglas clínicas, idempotencia de la
 sincronización, control de acceso por rol, grupo familiar, recuperación de
 contraseña, acceso móvil y carga del modelo desplegado.
 

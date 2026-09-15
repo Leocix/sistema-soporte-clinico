@@ -6,7 +6,6 @@
 # --- API Gateway (FastAPI) ---
 fastapi==0.118.0
 uvicorn[standard]==0.30.6
-python-multipart==0.0.9
 
 # --- Validacion y configuracion ---
 pydantic==2.9.2

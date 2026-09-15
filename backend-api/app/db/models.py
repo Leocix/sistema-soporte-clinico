@@ -292,7 +292,6 @@ class Paciente(Base):
     usuario: Mapped[Usuario | None] = relationship(
         back_populates="ficha", foreign_keys=[id_usuario]
     )
-    medico_tratante: Mapped[Usuario | None] = relationship(foreign_keys=[id_medico_tratante])
     registros: Mapped[list[RegistroAdherencia]] = relationship(
         back_populates="paciente",
         cascade="all, delete-orphan",
@@ -398,7 +397,6 @@ class RegistroAdherencia(Base):
     )
 
     paciente: Mapped[Paciente] = relationship(back_populates="registros")
-    confirmante: Mapped[Usuario | None] = relationship(foreign_keys=[id_confirmante])
 
     @property
     def corroborada(self) -> bool:
