@@ -507,6 +507,7 @@ Se completaron los servicios REST de ambas historias, con validación estricta d
 | `GET` | `/api/pacientes/{id}` | RF02 | Médico tratante o el propio paciente |
 | `PATCH` | `/api/pacientes/{id}` | RF02 | Médico tratante |
 | `DELETE` | `/api/pacientes/{id}` | RF02 | Médico tratante (baja lógica) |
+| `POST` | `/api/pacientes/{id}/acceso` | RF01/RF02 | Médico tratante |
 | `POST` | `/api/adherencia/registros` | RF03 | Paciente (su propia toma) o médico tratante |
 | `POST` | `/api/adherencia/registros/lote` | RF03 | Paciente o médico tratante |
 | `GET` | `/api/adherencia/pacientes/{id}/registros` | RF03 | Médico tratante o el propio paciente |
@@ -521,7 +522,7 @@ Se completaron los servicios REST de ambas historias, con validación estricta d
 | `POST` | `/api/auth/recuperacion` | RF10 | Pública |
 | `POST` | `/api/auth/recuperacion/confirmar` | RF10 | Pública, solo con enlace vigente |
 
-Las seis últimas rutas se incorporaron en el Sprint 3 y se documentan en el apartado 1.1.4. Ninguna ruta pública admite crear una cuenta ni cambiar una credencial sin un permiso de un solo uso previamente emitido por el titular.
+Las rutas de RF04, RF09, RF10 y la de acceso móvil se incorporaron en el Sprint 3 y se documentan en el apartado 1.1.4. Ninguna ruta pública admite crear una cuenta ni cambiar una credencial sin un permiso de un solo uso previamente emitido por el titular.
 
 **Tres decisiones de diseño relevantes.**
 
@@ -648,11 +649,14 @@ verificación dirigida, y ninguno por casualidad. **Cero abiertos al cierre.**
 | RF09 | Columna de corroboración en el historial clínico | Web | 2 | **Terminada** |
 | RF10 | Restablecimiento de contraseña por enlace de un solo uso | API + Web | 5 | **Terminada** |
 | RNF03 | Barra inferior de navegación en sustitución del menú oculto | Móvil | 3 | **Terminada** |
+| RF01 / RF02 | Acceso móvil del paciente generado desde el panel | API + Web | 3 | **Terminada** |
+| RF02 | Validación de la ficha en el propio formulario | Web | 3 | **Terminada** |
+| RNF04 | Reintento de lecturas ante el arranque en frío del servicio | Móvil | 2 | **Terminada** |
 | RF05 | Alertas tempranas al médico ante riesgo alto | API + Web | 5 | Pendiente |
 | RF06 | Atribución individual con SHAP | ML + Web | 8 | Pendiente |
 | RF07 | Exportación de reportes del panel *(arrastrado del Sprint 2)* | Web | 5 | Pendiente |
 | — (OE3) | Ejecución de la comparación sobre el dataset real | ML | 5 | **Bloqueada**: depende de la extracción documental |
-| | **Comprometido: 70 · Completado al corte: 47 (67 %)** | | **70** | |
+| | **Comprometido: 78 · Completado al corte: 55 (71 %)** | | **78** | |
 
 El sprint sigue abierto: su cierre corresponde a la semana 6. Lo completado hasta
 el corte del 50 % es el alcance adelantado que se documenta a continuación; los
@@ -715,20 +719,26 @@ El efecto sobre el dato es lo relevante para la investigación: el historial del
 
 La pantalla de acceso remitía al consultorio a quien olvidara su contraseña. Para una población de adultos mayores, buena parte de ella rural, eso convierte un olvido en un desplazamiento, y para el consultorio en una intervención manual sobre la base de datos. Se implementó el restablecimiento mediante un enlace de un solo uso, válido treinta minutos, con tres cautelas: la respuesta del API es idéntica exista o no la cuenta —de otro modo la ruta permitiría enumerar los correos registrados—, del enlace se persiste únicamente su resumen SHA-256, y solicitar uno nuevo anula los anteriores.
 
-#### e) Evidencia de pruebas del sprint
+#### e) Acceso del paciente a la aplicación y calidad de la ficha
+
+Dar de alta a un paciente con su correo no le daba acceso a la aplicación: la cuenta podía existir, pero nadie tenía cómo entregarle una contraseña. Se incorporó en la ficha del panel la **generación del acceso móvil**: el médico tratante la solicita, el API crea o renueva la cuenta y devuelve **una sola vez** una contraseña temporal, compuesta con un alfabeto que excluye los caracteres que se confunden al dictarla (O/0, I/l/1). No se almacena en claro ni vuelve a mostrarse.
+
+El formulario de alta y edición **valida la ficha antes de enviarla**. Distingue *errores*, que impiden guardar porque el API los rechazaría de todos modos —menos de cinco fármacos, controles perdidos que superan a los programados, tiempo de enfermedad mayor que la edad—, de *avisos*, que no bloquean porque un dato infrecuente puede ser correcto —un DNI que no tiene ocho dígitos, un puntaje de Morisky que no coincide con la clasificación registrada—. La validación del servidor sigue siendo la que manda; la del formulario evita que el médico descubra el error después de completar veintiuna variables. Protege además la calidad del dataset, porque cada ficha es una fila del conjunto de entrenamiento.
+
+#### f) Evidencia de pruebas del sprint
 
 **Tabla 19.** Batería automatizada al corte, por componente.
 
 | Componente | Casos | Alcance verificado | Resultado |
 | :--- | :---: | :--- | :---: |
-| API Gateway (`pytest`) | 79 | RF01–RF04, RF09, RF10, RBAC de dominio, no enumeración de cuentas | ✔ 79/79 |
-| Aplicación móvil (`flutter test`) | 36 | Contrato del cliente, cola sin conexión, programación de avisos, acceso y alta con código | ✔ 36/36 |
+| API Gateway (`pytest`) | 91 | RF01–RF04, RF09, RF10, acceso móvil, RBAC de dominio, no enumeración de cuentas y carga del modelo realmente desplegado | ✔ 91/91 |
+| Aplicación móvil (`flutter test`) | 40 | Contrato del cliente, cola sin conexión, reintento ante arranque en frío, programación de avisos, acceso y alta con código | ✔ 40/40 |
 | Panel web | — | `npm run build` y análisis estático sin errores; recorrido completo verificado en navegador | ✔ |
-| **Total** | **115** | | **✔** |
+| **Total** | **131** | | **✔** |
 
 Las pruebas del acompañamiento familiar y del restablecimiento no verifican únicamente que la función opere: verifican también que **no** haga lo que no debe. Un acompañante no puede corroborar tomas de un paciente ajeno (`403`), ni corroborar dos veces el mismo evento (`409`), ni corroborar fuera de plazo (`409`), ni registrar tomas en nombre del paciente. Y ni el acceso ni la recuperación permiten averiguar qué correos están registrados: la comprobación del código precede a la del correo precisamente por eso.
 
-#### f) Registro de incidencias del sprint
+#### g) Registro de incidencias del sprint
 
 **Tabla 20.** Registro de incidencias del Sprint 3, al corte del 50 %.
 
@@ -740,19 +750,29 @@ Las pruebas del acompañamiento familiar y del restablecimiento no verifican ún
 | I-11 | API | Una sola dirección de correo mal formada devolvía `500` en todo el listado de pacientes | Prueba de regresión | `EmailStr` se aplicaba también en el esquema de salida | Estricto al entrar, tolerante al salir: texto libre en la salida | Cerrada |
 | I-12 | Datos | La carga inicial saltaba las fichas ya existentes y dejaba la base sin cuentas de paciente | Intento de acceso desde la aplicación | El script solo contemplaba el alta, no completar una ficha a medias | Reescribir la carga para que complete lo que falte y sea idempotente | Cerrada |
 | I-13 | Web | El panel anunciaba que la predicción llegaría en el Sprint 3 cuando ya estaba integrada | Revisión previa a la demostración | Texto informativo no actualizado al cerrar RF04 | Reescribir el aviso y distinguir riesgo observado de riesgo predicho | Cerrada |
+| I-14 | API / Despliegue | En el servicio desplegado la ficha no mostraba la predicción: el modelo no podía cargarse | Revisión de la arquitectura y de las dependencias | `imbalanced-learn` no figuraba entre las dependencias del API y la versión de *scikit-learn* declarada no era la del entrenamiento; las pruebas usaban un modelo sintético y nunca abrían el artefacto real | Fijar las versiones exactas del entorno de entrenamiento y añadir pruebas que cargan el artefacto desplegado y comparan las versiones instaladas con las declaradas | Cerrada |
+| I-15 | Móvil | La aplicación indicaba «sin conexión» con el teléfono conectado a internet | Uso de la aplicación por el Product Owner en dispositivo | El servicio gratuito se suspende sin tráfico y la primera petición tras el arranque en frío se corta | Reintentar las lecturas con espera creciente (3 s y 8 s), nunca las escrituras, con un mensaje que no atribuye el fallo a la red del usuario | Cerrada |
+| I-16 | Web | No se podían guardar cambios en fichas con código de la serie D- | Verificación en navegador | La validación exigía el formato del código también en edición, donde el campo está bloqueado | Validar el código solo en el alta | Cerrada |
+| I-17 | Web | La contraseña temporal del acceso móvil desaparecía antes de poder anotarla | Verificación en navegador | Refrescar la ficha tras generarla desmontaba el componente que la mostraba | Refrescar la ficha solo al ocultar la contraseña | Cerrada |
 
-**Densidad del sprint:** seis defectos sobre cinco componentes tocados (1,2 por
+**Densidad del sprint:** diez defectos sobre cinco componentes tocados (2,0 por
 componente). **Cero abiertos al corte.**
 
-Dos merecen comentario metodológico. **I-08** solo era observable sobre el
+Tres merecen comentario metodológico. **I-14** es el más grave del proyecto: la
+batería de pruebas estaba en verde mientras la predicción no funcionaba en el
+servicio desplegado, porque ninguna prueba abría el archivo que realmente se
+sirve. La corrección no se limitó a añadir la dependencia: incorporó pruebas
+contra el artefacto real, de modo que el mismo desajuste no pueda repetirse sin
+que la batería falle. **I-08** solo era observable sobre el
 artefacto que se entrega: en desarrollo todo funcionaba, y de ahí la regla que se
 incorporó al procedimiento de verificación —probar el APK de publicación y no
-únicamente la ejecución en depuración—. **I-13** no es un fallo de código sino de
+únicamente la ejecución en depuración—. I-14 es la misma lección aplicada al
+modelo. **I-13** no es un fallo de código sino de
 consistencia entre el producto y su propia documentación en pantalla; se registra
 porque un sistema que se contradice a sí mismo ante el usuario es tan defectuoso
 como uno que calcula mal.
 
-#### g) Alcance pendiente del sprint
+#### h) Alcance pendiente del sprint
 
 Conforme al cronograma, restan dentro del Sprint 3: el módulo de **alertas tempranas al médico** (RF05), la **atribución individual con SHAP** (RF06) en sustitución de la importancia global que hoy muestra la ficha, la **exportación de reportes** del panel (RF07) y —condicionada a la extracción documental— la **ejecución de la comparación de algoritmos sobre el dataset real**, que es lo que cierra el OE3.
 
@@ -794,24 +814,28 @@ sin respaldo.
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | 1 | 4 | 0,25 | 0 (retrospectiva) | 0 |
 | 2 | 6 | 5 | 1,20 | 5 de 6 | 0 |
-| 3 *(al corte)* | 6 | 5 | 1,20 | 6 de 6 | 0 |
-| **Total** | **13** | — | — | **11 de 13** | **0** |
+| 3 *(al corte)* | 10 | 5 | 2,00 | 9 de 10 | 0 |
+| **Total** | **17** | — | — | **14 de 17** | **0** |
 
-**Lectura del indicador.** La densidad no decrece entre el Sprint 2 y el Sprint 3,
-y sería deshonesto presentarla como si lo hiciera. La explicación es que ambos
+**Lectura del indicador.** La densidad no decrece entre el Sprint 2 y el Sprint 3:
+aumenta, y sería deshonesto presentarla de otro modo. La explicación es que ambos
 sprints incorporaron componentes nuevos —el pipeline de datos y el panel en el
 segundo; la inferencia, el acompañamiento familiar y el empaquetado móvil en el
 tercero—, y el defecto se concentra en lo que se escribe por primera vez, no en lo
-que ya está cubierto por pruebas. Lo que sí mejoró es la **forma de detección**:
-en el Sprint 2, cinco de seis defectos aparecieron por prueba o verificación
-dirigida; en el Sprint 3, los seis. Ninguno llegó al usuario.
+que ya está cubierto por pruebas. El Sprint 3 añade una causa propia: es el
+primero que se ejecuta sobre el entorno desplegado y un dispositivo real, y dos
+de sus defectos (I-14 e I-15) solo se manifestaban allí. Ninguno afectó a
+pacientes, porque el sistema aún no opera con usuarios reales, pero ambos
+llegaron al entorno desplegado. Nueve de los diez se detectaron por prueba o
+verificación dirigida; I-15 lo detectó el Product Owner al usar la aplicación.
 
-**Clasificación por origen.** De los trece registrados, seis provienen de una
-suposición equivocada sobre el comportamiento de una biblioteca de terceros
-(I-02, I-03, I-05, I-06, I-09, I-10), tres de una diferencia entre el entorno de
-desarrollo y el de entrega (I-08, I-11, I-12), dos de maquetación o de mensajes
-(I-04, I-07), uno de consistencia entre el producto y su propia interfaz (I-13) y
-uno de diseño detectado en retrospectiva (I-01). La concentración en el primer
+**Clasificación por origen.** De los diecisiete registrados, seis provienen de
+una suposición equivocada sobre el comportamiento de una biblioteca de terceros
+(I-02, I-03, I-05, I-06, I-09, I-10), cinco de una diferencia entre el entorno de
+desarrollo y el de entrega (I-08, I-11, I-12, I-14, I-15), dos de maquetación o de
+mensajes (I-04, I-07), dos del flujo de la interfaz (I-16, I-17), uno de
+consistencia entre el producto y su propia interfaz (I-13) y uno de diseño
+detectado en retrospectiva (I-01). La concentración en el primer
 grupo motivó una práctica que se mantiene: comprobar en la documentación de la
 versión concreta de cada dependencia el contrato que se está asumiendo, en lugar
 de deducirlo del nombre del método.
@@ -888,7 +912,7 @@ El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el
 | :--- | :--- | :--- |
 | Porcentaje de cumplimiento de historias de usuario | 100 % por sprint | **5 de 5** historias cerradas de extremo a extremo y verificadas (HU01–HU05): **100 %** del alcance comprometido para los Sprints 1 y 2, más el alcance adelantado del Sprint 3 |
 | N.° de módulos construidos frente a módulos requeridos | Todos los módulos | **7 de 10** requisitos funcionales operativos de extremo a extremo (RF01–RF04, RF08, RF09, RF10), con los tres componentes del sistema desplegados y un APK de publicación instalable |
-| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **13 incidencias registradas y cerradas**, con su causa raíz y forma de detección en el registro consolidado del apartado 1.1.6 (Tabla 22). Once de las trece se detectaron por prueba automatizada o verificación dirigida y ninguna llegó al usuario. **0 abiertas** al corte; 115 de 115 pruebas en verde |
+| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **17 incidencias registradas y cerradas**, con su causa raíz y forma de detección en el registro consolidado del apartado 1.1.6 (Tabla 22). Catorce de las diecisiete se detectaron por prueba automatizada o verificación dirigida. **0 abiertas** al corte; 131 de 131 pruebas en verde |
 | Porcentaje de cumplimiento de atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación formal programada para el Sprint 4 |
 
 **Demostración del avance.** El núcleo funcional está operativo y verificado:
@@ -909,7 +933,7 @@ El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el
 | **Alertas de toma en el dispositivo (RF08)** | Implementada y verificada | `app-movil/lib/services/notification_service.dart` |
 | **Grupo familiar de acompañamiento (RF09)** | Implementado y verificado | `backend-api/app/api/familiares.py`, `app-movil/lib/screens/familia_screen.dart` |
 | **Restablecimiento de contraseña (RF10)** | Implementado y verificado | `backend-api/app/api/auth.py`, `frontend-web/src/pages/RestablecerClave.jsx` |
-| Batería de pruebas automatizadas | 115 casos, todos en verde | `backend-api/tests/`, `app-movil/test/` |
+| Batería de pruebas automatizadas | 131 casos, todos en verde | `backend-api/tests/`, `app-movil/test/` |
 
 **El escenario de extremo a extremo exigido por el hito está operativo sobre infraestructura desplegada:** el médico da de alta al paciente polimedicado desde el panel web; el paciente registra su toma desde la aplicación móvil, incluso sin conexión; un familiar la corrobora desde su propio dispositivo; y el médico consulta, en la misma ficha, la adherencia observada, la predicción del modelo y quién atestigua cada evento.
 
