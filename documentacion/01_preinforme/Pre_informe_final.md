@@ -45,18 +45,18 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 **5. Fecha de presentación**
 
-08 de septiembre de 2026 (Hito 2 – avance al 50 %, semana 4 del cronograma del curso).
+15 de septiembre de 2026 (avance al 50 %, semana 5 del cronograma del curso).
 
 **6. Estado del avance**
 
-| Componente | Alcance del corte (semana 4) | Estado |
-| :--- | :--- | :--- |
-| Sprint 1 (CRISP-DM: *Business & Data Understanding*) | Semanas 2–3 | Cerrado |
-| Sprint 2 (CRISP-DM: *Data Preparation & Modeling* inicial) | Semanas 3–4 | Cerrado |
-| Sprint 3 (CRISP-DM: *Modeling* y *Evaluation*) | Semanas 5–6 | En ejecución (adelantado) |
-| Sprint 4 (CRISP-DM: *Deployment*) | Semanas 7–8 | Programado |
+| Sprint | Semanas | Estado |
+| :--- | :---: | :--- |
+| Sprint 1 (CRISP-DM: *Business & Data Understanding*) | 2–3 | Cerrado |
+| Sprint 2 (CRISP-DM: *Data Preparation* y *Modeling* inicial) | 3–4 | Cerrado |
+| Sprint 3 (CRISP-DM: *Modeling* y *Evaluation*) | 5–6 | En ejecución |
+| Sprint 4 (CRISP-DM: *Deployment*) | 7–8 | Programado |
 
-> **Convención de lectura.** Los indicadores que dependen de mediciones de campo —extracción documental del Anexo n.° 04, aplicación del test de Morisky-Green, juicio de expertos y pruebas con usuarios— se reportan con su estado de ejecución y el sprint en que se cierran. No se consigna ningún valor que no haya sido medido.
+> **Convención de lectura.** Los indicadores que dependen del trabajo de campo —extracción de historias clínicas (Anexo n.° 04), test de Morisky-Green, juicio de expertos y pruebas con usuarios— se reportan con su estado y el sprint en que se cierran. Mientras tanto, el sistema y el modelo funcionan con un **conjunto de demostración** que permite verificar el protocolo de extremo a extremo.
 
 ---
 
@@ -64,12 +64,13 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 - **I. RESULTADOS**
   - **1.1. En base a la metodología utilizada**
-    - 1.1.1. Product Backlog general
-    - 1.1.2. Sprint 1: Comprensión del negocio y de los datos, y primer incremento funcional
-    - 1.1.3. Sprint 2: Preparación de datos, cierre del núcleo funcional y modelado inicial
-    - 1.1.4. Sprint 3: Integración del modelo, aplicación móvil y acompañamiento familiar *(en ejecución)*
-    - 1.1.5. Sprint 4: Cierre, rendimiento y validación de usabilidad *(programado)*
-    - 1.1.6. Registro consolidado de incidencias
+    - 1.1.1. Descripción del producto
+    - 1.1.2. Product Backlog general
+    - 1.1.3. Sprint 1: Comprensión del negocio y de los datos
+    - 1.1.4. Sprint 2: Preparación de datos y núcleo funcional
+    - 1.1.5. Sprint 3: Modelo integrado y funcionalidades complementarias *(en ejecución)*
+    - 1.1.6. Sprint 4: Cierre y validación *(programado)*
+    - 1.1.7. Registro consolidado de incidencias
   - **1.2. En base a los objetivos del proyecto**
     - 1.2.1. OE1 – Caracterización del proceso actual de seguimiento terapéutico
     - 1.2.2. OE2 – Determinación de los requisitos funcionales y no funcionales
@@ -85,886 +86,505 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 ## 1.1. En base a la metodología utilizada
 
-El desarrollo del producto acreditable se conduce con una **integración de SCRUM y CRISP-DM**. La unidad de trabajo y de rendición de cuentas es el **sprint** de SCRUM; las fases de CRISP-DM no constituyen un ciclo paralelo, sino que se ejecutan **dentro** de los sprints como trabajo especializado del mismo equipo. De ese modo cada sprint cierra a la vez un incremento de software verificable y un entregable del modelo predictivo, que es la forma en que la literatura recomienda integrar el ciclo de vida analítico con un marco ágil de entrega (enfoque MLOps) [1], [2].
-
-La integración es deliberada y no meramente terminológica. Un sprint que solo entregara código dejaría el modelo sin datos que aprender; uno que solo entregara analítica no produciría el software que captura esos datos. Al exigir que cada sprint cierre ambos frentes, la traza digital que genera el sistema alimenta el dataset del sprint siguiente, y el conocimiento obtenido del dataset redefine lo que el software debe capturar. Cada sprint del presente informe corresponde a un sprint del cronograma oficial del curso.
+El producto se desarrolla integrando **SCRUM y CRISP-DM**. El sprint de SCRUM es la unidad de trabajo; las fases de CRISP-DM se ejecutan dentro de los sprints. Así, cada sprint entrega a la vez un incremento de software y un avance del modelo predictivo [1], [2].
 
 **Tabla 1.** Correspondencia entre sprints, fases de CRISP-DM e hitos del cronograma.
 
-| Sprint | Objetivo del sprint | Fase CRISP-DM ejecutada dentro | Semanas | Hito | Estado |
+| Sprint | Objetivo | Fase CRISP-DM | Semanas | Hito | Estado |
 | :---: | :--- | :--- | :---: | :---: | :--- |
-| **1** | Planificación y primer incremento | *Business Understanding* + *Data Understanding* | 2–3 | 30 % (Hito 1) | **Cerrado** |
-| **2** | Núcleo funcional y modelado inicial | *Data Preparation* + *Modeling* (inicial) | 3–4 | 40 % / 50 % (Hito 2) | **Cerrado** |
-| **3** | Integración del modelo y funcionalidades complementarias | *Modeling* (selección) + *Evaluation* | 5–6 | 65 % / 80 % | **En ejecución** (adelantado) |
-| **4** | Finalización, rendimiento y validación de usabilidad | *Deployment* y monitoreo | 7–8 | 90 % / 100 % (Hito 3) | Programado |
-
-El Sprint 3 figura **en ejecución y no programado**: parte de su alcance se adelantó al corte del 50 %, según se documenta en el apartado 1.1.4. El detalle de las ceremonias de cada sprint —planificación, revisión y retrospectiva, con sus acuerdos y compromisos— consta en el Anexo n.° 11.
+| **1** | Planificación y primer incremento | *Business* y *Data Understanding* | 2–3 | 30 % | **Cerrado** |
+| **2** | Núcleo funcional y modelado inicial | *Data Preparation* y *Modeling* inicial | 3–4 | 40 % / 50 % | **Cerrado** |
+| **3** | Modelo integrado y funcionalidades complementarias | *Modeling* (selección) y *Evaluation* | 5–6 | 65 % / 80 % | **En ejecución** |
+| **4** | Cierre, rendimiento y usabilidad | *Deployment* | 7–8 | 90 % / 100 % | Programado |
 
 ---
 
-### 1.1.1. Product Backlog general
+### 1.1.1. Descripción del producto
 
-La pila de producto es el artefacto que gobierna todo lo demás: de ella salen los
-Sprint Backlog, y a ella vuelven los requisitos que emergen al inspeccionar cada
-incremento. Se presenta antes que los sprints porque ninguno de ellos se entiende
-sin saber de dónde sale lo que compromete.
+#### a) Función principal
 
-**Criterio de priorización.** Las prioridades no se asignaron por dificultad
-técnica sino por su relación con las brechas del diagnóstico (OE1). Un requisito
-es **Must** cuando sin él la hipótesis de la investigación no puede contrastarse;
-**Should** cuando aporta valor clínico sustancial pero su ausencia no invalida el
-estudio; **Could** cuando mejora la experiencia y se implementa si el cronograma
-lo permite.
+El sistema **anticipa qué pacientes polimedicados tienen mayor probabilidad de dejar su tratamiento** antes del próximo control, para que el médico intervenga a tiempo. Hoy el consultorio se entera del incumplimiento cuando el paciente ya se descompensó.
 
-**Tabla 2.** Product Backlog general priorizado con MoSCoW y su trazabilidad.
+Para lograrlo, el sistema hace tres cosas:
 
-| ID | Historia / requisito funcional | Prioridad | Objetivo | Sprint | Estado al corte |
-| :---: | :--- | :---: | :---: | :---: | :--- |
-| RF01 | Autenticar y autorizar a médicos y pacientes con perfiles diferenciados | Must | OE2/OE4 | 1 | **Implementado** |
-| RF02 | Registrar y gestionar pacientes polimedicados y su esquema farmacológico | Must | OE4 | 2 | **Implementado y verificado** |
-| RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | OE4 | 2 | **Implementado y verificado** |
-| RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | OE3/OE5 | 3 | **Implementado y verificado** |
-| RF05 | Generar alertas tempranas al médico ante riesgo alto de incumplimiento | Must | OE4 | 3 | Pendiente |
-| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | OE3 | 3 | **Parcial**: importancia global del modelo; atribución individual pendiente |
-| RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | OE2/OE4 | 3 | **Parcial**: panel operativo; exportación pendiente |
-| RF08 | Enviar recordatorios de toma al paciente | Could | OE4 | 3 | **Implementado y verificado** |
-| RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | OE4 | 3 | **Implementado y verificado** |
-| RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | OE4 | 3 | **Implementado y verificado** |
+1. **Registra la toma real** de cada medicamento desde el celular del paciente, con recordatorios y confirmación de un familiar.
+2. **Calcula el riesgo** de incumplimiento de cada paciente con un modelo de aprendizaje automático.
+3. **Muestra al médico** la ficha, la adherencia observada, el riesgo predicho y reportes de todos sus pacientes.
 
-Los requisitos **RF09 y RF10 no figuraban en la pila inicial**. Se incorporaron durante el desarrollo y su origen queda documentado aquí porque forma parte del resultado metodológico: RF09 nace al constatar que la brecha B1 quedaba a medias —el sistema sustituye el autorreporte verbal por una traza digital, pero la fuente de esa traza sigue siendo únicamente el paciente—; RF10, al constatar que remitir al consultorio a quien olvida su contraseña convierte un olvido en un desplazamiento para una población mayoritariamente rural. Ambos se clasifican como *Should*: la hipótesis puede contrastarse sin ellos, pero su ausencia degrada la calidad de la evidencia y la usabilidad, respectivamente. La incorporación de requisitos emergentes a partir de la inspección del incremento es, precisamente, el comportamiento que SCRUM prescribe para el Product Backlog [1].
+La decisión clínica sigue siendo del médico: el sistema es un apoyo, no un diagnóstico.
 
-**Refinamiento de la pila.** El Product Backlog no se congeló al final del
-Sprint 1. Se revisó al cierre de cada sprint, y esa revisión produjo dos altas
-—RF09 y RF10— y dos reclasificaciones: RF06 y RF07 pasaron de «pendiente» a
-«parcial» al comprobarse que una parte de su alcance quedaba cubierta y que
-declararlos terminados habría sido inexacto. El detalle de lo comprometido en
-cada sprint figura en el Sprint Backlog correspondiente.
+#### b) Estructura del producto
 
----
+**Tabla 2.** Componentes del producto y sus usuarios.
 
-### 1.1.2. Sprint 1: Comprensión del negocio y de los datos, y primer incremento funcional
+| Componente | Tecnología | Usuario | Qué hace |
+| :--- | :--- | :--- | :--- |
+| Panel web | React + Vite (Vercel) | Médico | Registra pacientes, consulta fichas, riesgo y reportes; genera el acceso móvil del paciente |
+| Aplicación móvil | Flutter (Android) | Paciente y familiar | Recordatorios, registro de tomas sin conexión, grupo familiar y corroboración |
+| API central | FastAPI (Render) | — | Autenticación, reglas del negocio, cálculo de indicadores y predicción |
+| Modelo predictivo | scikit-learn (`ml-pipeline`) | — | Prepara los datos, entrena y compara algoritmos, y genera el modelo que usa la API |
+| Base de datos | PostgreSQL (Aiven) | — | Guarda usuarios, fichas, tomas y grupo familiar |
 
-**Sprint 1 · Semanas 2–3 · CRISP-DM: *Business Understanding* y *Data Understanding*.**
+#### c) Arquitectura y justificación
 
-**Objetivo del sprint.** Establecer el entendimiento compartido del problema clínico, construir la línea base de adherencia del consultorio, priorizar la pila de producto y entregar el primer incremento funcional verificable (autenticación con perfiles diferenciados, RF01).
+Se eligió una **arquitectura por capas con servicios desacoplados**: los dos clientes (web y móvil) se comunican solo con la API central mediante REST, y la API es la única que accede a la base de datos y al modelo.
 
-#### a) Comprensión del negocio: diagnóstico del consultorio médico Milko Ugaz Zegarra
+| Decisión | Razón |
+| :--- | :--- |
+| Una API central para web y móvil | Las reglas clínicas y de seguridad se escriben una sola vez y valen para ambos clientes |
+| Modelo separado del resto del código | Se puede reentrenar y reemplazar sin modificar ni detener el sistema (RNF06) |
+| Aplicación móvil con cola local | El paciente registra su toma aunque no tenga señal; se envía al recuperar conexión |
+| Servicios en la nube gestionados | Despliegue real sin administrar servidores, con conexión cifrada (RNF01) |
 
-Se aplicó la **guía de entrevista semiestructurada (Anexo n.° 03)** al médico internista responsable del consultorio, Dr. Milko Ugaz Zegarra. Los hallazgos que estructuran el problema son:
+#### d) Variables que respaldan el sistema
 
-1. El seguimiento de la adherencia se realiza **exclusivamente mediante autorreporte verbal** durante la consulta; no existe ficha estructurada, registro digital ni sistema de alertas que documente el consumo real entre una cita y la siguiente.
-2. Las discrepancias entre lo prescrito y lo efectivamente consumido se detectan de forma **reactiva**, por lo general cuando el paciente ya presenta una descompensación clínica.
-3. La población objetivo del consultorio es de aproximadamente **50 pacientes polimedicados** con hipertensión arterial y/o diabetes mellitus tipo 2.
-4. Las causas percibidas del incumplimiento son, en orden de mención: **el olvido, la complejidad del régimen farmacológico y la falta de comprensión de las indicaciones**.
-5. El médico manifestó que **una alerta temprana de riesgo, disponible antes de la cita**, facilitaría intervenciones oportunas y ajustes de tratamiento mejor informados.
+Las variables siguen el **modelo multidimensional de adherencia de la OMS** [3], que agrupa las causas del incumplimiento en cinco dimensiones. Cada variable se registra en la ficha del panel y en el Anexo n.° 04.
 
-**Brechas tecnológicas identificadas.** El diagnóstico permitió clasificar cuatro brechas que fundamentan directamente la solución propuesta:
+**Tabla 3.** Variables del modelo predictivo.
 
-**Tabla 3.** Brechas tecnológicas del proceso actual y su traducción en requisitos.
-
-| N.° | Brecha identificada | Consecuencia clínica observada | Requisito derivado |
-| :---: | :--- | :--- | :---: |
-| B1 | Ausencia de registro estructurado de la toma de medicamentos | El cumplimiento real no es verificable ni auditable | RF03, RF07 |
-| B2 | Inexistencia de trazabilidad digital entre citas | Detección reactiva, posterior a la descompensación | RF02, RF03 |
-| B3 | Falta de analítica predictiva sobre los datos clínicos | Imposibilidad de anticipar el incumplimiento | RF04, RF06 |
-| B4 | Ausencia de mecanismos de alerta y de recordatorio | El olvido —principal causa percibida— no se mitiga | RF05, RF08 |
-
-**Porcentaje de procesos de seguimiento no digitalizados (indicador de OE1): 100 %.** La entrevista identificó cuatro subprocesos de seguimiento de la adherencia —registro de la toma, verificación entre citas, alerta de riesgo y auditoría del cumplimiento— y **ninguno de los cuatro** cuenta con soporte digital: los cuatro se resuelven de forma verbal o no se realizan.
-
-#### b) Comprensión de los datos: línea base de adherencia y factores de incumplimiento
-
-Los factores de incumplimiento se clasificaron según el **modelo multidimensional de adherencia terapéutica de la OMS (2003)** [3], que organiza los determinantes en cinco dimensiones. Esta clasificación es la que gobierna, más adelante, la estructura de variables del dataset (sección 1.1.2.b).
-
-**Tabla 4.** Factores de incumplimiento identificados, clasificados por dimensión OMS.
-
-| Dimensión (OMS) | Factores identificados en el consultorio | Variable observable asociada |
+| Dimensión OMS | Variables | Origen |
 | :--- | :--- | :--- |
-| Relacionada con el paciente | Olvido de la toma; falta de comprensión de las indicaciones | Edad; puntaje de Morisky |
-| Relacionada con la terapia | Complejidad del régimen; carga farmacológica (≥ 5 fármacos) | N.° de fármacos; tomas/día |
-| Relacionada con la enfermedad | Cronicidad y multimorbilidad | Diagnóstico; tiempo de enfermedad; comorbilidades |
-| Socioeconómica | Nivel socioeconómico; aseguramiento; distancia al establecimiento | Nivel socioeconómico; aseguramiento; zona de residencia |
-| Relacionada con el sistema de salud | Seguimiento discontinuo; inasistencia a controles | Controles programados; controles perdidos |
+| Paciente | Edad, sexo | Historia clínica |
+| Socioeconómica y social | Nivel educativo, convivencia (vive solo o acompañado), apoyo familiar en la medicación | Historia clínica o entrevista |
+| Enfermedad | Diagnóstico (HTA, DM2 o ambas), tiempo de enfermedad, comorbilidades (lista marcada; el modelo usa el total) | Historia clínica |
+| Terapia | Número de fármacos, tomas por día | Historia clínica |
+| Sistema de salud | Controles programados y controles perdidos en 6 meses | Historia clínica |
+| *Variables derivadas* | Carga terapéutica (fármacos × tomas), tasa de inasistencia (perdidos ÷ programados), cronicidad relativa (tiempo de enfermedad ÷ edad/10) | Calculadas por el sistema |
+| *Variable objetivo* | Incumplimiento (sí/no) según el test de Morisky-Green | Entrevista al paciente (Anexo n.° 05) |
 
-**Referencias de contexto para la línea base.** La evidencia disponible sitúa la magnitud del problema en el entorno inmediato del estudio: el 37,1 % de los pacientes peruanos con hipertensión y diabetes presenta adherencia deficiente según el análisis de seis años de la ENDES [4]; en el Centro de Salud Pimentel (Chiclayo) solo el 31,1 % de los adultos mayores hipertensos alcanza adherencia buena [5]; y en un centro de salud de Lambayeque el 44,7 % de los pacientes crónicos no cumple con la toma de sus medicamentos, con asociación estadísticamente significativa entre polifarmacia y adherencia (p < 0,05) [6].
+El puntaje de Morisky **no se usa como predictor**, porque de él sale la etiqueta: usarlo inflaría artificialmente los resultados.
 
-**Línea base propia del consultorio: en ejecución.** El test de Morisky-Green (Anexo n.° 05) se aplica a la muestra del consultorio en paralelo a la extracción documental del Anexo n.° 04, y su resultado se incorpora al cierre del Sprint 3. Las referencias anteriores sirven de contraste para interpretar ese valor cuando se obtenga.
+#### e) Origen de los datos
 
-#### c) Construcción del Product Backlog
+| Fuente | Qué aporta | Estado |
+| :--- | :--- | :--- |
+| Historias clínicas del consultorio (Anexo n.° 04) | Las variables de la ficha, anonimizadas con un código P-001, P-002… | En extracción |
+| Test de Morisky-Green (Anexo n.° 05) | La etiqueta de adherencia de cada paciente | En aplicación |
+| Aplicación móvil | Las tomas registradas y corroboradas: la adherencia observada día a día | Operativa |
 
-La pila de producto se construyó en este sprint a partir de las brechas del
-diagnóstico y se priorizó con MoSCoW junto al Product Owner, en una sesión de
-refinamiento posterior a la entrevista. El resultado —con su estado al corte del
-presente informe, ya actualizado por los sprints siguientes— es la
-**Tabla 2**, presentada en el apartado 1.1.1.
+Hasta concluir la extracción, el sistema funciona con **pacientes de demostración** (códigos D-001 a D-005) y el modelo está entrenado con un **conjunto de demostración de 400 fichas**; la propia ficha del paciente lo indica en pantalla.
 
-Lo relevante de este sprint no es la tabla en sí sino el criterio con el que se
-ordenó: se rechazó priorizar por facilidad de implementación —que habría puesto
-primero el panel de auditoría— y se optó por priorizar por dependencia respecto
-de la hipótesis. Sin registro digital de la toma (RF03) no hay traza, y sin traza
-no hay variable conductual que el modelo pueda aprender; de ahí que el núcleo
-funcional se comprometiera antes que cualquier funcionalidad de visualización.
+#### f) Modelo predictivo y entrenamiento
 
-#### d) Historias de usuario y criterios de aceptación
+El entrenamiento se ejecuta con `ml-pipeline/src/train_evaluate.py` y sigue estos pasos:
 
-**Tabla 5.** Historias de usuario del escenario principal y sus criterios de aceptación.
+1. **Limpieza:** elimina duplicados, anula valores fuera de rango y excluye a quien no cumple el criterio de polimedicación.
+2. **Partición:** 80 % entrenamiento y 20 % prueba, conservando la proporción de adherentes e incumplidores.
+3. **Preparación:** completa los datos faltantes (mediana o moda), codifica las categorías y estandariza los números.
+4. **Balanceo con SMOTE** [8]: genera casos sintéticos de incumplimiento, solo con datos de entrenamiento.
+5. **Comparación de cuatro algoritmos:** Regresión Logística, Random Forest, XGBoost y SVM, con ajuste de hiperparámetros y validación cruzada de 5 pliegues.
+6. **Selección:** gana el de mayor AUCROC. Si la prueba de McNemar no encuentra diferencia significativa con el segundo, gana el de mayor sensibilidad, porque el error más costoso es no detectar a un paciente en riesgo.
+7. **Evaluación final** sobre el 20 % de prueba, que el modelo nunca vio.
+8. **Despliegue:** se guarda el modelo completo (preparación + algoritmo) y la API lo usa para calcular la probabilidad de cada paciente.
 
-| ID | Historia de usuario | Criterio de aceptación | Verificación |
-| :---: | :--- | :--- | :--- |
-| HU01 | Como **médico o paciente**, quiero iniciar sesión con mi perfil, para acceder solo a la información que me corresponde. | El acceso se concede únicamente con credenciales válidas **y** perfil coincidente; el mensaje de error no revela cuál dato falló; el token expira. | Prueba de integración sobre `POST /api/auth/login` |
-| HU02 | Como **médico**, quiero registrar y actualizar la ficha del paciente polimedicado y su esquema farmacológico, para mantener trazable su carga terapéutica. | El alta y la edición quedan persistidas y consultables; se rechaza el alta de un paciente con menos de 5 fármacos. | Prueba unitaria + restricción `ck_paciente_polimedicado` |
-| HU03 | Como **paciente**, quiero registrar desde mi celular cada toma de medicamento, para que mi médico conozca mi cumplimiento real entre citas. | Cada toma queda registrada y sincronizada; un reintento de envío tras pérdida de conectividad no duplica el evento. | Prueba de integración + restricción `uq_registro_toma_programada` |
+La probabilidad se traduce en tres niveles: **bajo** (menos de 40 %), **medio** (40 % a 69 %) y **alto** (70 % o más).
 
-A las tres historias del escenario principal se sumaron, en el Sprint 3, **HU04** (*«Como paciente, quiero que un familiar mío pueda confirmar que tomé mi medicación, para que el registro no dependa solo de mi palabra»*) y **HU05** (*«Como usuario del sistema, quiero recuperar mi contraseña desde mi propio teléfono, para no tener que acercarme al consultorio por un olvido»*), con sus criterios de aceptación y verificación automatizada, documentadas en el apartado 1.1.4 y en el Anexo n.° 09.
+#### g) Cómo se calculan los porcentajes y promedios
 
-#### e) Sprint Backlog e infraestructura del entorno
+**Tabla 4.** Indicadores que muestra el sistema.
 
-**Tabla 6.** Sprint Backlog del Sprint 1 (semanas 2–3).
+| Indicador | Cálculo |
+| :--- | :--- |
+| Cumplimiento del paciente | Tomas cumplidas (a tiempo o con retraso) ÷ tomas con desenlace (cumplidas + omitidas) × 100. Las pospuestas no cuentan |
+| Retraso promedio | Promedio de minutos entre la hora prescrita y la hora en que se registró cada toma cumplida |
+| Omisiones consecutivas | Tomas omitidas seguidas, contadas desde la más reciente |
+| Riesgo observado | **Alto:** cumplimiento < 60 % o 3+ omisiones seguidas. **Medio:** < 80 % o 2 seguidas. **Bajo:** en otro caso. Resume lo que el paciente ya hizo |
+| Riesgo predicho | Probabilidad que devuelve el modelo con la ficha del paciente. Anticipa lo que puede ocurrir |
+| Factores que más pesan | Cuánto empeora el modelo cuando se desordena cada variable (importancia por permutación) |
+| Adherencia promedio (reportes) | Promedio del cumplimiento de los pacientes con tomas registradas; cada paciente pesa lo mismo |
+| Tomas corroboradas (reportes) | Tomas cumplidas confirmadas por un familiar ÷ total de tomas cumplidas × 100 |
 
-| Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
+---
+
+### 1.1.2. Product Backlog general
+
+La pila se priorizó con **MoSCoW** según su relación con la hipótesis: *Must* si sin él no se puede contrastar la hipótesis; *Should* si aporta valor clínico importante; *Could* si mejora la experiencia. La estimación usa puntos de Fibonacci.
+
+**Tabla 5.** Product Backlog general refinado.
+
+| ID | Historia de usuario | Criterio de aceptación | Prioridad | Pts | Sprint | Estado |
+| :---: | :--- | :--- | :---: | :---: | :---: | :--- |
+| RF01 | Como médico o paciente, quiero iniciar sesión con mi perfil para ver solo lo que me corresponde | Acceso solo con credenciales y perfil válidos; el error no revela qué dato falló | Must | 13 | 1 | **Terminado** |
+| RF02 | Como médico, quiero registrar y editar la ficha del paciente polimedicado para mantener sus datos clínicos al día | Ficha guardada y consultable; se rechaza a pacientes con menos de 5 fármacos | Must | 24 | 2–3 | **Terminado** |
+| RF03 | Como paciente, quiero registrar cada toma desde mi celular para que mi médico conozca mi cumplimiento real | Cada toma queda registrada y sincronizada, sin duplicarse al reenviar | Must | 16 | 2 | **Terminado** |
+| RF04 | Como médico, quiero ver el riesgo de incumplimiento de cada paciente para priorizar a quién contactar | La ficha muestra probabilidad, nivel y factores; el sistema sigue operando si el modelo falla | Must | 13 | 3 | **Terminado** |
+| RF05 | Como médico, quiero recibir alertas cuando un paciente pase a riesgo alto para actuar antes del control | Alerta visible al médico cuando el riesgo llega a alto | Must | 5 | 3 | Pendiente |
+| RF06 | Como médico, quiero saber qué factores explican el riesgo de un paciente para decidir la intervención | Contribución individual de cada variable (SHAP) en la ficha | Should | 8 | 3 | **Parcial** |
+| RF07 | Como médico, quiero reportes generales de mis pacientes para auditar la adherencia | Panel con indicadores globales, distribución de riesgo y exportación CSV | Should | 10 | 2–3 | **Terminado** |
+| RF08 | Como paciente, quiero recibir recordatorios de mis tomas para no olvidarlas | Aviso en el teléfono a la hora de cada toma, aun sin conexión | Could | 8 | 3 | **Terminado** |
+| RF09 | Como paciente, quiero que un familiar confirme mis tomas para que el registro no dependa solo de mi palabra | El familiar se une con un código de un solo uso y solo corrobora tomas cumplidas de las últimas 48 h | Should | 18 | 3 | **Terminado** |
+| RF10 | Como usuario, quiero recuperar mi contraseña por correo para no acudir al consultorio por un olvido | Enlace de un solo uso válido 30 minutos; la respuesta no revela si el correo existe | Should | 5 | 3 | **Terminado** |
+
+**Refinamiento de la pila.** La pila se revisó al cierre de cada sprint:
+
+- **Sprint 2:** la exportación de reportes (RF07) pasó al Sprint 3.
+- **Sprint 3:** se incorporaron **RF09** y **RF10**, nacidos de la revisión del producto: el registro de tomas dependía solo del paciente, y la recuperación de contraseña obligaba a ir al consultorio.
+- **Sprint 3:** se refinaron las variables de la ficha (RF02). Al tratarse de una clínica privada, el nivel socioeconómico, el tipo de seguro y la zona de residencia casi no varían entre pacientes y no ayudan a distinguir quién incumple. Se reemplazaron por **nivel educativo, convivencia y apoyo familiar**, que sí varían y se relacionan con la comprensión de las indicaciones y el olvido, las causas señaladas por el médico. Las comorbilidades pasaron de un número a una **lista de enfermedades**, para que la ficha sea específica.
+
+---
+
+### 1.1.3. Sprint 1: Comprensión del negocio y de los datos
+
+**Semanas 2–3 · CRISP-DM: *Business Understanding* y *Data Understanding*.**
+
+**Objetivo.** Entender el problema clínico, priorizar la pila y entregar la autenticación (RF01).
+
+**Tabla 6.** Sprint Backlog del Sprint 1.
+
+| Elemento | Tarea | Componente | Pts | Estado |
 | :---: | :--- | :--- | :---: | :--- |
-| — (OE1) | Entrevista semiestructurada al médico y consolidación del diagnóstico | Documentación | 3 | **Terminada** |
-| — (OE1) | Línea base de adherencia y clasificación de factores por dimensión OMS | Documentación | 3 | **Terminada** |
-| — (OE2) | Product Backlog priorizado con MoSCoW e historias de usuario | Documentación | 2 | **Terminada** |
-| RF01 | Modelo de datos relacional del núcleo (`Usuario`, `Paciente`, `RegistroAdherencia`) | API | 5 | **Terminada** |
-| RF01 | Autenticación JWT y control de acceso por perfil | API | 5 | **Terminada** |
-| RF01 | Pantalla de acceso del panel médico | Web | 3 | **Terminada** |
-| — | Repositorio, entorno de trabajo y migraciones con Alembic | Infraestructura | 3 | **Terminada** |
+| OE1 | Entrevista semiestructurada al médico y diagnóstico | Documentación | 3 | **Terminada** |
+| OE1 | Clasificación de factores de incumplimiento por dimensión OMS | Documentación | 3 | **Terminada** |
+| OE2 | Product Backlog priorizado e historias de usuario | Documentación | 2 | **Terminada** |
+| RF01 | Modelo de datos inicial (usuario, paciente, registro de toma) | API | 5 | **Terminada** |
+| RF01 | Inicio de sesión con token y control por perfil | API | 5 | **Terminada** |
+| RF01 | Pantalla de acceso del panel | Web | 3 | **Terminada** |
+| — | Repositorio, entorno y migraciones | Infraestructura | 3 | **Terminada** |
 | | **Comprometido: 24 · Completado: 24 (100 %)** | | **24** | |
 
-**Sobre la unidad de estimación.** Los puntos siguen una escala relativa de
-Fibonacci y los asigna el propio equipo de desarrollo, que en este proyecto es de
-un solo integrante. Cumplen por tanto una función de ordenación y de control del
-alcance comprometido, no de previsión de capacidad de un equipo: la velocidad que
-de ellos se deriva solo es comparable entre sprints de este mismo proyecto.
+#### a) Diagnóstico del consultorio
 
-Se configuró el repositorio y el entorno de trabajo con una estructura que separa cuatro componentes desplegables de forma independiente, coherentes con la arquitectura de microservicios del proyecto:
+Se aplicó la entrevista semiestructurada (Anexo n.° 03) al Dr. Milko Ugaz Zegarra. Hallazgos principales:
 
-```
-sistema-soporte-clinico/
-├── backend-api/     # API Gateway FastAPI (autenticación, pacientes, adherencia)
-├── frontend-web/    # Panel médico React + Vite
-├── app-movil/       # App del paciente en Flutter
-├── ml-pipeline/     # Entorno CRISP-DM (preparación, entrenamiento, evaluación)
-└── documentacion/   # Evidencias académicas y formatos exigidos por la USAT
-```
+1. El seguimiento se basa **solo en lo que el paciente dice** en la consulta; no hay registro digital ni alertas.
+2. El incumplimiento se detecta **tarde**, cuando el paciente ya se descompensó.
+3. El consultorio atiende a unos **50 pacientes polimedicados** con hipertensión y/o diabetes.
+4. Las causas percibidas son **el olvido, la complejidad del tratamiento y la falta de comprensión** de las indicaciones.
 
-#### f) Modelo de datos clínico inicial
+**Tabla 7.** Brechas identificadas y requisitos que las atienden.
 
-Se diseñó el modelo relacional del núcleo funcional sobre tres entidades, implementado con SQLAlchemy 2.0 en `backend-api/app/db/models.py`:
+| N.° | Brecha | Consecuencia | Requisito |
+| :---: | :--- | :--- | :---: |
+| B1 | No hay registro de la toma de medicamentos | El cumplimiento real no se puede verificar | RF03, RF07, RF09 |
+| B2 | No hay seguimiento entre citas | Detección tardía | RF02, RF03 |
+| B3 | No se analizan los datos clínicos | No se puede anticipar el incumplimiento | RF04, RF06 |
+| B4 | No hay alertas ni recordatorios | El olvido no se mitiga | RF05, RF08 |
 
-- **`Usuario`** — credencial de acceso con perfil diferenciado (`medico` / `paciente`); la contraseña se persiste únicamente como hash bcrypt y el rol se embebe en el token para resolver el control de acceso.
-- **`Paciente`** — ficha del paciente polimedicado y, simultáneamente, **fila de características del dataset**: cada columna corresponde a una variable del Anexo n.° 04 y está agrupada por la dimensión OMS a la que pertenece. El campo `codigo_anonimizado` (P-001, P-002, …) es el seudónimo con el que los datos viajan al pipeline de ML, de modo que la extracción no arrastra identificadores directos (RNF01).
-- **`RegistroAdherencia`** — evento de toma reportado desde la app móvil; sustituye el autorreporte verbal por una traza digital fechada.
+#### b) Factores de incumplimiento
 
-Las reglas clínicas del estudio quedaron escritas como **restricciones de integridad de la base de datos**, no como validaciones dispersas en el código:
+**Tabla 8.** Factores identificados por dimensión OMS [3].
 
-| Restricción | Regla que garantiza |
-| :--- | :--- |
-| `ck_paciente_polimedicado` | Solo se admiten pacientes con ≥ 5 fármacos (criterio de elegibilidad del Anexo n.° 04) |
-| `ck_paciente_edad_valida` | Edad entre 18 y 120 años |
-| `ck_paciente_morisky_rango` | Puntaje de Morisky en el rango 0–4 |
-| `ck_paciente_controles_coherentes` | No se puede faltar a más controles de los programados |
-| `uq_registro_toma_programada` | Un mismo paciente, medicamento y horario no admite doble registro: la sincronización de la app es idempotente |
-
-#### g) Primer incremento funcional: módulo de autenticación (RF01)
-
-Se implementó y verificó el módulo de autenticación como primer incremento entregable:
-
-| Artefacto | Ruta | Función |
+| Dimensión OMS | Factores en el consultorio | Variable asociada |
 | :--- | :--- | :--- |
-| Endpoints de sesión | `backend-api/app/api/auth.py` | `POST /api/auth/login`, `GET /api/auth/me` |
-| Seguridad y RBAC | `backend-api/app/core/security.py` | Hash bcrypt, emisión y validación de JWT (HS256), dependencia `requiere_rol()` |
-| Esquemas de validación | `backend-api/app/schemas/auth_schema.py` | Validación estricta con Pydantic (`extra="forbid"`, longitud mínima de contraseña) |
+| Paciente | Olvido; falta de comprensión de las indicaciones | Edad, sexo |
+| Socioeconómica y social | Nivel de instrucción; soledad o falta de apoyo en casa | Nivel educativo, convivencia, apoyo familiar |
+| Enfermedad | Cronicidad y multimorbilidad | Diagnóstico, tiempo de enfermedad, comorbilidades |
+| Terapia | Muchos fármacos y tomas | N.° de fármacos, tomas por día |
+| Sistema de salud | Inasistencia a controles | Controles programados y perdidos |
 
-**Decisión de diseño relevante.** Ante credencial inexistente, contraseña incorrecta **o perfil equivocado** se devuelve una única respuesta indistinguible (`401 NO_AUTENTICADO`), de modo que el mecanismo de inicio de sesión no permita enumerar usuarios registrados.
+**Línea base de contexto.** El 37,1 % de los pacientes peruanos con hipertensión y diabetes tiene adherencia deficiente [4]; en Lambayeque, el 44,7 % de los pacientes crónicos no cumple su tratamiento [6]. La línea base propia del consultorio se obtiene con el test de Morisky-Green (en ejecución).
 
-#### h) Evidencia de pruebas del incremento
+#### c) Incremento: autenticación (RF01)
 
-| Caso de prueba | Resultado esperado | Resultado obtenido |
+Se implementó el inicio de sesión con token JWT y control de acceso por perfil (`backend-api/app/api/auth.py`). Ante cualquier error de acceso se devuelve la misma respuesta, para no revelar qué correos están registrados.
+
+**Tabla 9.** Pruebas del Sprint 1.
+
+| Caso | Esperado | Obtenido |
 | :--- | :--- | :---: |
-| Inicio de sesión con credenciales y perfil válidos | `200` + token JWT + datos del usuario | ✔ `200` |
-| Inicio de sesión con perfil incorrecto (médico que selecciona «Paciente») | `401` sin distinción de causa | ✔ `401` |
-| Inicio de sesión con usuario inexistente | `401` sin distinción de causa | ✔ `401` |
-| Acceso a `/api/auth/me` sin token | `401 NO_AUTENTICADO` | ✔ `401` |
-| Acceso a `/api/auth/me` con token válido | `200` + perfil de la sesión | ✔ `200` |
-| Envío de correo malformado y contraseña corta | `422 VALIDACION_FALLIDA` con detalle por campo | ✔ `422` |
+| Credenciales y perfil válidos | Acceso con token | ✔ `200` |
+| Perfil equivocado o usuario inexistente | Rechazo sin indicar la causa | ✔ `401` |
+| Consulta sin token | Rechazo | ✔ `401` |
+| Correo mal formado o contraseña corta | Error por campo | ✔ `422` |
 
-#### i) Cierre del sprint
+**Tabla 10.** Incidencias del Sprint 1.
 
-**Tabla 7.** Registro de incidencias del Sprint 1.
+| ID | Componente | Incidencia | Causa | Corrección | Estado |
+| :---: | :--- | :--- | :--- | :--- | :---: |
+| I-01 | API / Datos | Reglas clínicas repartidas entre el código y la base de datos | No había un criterio de dónde ubicar cada regla | Llevarlas a restricciones de la base de datos (Sprint 2) | Cerrada |
 
-| ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
-| :---: | :--- | :--- | :--- | :--- | :--- | :---: |
-| I-01 | API / Datos | Las validaciones clínicas se estaban implementando dispersas entre el código y la base de datos | Retrospectiva del sprint | Ausencia de un criterio único sobre dónde vive una regla de negocio | Trasladarlas a restricciones declarativas de la base (`CHECK`, `UNIQUE`), ejecutado en el Sprint 2 | Cerrada |
-
-No se detectaron defectos funcionales en este sprint: el incremento comprometido
-—RF01— se entregó con sus seis casos de prueba en verde. La única incidencia
-registrada es de diseño y se detectó en la retrospectiva, no en ejecución; se
-consigna igualmente porque su corrección condicionó el modelo de datos del sprint
-siguiente.
-
-**Sprint Review (Sprint 1).** Se aceptó el incremento RF01 y se validaron con el médico el modelo de datos inicial y el Product Backlog priorizado. **Retrospectiva:** se identificó que la dispersión de las validaciones clínicas entre el código y la base de datos generaba riesgo de inconsistencia; la acción correctiva —trasladarlas a restricciones declarativas— se ejecutó en el Sprint 2.
+**Review y retrospectiva.** Se aceptó RF01 y se validaron con el médico el modelo de datos y la pila. Mejora acordada: centralizar las reglas clínicas en la base de datos.
 
 ---
 
-### 1.1.3. Sprint 2: Preparación de datos, cierre del núcleo funcional y modelado inicial
+### 1.1.4. Sprint 2: Preparación de datos y núcleo funcional
 
-**Sprint 2 · Semanas 3–4 · CRISP-DM: *Data Preparation* y *Modeling* inicial.**
+**Semanas 3–4 · CRISP-DM: *Data Preparation* y *Modeling* inicial.**
 
-**Objetivo del sprint.** Especificar los requisitos y la arquitectura restantes, completar el núcleo funcional RF01–RF03, dejar el dataset clínico depurado y balanceado, y montar la configuración experimental de los cuatro algoritmos candidatos.
+**Objetivo.** Completar el núcleo funcional (RF01–RF03), preparar el pipeline de datos y configurar la comparación de algoritmos.
 
-**Tabla 8.** Sprint Backlog del Sprint 2 (semanas 3–4).
+**Tabla 11.** Sprint Backlog del Sprint 2.
 
-| Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
+| Elemento | Tarea | Componente | Pts | Estado |
 | :---: | :--- | :--- | :---: | :--- |
-| — (OE2) | Especificación de requisitos no funcionales y arquitectura | Documentación | 3 | **Terminada** |
-| RF02 | Servicios REST de alta, consulta, edición y baja lógica de pacientes | API | 5 | **Terminada** |
-| RF02 | Restricciones de integridad clínica como invariantes de la base | Datos | 3 | **Terminada** |
-| RF02 | Formulario de alta y ficha clínica del panel | Web | 5 | **Terminada** |
-| RF03 | Registro de toma idempotente y sincronización en lote | API | 8 | **Terminada** |
-| RF03 | Cola local sin conexión y envío diferido | Móvil | 8 | **Terminada** |
-| RF07 | Panel de auditoría con indicadores y listado por prioridad clínica | Web | 5 | **Parcial**: sin exportación |
-| — (OE3) | `preprocess.py`: depuración, nulos, características derivadas y SMOTE | ML | 8 | **Terminada** |
-| — (OE3) | `train_evaluate.py`: cuatro algoritmos, validación cruzada y McNemar | ML | 8 | **Terminada** |
-| — (RNF01/04) | Despliegue en Aiven, Render y Vercel con verificación de seguridad | Infraestructura | 5 | **Terminada** |
-| | **Comprometido: 58 · Completado: 53 (91 %)** | | **58** | |
+| OE2 | Requisitos no funcionales y arquitectura | Documentación | 3 | **Terminada** |
+| RF02 | Alta, consulta, edición y baja de pacientes | API | 5 | **Terminada** |
+| RF02 | Reglas clínicas como restricciones de la base de datos | Datos | 3 | **Terminada** |
+| RF02 | Formulario de alta y ficha del paciente | Web | 5 | **Terminada** |
+| RF03 | Registro de tomas sin duplicados y envío en lote | API | 8 | **Terminada** |
+| RF03 | Cola local sin conexión | Móvil | 8 | **Terminada** |
+| RF07 | Panel de auditoría con listado por prioridad | Web | 5 | **Terminada** |
+| RF07 | Exportación de reportes | Web | 5 | Trasladada al Sprint 3 |
+| OE3 | `preprocess.py`: limpieza, faltantes, variables derivadas y SMOTE | ML | 8 | **Terminada** |
+| OE3 | `train_evaluate.py`: cuatro algoritmos, validación cruzada y McNemar | ML | 8 | **Terminada** |
+| RNF01/04 | Despliegue en Aiven, Render y Vercel | Infraestructura | 5 | **Terminada** |
+| | **Comprometido: 63 · Completado: 58 (92 %)** | | **63** | |
 
-Los cinco puntos no completados corresponden a la exportación de reportes de
-RF07, que se trasladó al Sprint 3 sin renegociar el resto del alcance.
+#### a) Requisitos no funcionales
 
-#### a) Especificación de requisitos y arquitectura (OE2)
+**Tabla 12.** Requisitos no funcionales (ISO/IEC 25010 [7]).
 
-Se consolidaron en este sprint **ocho requisitos funcionales** y **seis requisitos no funcionales** mapeados a atributos de calidad de la norma ISO/IEC 25010 [7]. La pila creció después a diez requisitos funcionales con la incorporación de RF09 y RF10 en el Sprint 3, según se explica bajo la Tabla 2:
-
-**Tabla 9.** Requisitos no funcionales y su materialización técnica al corte.
-
-| Código | Requisito no funcional | Atributo ISO/IEC 25010 | Materialización al corte |
+| Código | Requisito | Atributo | Cómo se cumple |
 | :---: | :--- | :--- | :--- |
-| RNF01 | Cifrado en tránsito (TLS) y en reposo (AES-256) | Seguridad | Cabeceras endurecidas y HSTS en `main.py`; secretos fuera del código (`config.py`, `.env.example`); seudonimización en `Paciente.codigo_anonimizado` |
-| RNF02 | Respuesta de la inferencia en tiempo aceptable (≤ 2 s) | Eficiencia de desempeño | Cabecera `X-Tiempo-Respuesta-ms` emitida por petición como instrumentación base de la medición |
-| RNF03 | Interfaz usable para personal médico y adultos mayores | Usabilidad | Programado para el Sprint 4 (SUS) |
-| RNF04 | Disponibilidad continua para la consulta clínica | Fiabilidad | Manejo global de excepciones + sonda `/health` + `pool_pre_ping` |
-| RNF05 | Código modular y mantenible | Mantenibilidad | Separación en capas `api / core / db / schemas / services` |
-| RNF06 | Escalado ante mayor concurrencia | Eficiencia / Portabilidad | Microservicio de ML desacoplado del backend transaccional |
+| RNF01 | Datos protegidos en tránsito y en reposo | Seguridad | HTTPS, cabeceras de seguridad, contraseñas cifradas, código anonimizado |
+| RNF02 | Respuesta de la predicción en ≤ 2 s | Eficiencia | Tiempo medido en cada respuesta (≈ 13 ms por predicción) |
+| RNF03 | Interfaz usable por médicos y adultos mayores | Usabilidad | Barra de navegación rotulada; evaluación SUS en el Sprint 4 |
+| RNF04 | Disponibilidad para la consulta clínica | Fiabilidad | Manejo global de errores, sonda `/health`, reintento en la app |
+| RNF05 | Código modular | Mantenibilidad | Capas `api`, `core`, `db`, `schemas`, `services` |
+| RNF06 | Escalable y reentrenable | Portabilidad | Modelo desacoplado de la API |
 
-**Arquitectura implementada.** El API Gateway (`backend-api/app/main.py`) concentra las responsabilidades transversales de la capa de lógica y servicios:
+#### b) Preparación de los datos
 
-1. **CORS controlado.** Se autorizan los orígenes fijos del entorno local y, mediante expresión regular, los subdominios de despliegue de Vercel del panel médico —Vercel genera un dominio distinto por cada despliegue de vista previa, por lo que enumerarlos uno a uno no es viable—. Se restringen métodos, cabeceras y se expone `X-Request-ID` al cliente.
-2. **Middlewares de seguridad y observabilidad.** `CabecerasSeguridadMiddleware` fija `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Content-Security-Policy`, `Cache-Control: no-store` —los datos de salud no deben quedar en cachés intermedias— y HSTS en producción. `TrazaPeticionMiddleware` asigna un identificador único por petición y mide su latencia.
-3. **Manejo global de excepciones.** Registrado en `core/exceptions.py`, traduce toda excepción a un contrato único (`codigo`, `mensaje`, `detalles`, `id_traza`). Ninguna traza interna, consulta SQL ni estructura de la base clínica se propaga al cliente: al usuario se le entrega solo el identificador de traza para el reporte de soporte. Un fallo de base de datos responde `503` en lugar de `500`, y la indisponibilidad del modelo predictivo responde `503 MODELO_NO_DISPONIBLE`, de modo que el panel clínico degrade únicamente la vista de riesgo sin bloquear la auditoría de adherencia (RNF04).
+El Anexo n.° 04 se formalizó como el esquema del conjunto de datos, con una plantilla CSV que el pipeline valida columna por columna.
 
-**Verificación ejecutada sobre el API:**
+**Tabla 13.** Reglas de limpieza del pipeline.
 
-| Escenario | Respuesta obtenida |
+| Regla | Tratamiento |
 | :--- | :--- |
-| `GET /health` | `200 {"estado":"ok"}` con las seis cabeceras de seguridad presentes |
-| Petición con origen `https://*.vercel.app` | `Access-Control-Allow-Origin` reflejado correctamente |
-| Esquema de entrada inválido | `422 VALIDACION_FALLIDA` con detalle campo por campo, sin reflejar el valor recibido |
-| Tabla inexistente en la base de datos | `503 BD_NO_DISPONIBLE` — la traza queda en el log del servidor, no en la respuesta |
-| Acceso sin token | `401 NO_AUTENTICADO` |
+| Paciente duplicado | Se conserva el registro más reciente |
+| Categoría o número fuera de rango | Se marca como faltante y se completa después |
+| Controles perdidos mayores que programados | Se anula ese dato |
+| Menos de 5 fármacos o sin etiqueta | Se excluye al paciente |
 
-#### b) Estructuración del Anexo n.° 04 (Ficha de Extracción de Datos Clínicos)
+El balanceo con SMOTE se aplica **después** de separar entrenamiento y prueba, y dentro de cada pliegue de la validación cruzada, para que las métricas no salgan infladas.
 
-La ficha de recolección se formalizó como el **contrato de esquema del dataset**: el script de preparación valida que el CSV extraído contenga exactamente las variables del Anexo n.° 04 y aborta con un mensaje explícito si falta alguna.
+#### c) Configuración de la comparación de algoritmos (OE3)
 
-**Tabla 10.** Variables del Anexo n.° 04, su dimensión OMS y su tratamiento en el pipeline.
+**Tabla 14.** Algoritmos candidatos.
 
-| N.° | Variable | Tipo | Dimensión (OMS) | Tratamiento en el pipeline |
-| :---: | :--- | :--- | :--- | :--- |
-| 1 | Edad | Numérica (años) | Paciente | Imputación por mediana + estandarización |
-| 2 | Sexo | Categórica (M/F) | Paciente | Imputación por moda + codificación binaria |
-| 3 | Nivel socioeconómico | Ordinal (bajo/medio/alto) | Socioeconómica | Imputación por moda + codificación **ordinal** (preserva el orden) |
-| 4 | Aseguramiento en salud | Categórica | Socioeconómica | Imputación por moda + *one-hot* |
-| 5 | Zona de residencia | Categórica (urbana/rural) | Socioeconómica | Imputación por moda + codificación binaria |
-| 6 | Diagnóstico | Categórica (HTA/DM2/ambas) | Enfermedad | Imputación por moda + *one-hot* |
-| 7 | Tiempo de enfermedad | Numérica (años) | Enfermedad | Imputación por mediana + estandarización |
-| 8 | Comorbilidades | Numérica (n.°) | Enfermedad | Imputación por mediana + estandarización |
-| 9 | N.° de fármacos prescritos | Numérica (n.°) | Terapia | Criterio de elegibilidad (≥ 5) + estandarización |
-| 10 | Complejidad del régimen (tomas/día) | Numérica (n.°) | Terapia | Imputación por mediana + estandarización |
-| 11 | Frecuencia de controles médicos | Numérica (n.°) | Sistema de salud | Imputación por mediana + estandarización |
-| 12 | Controles perdidos | Numérica (n.°) | Sistema de salud | Validación de coherencia + imputación + estandarización |
-| 13 | Puntaje de adherencia (Morisky) | Ordinal (0–4) | Paciente | **Excluido como predictor** (fuente de la etiqueta) |
-| 14 | Adherencia (variable objetivo) | Binaria | Variable de salida | Etiqueta `incumplimiento` (0 = adherente, 1 = incumplimiento) |
-
-**Decisión metodológica.** El puntaje de Morisky se **excluye del conjunto de predictores**: al ser la fuente directa de la etiqueta, incorporarlo produciría fuga de información (*data leakage*) y métricas artificialmente perfectas que no reflejarían capacidad predictiva alguna.
-
-**Captura de los datos.** La ficha se acompaña de una plantilla en formato CSV
-(`documentacion/02_instrumentos/Plantilla_Extraccion_Anexo_04.csv`) cuyas columnas
-y valores admitidos son exactamente los que valida el pipeline. Un nombre de
-columna o un valor categórico que no coincida detiene la ejecución con un mensaje
-explícito, de modo que un error de captura no llegue silenciosamente al modelo.
-La documentación del anexo fija además una regla de captura relevante para la
-validez del estudio: **una celda vacía es preferible a un valor supuesto**, porque
-el pipeline imputa los faltantes y deja constancia del porcentaje imputado,
-mientras que un dato inventado sesga el modelo sin dejar rastro.
-
-**Conjunto de demostración.** Para poder ejercitar el sistema completo antes de
-disponer de la extracción definitiva, el pipeline incorpora un generador de datos
-**simulados** (`--generar-muestra`). Sirve exclusivamente para comprobar que el
-flujo se ejecuta de extremo a extremo y para demostrar el funcionamiento de la
-plataforma; **ningún valor obtenido con él se reporta como resultado de esta
-investigación**, y los archivos que produce quedan excluidos del control de
-versiones. Los resultados del OE3 se obtendrán únicamente sobre las historias
-clínicas reales del consultorio.
-
-#### c) Depuración del dataset clínico
-
-El script `ml-pipeline/src/preprocess.py` automatiza el recorrido completo desde la ficha en bruto hasta las matrices listas para el modelado. Las reglas de limpieza implementadas son:
-
-**Tabla 11.** Reglas de depuración aplicadas y su justificación.
-
-| Regla | Tratamiento | Justificación |
+| Algoritmo | Por qué se incluye | Hiperparámetros evaluados |
 | :--- | :--- | :--- |
-| Duplicados por código de paciente | Se conserva la extracción más reciente | Un paciente, una fila |
-| Normalización de texto categórico | Minúsculas, sin espacios sobrantes | Evita que «Urbana» y «urbana» sean categorías distintas |
-| Categoría fuera del catálogo | Se marca como nulo | Se preserva el resto de variables del paciente |
-| Valor numérico fuera de rango plausible | Se marca como nulo | Se prefiere imputar un dato a descartar al paciente completo |
-| Controles perdidos > controles programados | Se anula el dato incoherente | Incoherencia clínica: solo se anula el dato, no el registro |
-| Menos de 5 fármacos | Exclusión del registro | Criterio de elegibilidad del estudio (polimedicación) |
-| Etiqueta ausente o no binaria | Exclusión del registro | Sin etiqueta no hay aprendizaje supervisado posible |
+| Regresión Logística | Referencia simple e interpretable | `C` ∈ {0,01; 0,1; 1; 10} |
+| Random Forest | Robusto con variables mixtas [9] | `n_estimators` ∈ {200; 500}, `max_depth` ∈ {None; 8; 12} |
+| XGBoost | Referente en datos clínicos tabulares [10] | `learning_rate` ∈ {0,05; 0,1}, `max_depth` ∈ {3; 5; 7} |
+| SVM (RBF) | Eficaz con muestras pequeñas | `C` ∈ {0,1; 1; 10}, `gamma` ∈ {scale; 0,01} |
 
-**Ingeniería de características.** Se derivaron tres variables que expresan los factores priorizados en el diagnóstico:
+Métricas: exactitud, sensibilidad, especificidad, F1-score y AUCROC (meta ≥ 0,80), con semilla fija 42.
 
-| Variable derivada | Definición | Factor que representa |
-| :--- | :--- | :--- |
-| `carga_terapeutica` | N.° de fármacos × tomas/día | Complejidad del régimen (2.ª causa percibida de incumplimiento) |
-| `tasa_inasistencia` | Controles perdidos ÷ controles programados | Desvinculación del seguimiento clínico |
-| `cronicidad_relativa` | Tiempo de enfermedad ÷ (edad ÷ 10) | Cronicidad ajustada por la edad del paciente |
+#### d) Núcleo funcional (RF02 y RF03)
 
-#### d) Manejo de valores nulos
+- **Pacientes:** el médico registra, edita y da de baja fichas; solo ve a sus propios pacientes.
+- **Tomas:** la app envía cada toma; si la reenvía por falta de señal, se actualiza en lugar de duplicarse.
+- **Despliegue:** base de datos en Aiven, API en Render y panel en Vercel, con conexión cifrada.
 
-El tratamiento es diferenciado por naturaleza de la variable y —decisión central— **se ajusta únicamente con el subconjunto de entrenamiento**:
+**Tabla 15.** Pruebas del Sprint 2 (selección).
 
-- **Variables numéricas:** imputación por **mediana**, robusta ante los valores extremos propios de los conteos de fármacos y de comorbilidades.
-- **Variables categóricas y ordinales:** imputación por **moda**.
-- **Escalado:** estandarización posterior, indispensable para SVM y Regresión Logística e inocua para Random Forest y XGBoost, que son invariantes a la escala.
+| Grupo | Caso | Resultado |
+| :--- | :--- | :---: |
+| RF02 | Alta guardada con código correlativo | ✔ `201` |
+| RF02 | Rechazo con menos de 5 fármacos o controles incoherentes | ✔ `422` |
+| RF02 | Baja lógica: el historial se conserva | ✔ |
+| RF03 | Reenvío de la misma toma no duplica | ✔ `201` → `200` |
+| RF03 | Cumplimiento: 3 cumplidas de 5 = 60 % | ✔ |
+| Seguridad | Médico ajeno o paciente sin permiso | ✔ `403` |
+| Despliegue | Documentación oculta y `Host` falsificado rechazado en producción | ✔ `404` / `403` |
 
-El pipeline emite un **reporte de preparación en formato JSON** (`data/processed/reporte_preparacion.json`) con el porcentaje de celdas faltantes por variable antes de imputar, el conteo de valores fuera de rango y la distribución de clases. Este reporte constituye la evidencia auditable de la fase *Data Preparation*.
+**Tabla 16.** Incidencias del Sprint 2.
 
-**Porcentaje de celdas faltantes.** En la corrida de verificación del pipeline (conjunto de demostración de 400 fichas con la estructura del Anexo n.° 04) el reporte registró un **2,25 %** de celdas faltantes, concentradas en el tiempo de enfermedad (12,0 %), el nivel socioeconómico (8,0 %), la zona de residencia (5,0 %) y la edad (2,0 %), además de 8 valores fuera de rango tratados como ausentes. La distribución de clases fue de 344 adherentes y 56 no adherentes (desbalance 6,14 : 1), que SMOTE llevó a 275 : 275 en entrenamiento. El valor sobre la extracción del consultorio se reporta al cierre del Sprint 3.
+| ID | Componente | Incidencia | Causa | Corrección | Estado |
+| :---: | :--- | :--- | :--- | :--- | :---: |
+| I-02 | ML | La preparación fallaba al completar categorías vacías | Los imputadores no reconocen `pd.NA` | Convertir a `NaN` antes de imputar | Cerrada |
+| I-03 | Datos | La base guardaba `MASCULINO` en vez de `M` | Comportamiento por defecto de SQLAlchemy | Guardar el valor del catálogo | Cerrada |
+| I-04 | Web | El contenido desbordaba la página | Alto fijo sin contenedor definido | Usar alto mínimo | Cerrada |
+| I-05 | Móvil | La app no arrancaba | Tamaño de letra nulo en el tema | Fijar tamaños explícitos | Cerrada |
+| I-06 | Móvil | Un fallo de red se mostraba como demora del servidor | Tipo de excepción mal capturado | Distinguir ambos errores | Cerrada |
+| I-07 | API | Mensajes de validación con prefijo técnico | Texto de la librería sin depurar | Limpiar el mensaje | Cerrada |
 
-#### e) Balanceo de clases con SMOTE
+**Review y retrospectiva.** Se aceptaron el núcleo RF01–RF03, el pipeline y la configuración experimental. Mejora acordada: verificar el comportamiento de cada librería en su documentación antes de usarla.
 
-La clase minoritaria del problema es, por definición, el **incumplimiento**: justamente la que el sistema debe detectar. Sin balanceo, un clasificador puede alcanzar una exactitud elevada prediciendo siempre «adherente» y una sensibilidad cercana a cero —resultado inservible como alerta temprana (RF05)—. Se aplica por ello **SMOTE** [8], que sintetiza nuevos casos de la clase minoritaria por interpolación entre vecinos cercanos.
+---
 
-**Salvaguarda metodológica implementada.** El orden de las operaciones es determinante y se hizo explícito en el código:
+### 1.1.5. Sprint 3: Modelo integrado y funcionalidades complementarias *(en ejecución)*
 
-```
-1. Partición estratificada train / test  (80 / 20)
-2. Ajuste del imputador, codificador y escalador  →  SOLO con train
-3. Transformación de test                          →  sin reajustar
-4. SMOTE                                           →  SOLO sobre train
-5. El conjunto de prueba permanece SIN balancear
-```
+**Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*.**
 
-Si el balanceo se aplicara antes de la partición, muestras sintéticas derivadas de registros de prueba se filtrarían al entrenamiento y las métricas (AUCROC, sensibilidad, F1-score) quedarían infladas, invalidando la comparación de algoritmos exigida por OE3. El conjunto de prueba se mantiene deliberadamente con la **prevalencia real** del consultorio, porque es sobre esa distribución que el sistema operará.
+**Objetivo.** Integrar el modelo al sistema, completar la app del paciente y el grupo familiar, y seleccionar el algoritmo.
 
-El preprocesador ajustado se serializa (`models/preprocesador_v1.pkl`) junto al modelo, de modo que la inferencia en producción (RF04) aplique exactamente la misma transformación que el entrenamiento y no se produzca desfase entre entrenamiento y servicio.
+**Tabla 17.** Sprint Backlog del Sprint 3.
 
-**Verificación del flujo.** El pipeline se ejecutó de extremo a extremo con un generador de muestra sintética incorporado al script (`--generar-muestra`), destinado exclusivamente a comprobar el funcionamiento del código antes de disponer de la extracción real. La ejecución recorrió correctamente las siete etapas —validación de esquema, limpieza, perfilado de nulos, derivación de variables, partición estratificada, transformación y balanceo—, confirmó la reducción del desbalance a una proporción 1:1 en entrenamiento y produjo los artefactos esperados. **Los valores obtenidos en esa corrida son artificiales y no se reportan como resultado de la investigación.**
+| Elemento | Tarea | Componente | Pts | Estado |
+| :---: | :--- | :--- | :---: | :--- |
+| RF04 | Servicio de predicción | API | 8 | **Terminada** |
+| RF04 | Tarjeta de riesgo predicho en la ficha | Web | 5 | **Terminada** |
+| RF08 | Recordatorios en el dispositivo | Móvil | 5 | **Terminada** |
+| RF08 | APK de publicación | Móvil | 3 | **Terminada** |
+| RF09 | Grupo familiar y corroboración | API | 8 | **Terminada** |
+| RF09 | Pantallas del paciente y del familiar | Móvil | 8 | **Terminada** |
+| RF09 | Columna «Testigo» en el historial | Web | 2 | **Terminada** |
+| RF10 | Recuperación de contraseña por correo | API + Web | 5 | **Terminada** |
+| RF02 | Acceso móvil generado desde el panel | API + Web | 3 | **Terminada** |
+| RF02 | Validación de la ficha en el formulario | Web | 3 | **Terminada** |
+| RF02 | Refinamiento de variables: contexto social y lista de comorbilidades | API + Web + ML | 5 | **Terminada** |
+| RF07 | Reportes generales y exportación CSV *(del Sprint 2)* | API + Web | 5 | **Terminada** |
+| RNF03 | Barra inferior de navegación | Móvil | 3 | **Terminada** |
+| RNF04 | Reintento ante el arranque lento del servidor | Móvil | 2 | **Terminada** |
+| OE3 | Corrida de verificación del protocolo de selección | ML | 3 | **Terminada** |
+| RF05 | Alertas tempranas al médico | API + Web | 5 | Pendiente |
+| RF06 | Explicación individual con SHAP | ML + Web | 8 | Pendiente |
+| OE3 | Comparación sobre las historias clínicas reales | ML | 5 | Bloqueada: depende de la extracción |
+| | **Comprometido: 86 · Completado al corte: 68 (79 %)** | | **86** | |
 
-#### f) Configuración experimental de los cuatro algoritmos candidatos (OE3)
+#### a) Modelo integrado (RF04)
 
-**Tabla 12.** Configuración experimental de los algoritmos candidatos.
+La API carga el modelo una sola vez, arma los datos de la ficha y devuelve la probabilidad, el nivel, los factores que más pesan y las variables que faltaban. Si el modelo no está disponible, la ficha se sigue mostrando sin la tarjeta de riesgo.
 
-| Algoritmo | Fundamento de la elección | Hiperparámetros de partida |
-| :--- | :--- | :--- |
-| Regresión Logística | Modelo de referencia interpretable; permite contrastar la ganancia de los métodos no lineales | `penalty='l2'`, `C ∈ {0,01; 0,1; 1; 10}`, `max_iter=1000` |
-| Random Forest | Robusto ante variables heterogéneas y valores extremos; desempeño reportado en clasificación de adherencia [9] | `n_estimators ∈ {200; 500}`, `max_depth ∈ {None; 8; 12}`, `min_samples_leaf ∈ {1; 3; 5}` |
-| XGBoost | Potenciación de gradiente; referencia actual en datos clínicos tabulares [10] | `n_estimators ∈ {200; 400}`, `learning_rate ∈ {0,05; 0,1}`, `max_depth ∈ {3; 5; 7}` |
-| SVM (RBF) | Eficaz en muestras pequeñas y fronteras no lineales; exige el escalado ya incorporado al preprocesador | `kernel='rbf'`, `C ∈ {0,1; 1; 10}`, `gamma ∈ {'scale'; 0,01}`, `probability=True` |
+#### b) Selección del algoritmo: corrida de verificación
 
-**Protocolo de evaluación.**
+El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas: 320 de entrenamiento y 80 de prueba). En la preparación, el 2,25 % de las celdas estaba vacío (tiempo de enfermedad 12 %, nivel educativo 8 %, convivencia 5 %, edad 2 %) y la proporción fue de 334 adherentes y 66 incumplidores; SMOTE equilibró el entrenamiento a 267 y 267.
 
-- **Validación cruzada estratificada de 5 pliegues** sobre el conjunto de entrenamiento, preservando la proporción de clases en cada pliegue.
-- **Métricas reportadas:** exactitud, sensibilidad (*recall*), especificidad, F1-score y AUCROC, con media y desviación estándar entre pliegues.
-- **Métrica de decisión:** AUCROC, con la meta de **≥ 0,80** fijada en la hipótesis del proyecto; en caso de empate estadístico prevalece la **sensibilidad**, por ser el error clínicamente costoso el falso negativo —un paciente en riesgo que el sistema no detecta—.
-- **Semilla fija (42)** en particiones, balanceo y modelos, para garantizar la reproducibilidad del experimento.
-- **Contraste estadístico:** prueba de McNemar o *t* pareada entre los dos mejores clasificadores, programada para el Sprint 3.
+**Tabla 18.** Comparación de algoritmos en la corrida de verificación (validación cruzada de 5 pliegues; media ± desviación).
 
-**Implementación del experimento.** El protocolo no quedó solo descrito: `ml-pipeline/src/train_evaluate.py` lo ejecuta de extremo a extremo —ajuste de hiperparámetros, validación cruzada, evaluación sobre el conjunto apartado, contraste estadístico y serialización del modelo ganador— y emite la tabla comparativa en formato listo para incorporar a este informe, junto con un reporte JSON auditable.
-
-**Una precisión metodológica sobre el balanceo.** La sección 1.1.2.e establece que SMOTE se aplica solo al conjunto de entrenamiento, después de la partición. Eso es correcto para ajustar el modelo final, pero **no basta para la validación cruzada**: si se balancea el conjunto de entrenamiento completo y después se divide en pliegues, las muestras sintéticas —interpoladas entre casos reales— quedan repartidas entre los pliegues de entrenamiento y los de validación, de modo que el modelo termina evaluándose sobre casos derivados de los que ya vio. El AUCROC resultante sería optimista y la comparación entre algoritmos, inválida.
-
-Por eso `train_evaluate.py` parte del dataset **crudo** y encadena imputación, codificación, escalado, SMOTE y clasificador en un único objeto (`imblearn.Pipeline`) que la rutina de validación cruzada reajusta por completo en cada pliegue. El conjunto de prueba se aparta antes de todo y nunca se balancea: conserva la prevalencia real del consultorio, que es la distribución sobre la que operará el sistema.
-
-**Verificación del flujo.** El script se ejecutó de extremo a extremo sobre datos sintéticos, recorriendo las cuatro configuraciones, la búsqueda de hiperparámetros, los cinco pliegues, la evaluación en prueba, el contraste de McNemar y la escritura de los tres artefactos.
-
-**Resultados comparativos de la corrida de verificación.** El protocolo completo se ejecutó sobre el conjunto de demostración de 400 fichas (320 de entrenamiento y 80 de prueba), con búsqueda de hiperparámetros y validación cruzada estratificada de 5 pliegues:
-
-**Tabla 13.** Comparación de algoritmos en la corrida de verificación del protocolo (conjunto de demostración, validación cruzada estratificada de 5 pliegues; media ± desviación estándar).
-
-| Algoritmo | Hiperparámetros seleccionados | Exactitud | Sensibilidad | Especificidad | F1-score | AUCROC |
+| Algoritmo | Hiperparámetros | Exactitud | Sensibilidad | Especificidad | F1-score | AUCROC |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
-| **SVM (RBF)** *(seleccionado)* | `C=10`, `gamma=0,01` | 0,847 ± 0,048 | 0,778 ± 0,199 | 0,858 ± 0,049 | 0,586 ± 0,132 | **0,894 ± 0,060** |
-| Regresión Logística | `C=0,1`, `penalty='l2'` | 0,806 ± 0,042 | 0,844 ± 0,259 | 0,800 ± 0,038 | 0,540 ± 0,139 | 0,883 ± 0,071 |
-| Random Forest | `n_estimators=200`, `max_depth=8`, `min_samples_leaf=3` | 0,844 ± 0,040 | 0,400 ± 0,229 | 0,916 ± 0,037 | 0,398 ± 0,179 | 0,880 ± 0,056 |
-| XGBoost | `n_estimators=200`, `learning_rate=0,1`, `max_depth=7` | 0,856 ± 0,050 | 0,511 ± 0,206 | 0,913 ± 0,041 | 0,492 ± 0,182 | 0,873 ± 0,056 |
+| Regresión Logística | `C=1` | 0,781 ± 0,049 | 0,625 ± 0,094 | 0,813 ± 0,056 | 0,490 ± 0,074 | **0,864 ± 0,047** |
+| **SVM (RBF)** *(seleccionado)* | `C=1`, `gamma=0,01` | 0,762 ± 0,047 | **0,794 ± 0,064** | 0,757 ± 0,060 | 0,530 ± 0,056 | 0,856 ± 0,044 |
+| Random Forest | `n_estimators=500`, `max_depth=8` | 0,822 ± 0,051 | 0,494 ± 0,167 | 0,888 ± 0,036 | 0,477 ± 0,140 | 0,825 ± 0,057 |
+| XGBoost | `learning_rate=0,05`, `max_depth=3` | 0,816 ± 0,030 | 0,455 ± 0,081 | 0,888 ± 0,026 | 0,450 ± 0,074 | 0,815 ± 0,063 |
 
-Sobre el conjunto de prueba apartado, el modelo seleccionado obtuvo exactitud 0,763, sensibilidad 0,636, especificidad 0,783, F1-score 0,424 y **AUCROC 0,862**. La prueba de McNemar entre los dos mejores clasificadores (SVM y Regresión Logística; versión binomial exacta, 6 casos discordantes) no mostró diferencia significativa (*p* = 1,00), de modo que la elección se sostiene en el criterio de desempate declarado.
+**Lectura.** Los cuatro algoritmos superan la meta de AUCROC ≥ 0,80. Regresión Logística obtuvo el mayor AUCROC, pero la prueba de McNemar frente a SVM no mostró diferencia significativa (10 casos discordantes, *p* = 0,754). Por el criterio de desempate se seleccionó **SVM**, que detecta más incumplidores (sensibilidad 0,794 frente a 0,625). En el conjunto de prueba, SVM obtuvo exactitud 0,775, sensibilidad 0,615, especificidad 0,806, F1-score 0,471 y AUCROC 0,809. Estas cifras verifican que el protocolo y el sistema funcionan; el resultado del OE3 se obtendrá con el mismo script sobre las historias clínicas reales.
 
-La corrida confirma tres propiedades del protocolo: los cuatro algoritmos se comparan bajo las mismas particiones; SMOTE dentro de cada pliegue no infla el AUCROC —las cifras de validación y de prueba son coherentes—; y el modelo que llega al sistema es exactamente el seleccionado, pues la ficha del modelo desplegado (`risk_model_v1.json`) reproduce las mismas cifras. Estos valores **verifican el protocolo y el sistema**; el reporte comparativo que responde al OE3 se obtiene con el mismo script sobre la extracción del consultorio, en el Sprint 3.
+#### c) Aplicación del paciente y grupo familiar (RF08, RF09, RF10)
 
-#### g) Cierre del núcleo funcional: gestión de pacientes (RF02) y registro de adherencia (RF03)
+- **App instalable** con barra inferior (Hoy, Medicinas, Familia, Mi cuenta) y recordatorios que funcionan sin conexión.
+- **Grupo familiar:** el paciente invita a un familiar con un código; el familiar confirma las tomas cumplidas desde su teléfono. El historial del médico indica qué tomas tienen testigo.
+- **Recuperación de contraseña** por enlace de un solo uso enviado al correo.
+- **Acceso móvil:** el médico genera desde el panel la contraseña temporal del paciente.
 
-Se completaron los servicios REST de ambas historias, con validación estricta de esquemas Pydantic y control de acceso por rol.
+#### d) Ficha refinada y reportes generales (RF02, RF07)
 
-**Tabla 14.** Servicios REST del núcleo funcional expuestos al corte.
+- **Ficha:** el formulario valida los datos antes de guardar, pide nivel educativo, convivencia y apoyo familiar, y permite marcar comorbilidades concretas; el sistema calcula el total.
+- **Reportes generales:** nueva sección del panel con pacientes activos, adherencia promedio, tomas registradas y corroboradas, distribución del riesgo observado y predicho, pacientes por diagnóstico, comorbilidades y motivos de omisión más frecuentes, y una tabla de pacientes ordenada por riesgo exportable a CSV.
 
-| Método | Ruta | Requisito | Autorización |
-| :--- | :--- | :---: | :--- |
-| `POST` | `/api/auth/login` | RF01 | Pública |
-| `GET` | `/api/auth/me` | RF01 | Sesión autenticada |
-| `POST` | `/api/pacientes` | RF02 | Médico |
-| `GET` | `/api/pacientes` | RF02 | Médico (solo sus pacientes a cargo) |
-| `GET` | `/api/pacientes/{id}` | RF02 | Médico tratante o el propio paciente |
-| `PATCH` | `/api/pacientes/{id}` | RF02 | Médico tratante |
-| `DELETE` | `/api/pacientes/{id}` | RF02 | Médico tratante (baja lógica) |
-| `POST` | `/api/pacientes/{id}/acceso` | RF01/RF02 | Médico tratante |
-| `POST` | `/api/adherencia/registros` | RF03 | Paciente (su propia toma) o médico tratante |
-| `POST` | `/api/adherencia/registros/lote` | RF03 | Paciente o médico tratante |
-| `GET` | `/api/adherencia/pacientes/{id}/registros` | RF03 | Médico tratante o el propio paciente |
-| `GET` | `/api/adherencia/pacientes/{id}/resumen` | RF03/RF07 | Médico tratante o el propio paciente |
-| `GET` | `/api/prediccion/pacientes/{id}` | RF04 | Médico tratante |
-| `POST` | `/api/familiares/invitaciones` | RF09 | Paciente |
-| `GET` | `/api/familiares` | RF09 | Paciente |
-| `DELETE` | `/api/familiares/{id}` | RF09 | Paciente |
-| `POST` | `/api/familiares/registro` | RF09 | Pública, solo con código de invitación vigente |
-| `GET` | `/api/familiares/tomas-por-confirmar` | RF09 | Acompañante familiar |
-| `POST` | `/api/familiares/tomas/{id}/confirmacion` | RF09 | Acompañante del paciente titular del evento |
-| `POST` | `/api/auth/recuperacion` | RF10 | Pública |
-| `POST` | `/api/auth/recuperacion/confirmar` | RF10 | Pública, solo con enlace vigente |
+**Tabla 19.** Pruebas automatizadas al corte.
 
-Las rutas de RF04, RF09, RF10 y la de acceso móvil se incorporaron en el Sprint 3 y se documentan en el apartado 1.1.4. Ninguna ruta pública admite crear una cuenta ni cambiar una credencial sin un permiso de un solo uso previamente emitido por el titular.
-
-**Tres decisiones de diseño relevantes.**
-
-1. **El rol no basta para autorizar.** Un paciente autenticado tiene rol válido, pero solo sobre *su* ficha. Esa regla se concentró en `services/acceso.py` para que todos los servicios que reciben un `id_paciente` la apliquen de forma idéntica, en lugar de quedar dispersa —y eventualmente olvidada— en cada controlador. El médico accede únicamente a los pacientes que tiene a su cargo como tratante.
-
-2. **La sincronización es idempotente por diseño.** La terna (paciente, medicamento, horario programado) identifica el evento de forma unívoca. Un reenvío desde la app móvil tras una pérdida de conectividad **actualiza** el registro existente y responde `200`, mientras que un evento nuevo responde `201`. Esto satisface directamente el criterio de aceptación de HU03 («cada toma queda registrada y sincronizada») y, sobre todo, protege la validez del dataset: eventos duplicados sesgarían la tasa de adherencia observada y, con ella, las características conductuales del modelo predictivo (RF04). El servicio de lote acota el envío a 200 registros y confirma la transacción de forma atómica, de modo que un fallo a mitad de camino no deje la cola del dispositivo en un estado indeterminado.
-
-3. **La adherencia observada se distingue de la autorreportada.** El servicio de resumen calcula la tasa de cumplimiento, el retraso promedio y la racha de omisiones consecutivas —disparador de la alerta temprana (RF05)— a partir de eventos fechados. Las tomas pospuestas se excluyen del denominador por no tener desenlace todavía. Este indicador es, precisamente, la evidencia objetiva cuya ausencia identificó el diagnóstico del OE1, frente al autorreporte verbal del test de Morisky.
-
-#### h) Evidencia de pruebas del núcleo funcional
-
-Se construyó una batería automatizada con `pytest` sobre una base de datos en memoria (`backend-api/tests/`). **Resultado al cierre de este sprint: 25 de 25 pruebas en verde.** El recuento acumulado tras el Sprint 3 figura en la Tabla 20.
-
-| Grupo | Caso verificado | Resultado |
-| :--- | :--- | :---: |
-| RF02 | Alta persistida, consultable y con código seudonimizado correlativo (P-002) | ✔ |
-| RF02 | Rechazo del alta con menos de 5 fármacos (criterio de elegibilidad) | ✔ `422` |
-| RF02 | Rechazo de controles perdidos > programados | ✔ `422` |
-| RF02 | Rechazo de campos ajenos al Anexo n.° 04 | ✔ `422` |
-| RF02 | Actualización parcial: los campos no enviados se conservan | ✔ |
-| RF02 | La coherencia se valida sobre la ficha fusionada, no solo sobre lo enviado | ✔ `409` |
-| RF02 | Baja lógica: sale del panel, el historial permanece para el análisis | ✔ |
-| RF03 | Registro de toma con cálculo de retraso | ✔ `201` |
-| RF03 | **Reintento del mismo evento: no duplica** (`201` → `200`, un solo registro) | ✔ |
-| RF03 | Corrección del desenlace: pospuesta → tomada con retraso | ✔ |
-| RF03 | Sincronización de cola en lote y reenvío completo sin duplicar (3 creados → 3 actualizados) | ✔ |
-| RF03 | Toma cumplida sin hora real / toma omitida con hora real | ✔ `422` |
-| RF03 | Resumen de adherencia: 3 cumplidas de 5 eventos resueltos = 60 % | ✔ |
-| RBAC | El paciente no puede dar de alta fichas | ✔ `403` |
-| RBAC | El paciente no puede registrar tomas por un tercero | ✔ `403` |
-| RBAC | Un médico ajeno no accede a la ficha ni al historial | ✔ `403` |
-| RBAC | El paciente accede a su propia ficha, no a otras | ✔ `200` / `403` |
-| RBAC | Sin token no hay acceso | ✔ `401` |
-
-Con ello, el **escenario de inicio a fin exigido por el hito del 50 %** queda ejecutable y verificado: alta del paciente polimedicado → registro de la toma desde la app → cálculo de las variables conductuales de adherencia. Un evento registrado con 45 minutos de retraso respecto del horario prescrito se clasifica correctamente como cumplido con retraso y su latencia se calcula como insumo directo de la ingeniería de características del modelo predictivo.
-
-#### i) Despliegue del sistema en infraestructura real
-
-El sistema no quedó en un entorno de desarrollo local: los tres componentes que
-lo integran están desplegados y accesibles, lo que permite verificar los
-requisitos no funcionales sobre la infraestructura real y no sobre una
-simulación.
-
-**Tabla 15.** Componentes desplegados y su verificación.
-
-| Componente | Plataforma | Verificación ejecutada |
-| :--- | :--- | :--- |
-| Base de datos PostgreSQL | Aiven | Conexión cifrada (`sslmode=require`); esquema aplicado con Alembic |
-| API Gateway | Render | `/health` responde `200`; entorno `produccion` |
-| Panel médico | Vercel | Sitio servido; el paquete apunta al API de producción |
-
-**Comprobaciones de seguridad sobre el servicio desplegado.** Las siguientes se
-ejecutaron contra el dominio público, no en local:
-
-| Comprobación | Resultado esperado | Resultado obtenido |
-| :--- | :--- | :---: |
-| Documentación interactiva oculta en producción | `404` en `/docs` | ✔ `404` |
-| Cabecera `Host` falsificada | Rechazo | ✔ `403` |
-| Origen del panel autorizado por CORS | Origen reflejado | ✔ |
-| Cabeceras de seguridad (HSTS, CSP, `nosniff`, `no-store`) | Presentes | ✔ |
-| Conexión efectiva a la base clínica | Error de credenciales, no de base de datos | ✔ `401`, no `503` |
-
-La última merece explicación: un intento de acceso con credenciales inexistentes
-responde `401 NO_AUTENTICADO`. Si la conexión a PostgreSQL estuviera mal
-configurada, el manejador global devolvería `503 BD_NO_DISPONIBLE`. Distinguir
-ambos casos es lo que permite comprobar la conectividad sin exponer ninguna
-credencial válida.
-
-**Gestión de secretos (RNF01).** Ninguna credencial está versionada. La clave de
-firma del JWT y la cadena de conexión se inyectan como variables de entorno en
-la plataforma de despliegue, y el repositorio excluye los archivos `.env`. Antes
-de la primera publicación se auditó el índice del repositorio para confirmar que
-ni las credenciales de la base de datos ni la clave de firma habían quedado
-incluidas.
-
-**Limitación conocida del entorno.** El plan gratuito de la plataforma de
-alojamiento suspende el servicio tras quince minutos sin tráfico; la primera
-petición posterior tarda entre 30 y 45 segundos en responder. Esta latencia es
-del arranque en frío de la infraestructura, no del sistema, y debe descontarse
-al medir el indicador de RNF02 (tiempo de respuesta ≤ 2 s), que se evaluará con
-el servicio ya activo durante las pruebas de carga del Sprint 4.
-
-#### j) Cierre del sprint
-
-Las actas completas de ambas ceremonias, con los entregables aceptados, las observaciones del Product Owner y los compromisos del sprint siguiente, constan en el Anexo n.° 11.
-
-**Tabla 16.** Registro de incidencias del Sprint 2.
-
-| ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
-| :---: | :--- | :--- | :--- | :--- | :--- | :---: |
-| I-02 | ML | La preparación del dataset se interrumpía al imputar las variables categóricas | Ejecución de `preprocess.py` | `pd.NA` de *pandas* no es reconocido como ausente por los imputadores de *scikit-learn*, que solo interpretan `NaN` | Normalizar las categóricas a tipo `object` con `np.nan` antes de imputar | Cerrada |
-| I-03 | Datos | La base almacenaba el **nombre** del miembro del enumerado (`MASCULINO`) y no su **valor** (`M`) | Inspección del gestor de base de datos tras la primera carga | Comportamiento por omisión de SQLAlchemy para columnas enumeradas | Declarar las columnas con `values_callable`, de modo que persistan los códigos del Anexo n.° 04 | Cerrada |
-| I-04 | Web | El contenido desbordaba el alto de la página en el panel | Verificación en navegador | `height: 100 %` sobre un contenedor cuyo padre no tiene alto definido | Sustituir por `min-height` con unidades `dvh` | Cerrada |
-| I-05 | Móvil | La aplicación no arrancaba: aserción en el tema tipográfico | Ejecución en dispositivo | `TextTheme.apply(fontSizeFactor:)` falla si algún estilo del tema base llega con `fontSize` nulo | Fijar el tamaño de forma explícita en cada texto | Cerrada |
-| I-06 | Móvil | Un fallo de red se comunicaba al paciente como «el servidor tardó demasiado» | Prueba sin conectividad | `package:http` envuelve `SocketException` en `ClientException`, de modo que capturar la primera no atrapaba nada | Capturar `ClientException` y distinguirla del tiempo de espera agotado | Cerrada |
-| I-07 | API | Los mensajes de validación llegaban con el prefijo `Value error,` de *Pydantic* | Prueba de integración | El manejador global no depuraba el texto de la excepción | Retirar el prefijo al construir el detalle del error | Cerrada |
-
-**Densidad del sprint:** seis defectos sobre cinco componentes tocados (1,2 por
-componente). Cinco de los seis se detectaron por pruebas automatizadas o
-verificación dirigida, y ninguno por casualidad. **Cero abiertos al cierre.**
-
-**Sprint Review (Sprint 2).** Se aceptaron el núcleo funcional RF01–RF03, el pipeline de preparación de datos y la configuración experimental. **Retrospectiva:** se detectó que el `pd.NA` de las columnas de texto de pandas no es interpretado por los imputadores de scikit-learn, lo que interrumpía la ejecución; la corrección —normalizar las categóricas a `object` con `np.nan` antes de imputar— se incorporó al script y quedó documentada para evitar su reaparición.
-
----
-
-### 1.1.4. Sprint 3: Integración del modelo, aplicación móvil y acompañamiento familiar *(en ejecución)*
-
-**Sprint 3 · Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*.**
-
-**Objetivo del sprint.** Llevar el modelo predictivo del cuaderno de análisis al sistema en producción, completar la aplicación del paciente y cerrar las dos brechas de seguimiento que el diagnóstico dejó abiertas: la ausencia de avisos (B4) y la dependencia exclusiva del autorreporte como fuente de la toma (B1).
-
-**Sobre el adelanto de alcance.** Parte del trabajo de este sprint se ejecutó antes del corte del 50 %. La razón no fue de cronograma sino técnica: el Sprint 2 dejó el modelo entrenado y serializado, pero un artefacto `.pkl` en un directorio no es un componente del sistema. Mientras no exista una ruta que lo cargue, lo alimente con los datos de una ficha real y devuelva una probabilidad, el objetivo OE4 —construir el sistema integrando el modelo— permanece sin evidencia. Se decidió por tanto adelantar la integración, que es lo que convierte el modelo en parte del producto acreditable.
-
-**Tabla 17.** Sprint Backlog del Sprint 3 (semanas 5–6), al corte del 50 %.
-
-| Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
-| :---: | :--- | :--- | :---: | :--- |
-| RF04 | Servicio de inferencia y contrato de la predicción | API | 8 | **Terminada** |
-| RF04 | Tarjeta de predicción y factores influyentes en la ficha | Web | 5 | **Terminada** |
-| RF08 | Alertas de toma programadas en el dispositivo | Móvil | 5 | **Terminada** |
-| RF08 | Empaquetado del APK de publicación | Móvil | 3 | **Terminada** |
-| RF09 | Modelo, servicios REST y reglas del grupo familiar | API | 8 | **Terminada** |
-| RF09 | Recorridos del paciente y del acompañante | Móvil | 8 | **Terminada** |
-| RF09 | Columna de corroboración en el historial clínico | Web | 2 | **Terminada** |
-| RF10 | Restablecimiento de contraseña por enlace de un solo uso | API + Web | 5 | **Terminada** |
-| RNF03 | Barra inferior de navegación en sustitución del menú oculto | Móvil | 3 | **Terminada** |
-| RF01 / RF02 | Acceso móvil del paciente generado desde el panel | API + Web | 3 | **Terminada** |
-| RF02 | Validación de la ficha en el propio formulario | Web | 3 | **Terminada** |
-| RNF04 | Reintento de lecturas ante el arranque en frío del servicio | Móvil | 2 | **Terminada** |
-| RF05 | Alertas tempranas al médico ante riesgo alto | API + Web | 5 | Pendiente |
-| RF06 | Atribución individual con SHAP | ML + Web | 8 | Pendiente |
-| RF07 | Exportación de reportes del panel *(arrastrado del Sprint 2)* | Web | 5 | Pendiente |
-| — (OE3) | Ejecución de la comparación sobre el dataset real | ML | 5 | **Bloqueada**: depende de la extracción documental |
-| | **Comprometido: 78 · Completado al corte: 55 (71 %)** | | **78** | |
-
-El sprint sigue abierto: su cierre corresponde a la semana 6. Lo completado hasta
-el corte del 50 % es el alcance adelantado que se documenta a continuación; los
-cuatro elementos restantes conservan su compromiso dentro del mismo sprint.
-
-#### a) Del artefacto serializado al servicio: integración del modelo (RF04)
-
-El módulo `backend-api/app/services/ml_inference.py` carga el *pipeline* serializado una sola vez por proceso (`lru_cache`), construye la fila de características a partir de la ficha del paciente y devuelve la probabilidad de incumplimiento junto con su interpretación clínica. La ruta `GET /api/prediccion/pacientes/{id}` la expone al panel médico.
-
-**Tabla 18.** Contrato de la predicción devuelta por el sistema.
-
-| Campo | Contenido | Por qué forma parte del contrato |
-| :--- | :--- | :--- |
-| `probabilidad` | Probabilidad de incumplimiento antes del próximo control | Es el resultado del modelo, no una categoría precocinada |
-| `nivel` | Bajo / medio / alto, según el umbral configurado | Traduce la probabilidad a la decisión que el médico debe tomar |
-| `factores_influyentes` | Variables con mayor importancia de permutación | Sin ellos la cifra es una caja negra que el médico no puede contrastar |
-| `variables_imputadas` | Campos ausentes en la ficha que el modelo tuvo que estimar | Una predicción sobre una ficha incompleta merece menos confianza, y el médico debe poder verlo |
-| `modelo` y `entrenado_el` | Algoritmo y fecha de entrenamiento | Trazabilidad: identifica qué modelo produjo qué predicción |
-| `origen_datos` | Procedencia del conjunto de entrenamiento | Declara si el resultado proviene de datos reales o de demostración |
-
-**Tres salvaguardas incorporadas durante la integración.**
-
-1. **Ausentes reales, no ausentes de Python.** Los campos opcionales de la ficha llegan desde el API como `None`, que los imputadores de *scikit-learn* no reconocen como valor faltante: solo interpretan `NaN`. La conversión explícita antes de invocar el *pipeline* evita que la inferencia falle para casi cualquier paciente con una ficha incompleta, que es el caso corriente.
-
-2. **La ausencia del modelo no tumba el sistema.** Si el artefacto no está disponible, el manejador global responde `503 MODELO_NO_DISPONIBLE`. El panel muestra el resto de la ficha con normalidad. La predicción es un apoyo a la decisión; su indisponibilidad no debe impedir consultar la historia de adherencia.
-
-3. **La interfaz declara lo que la cifra es y lo que no es.** La ficha muestra literalmente que se trata de una estimación de apoyo a la decisión clínica, que no constituye un diagnóstico y que la decisión corresponde al médico tratante. Cuando el modelo se ha entrenado con el conjunto de demostración, lo declara en la misma tarjeta.
-
-**Desempeño medido (RNF02).** El tiempo de inferencia, instrumentado con la cabecera `X-Tiempo-Respuesta-ms`, se sitúa en el orden de **13 ms** con el servicio activo, frente a la meta de 2 s del RNF02. La latencia percibida en el despliegue gratuito procede del arranque en frío de la infraestructura, no del cálculo del modelo.
-
-**Advertencia metodológica, explícita en el sistema y en este informe.** El modelo actualmente desplegado se entrenó con un **conjunto de demostración simulado** (320 filas; `datos_reales: false` en `risk_model_v1.json`). Sus métricas ilustran el funcionamiento del componente y **no constituyen un resultado de la investigación**. Los valores que responderán al indicador del OE3 son los que produzca `train_evaluate.py` sobre el dataset real, una vez concluida la extracción documental del Anexo n.° 04.
-
-#### b) La aplicación del paciente sobre un dispositivo real
-
-La aplicación Flutter pasó de maqueta verificada por pruebas a **APK de publicación instalable**, lo que satisface la exigencia de una versión ejecutable del núcleo funcional.
-
-- **Navegación por barra inferior.** Las funciones estaban tras un menú de tres puntos. Para el usuario objetivo —un adulto mayor polimedicado— un icono sin etiqueta en una esquina no es un menú: es una función que no existe. Se sustituyó por cuatro destinos rotulados y permanentes (Hoy, Medicinas, Familia, Mi cuenta), decisión trazable al RNF03.
-- **Alertas de toma en el dispositivo (RF08).** Los recordatorios se programan en el teléfono y no se envían desde el servidor: el paciente puede estar sin cobertura justo a la hora de su medicación, que es precisamente el escenario que más necesita el aviso. El permiso se solicita al guardar el primer medicamento con su horario, único momento en que la petición se explica por sí sola.
-- **Defecto corregido con implicación de despliegue.** El manifiesto de publicación de Android no declaraba el permiso de INTERNET. Las herramientas de Flutter lo declaran por su cuenta en los manifiestos de depuración y de perfil, que no se fusionan en la compilación de publicación: la aplicación funcionaba durante el desarrollo y quedaba permanentemente «sin conexión» al instalarse desde el APK. El caso ilustra por qué la verificación debe ejecutarse sobre el artefacto que se entrega y no sobre el que se depura.
-
-#### c) Acompañamiento familiar: la toma deja de tener una sola fuente (RF09)
-
-Toda la traza de adherencia construida hasta el Sprint 2 es **autorreporte**: el paciente marca su propia toma. Es una mejora sustancial frente al recuerdo verbal en consulta que describió el diagnóstico (OE1), pero conserva su sesgo, que la literatura sobre medición de la adherencia reconoce como su limitación principal [3].
-
-Se incorporó un **grupo familiar de acompañamiento**: el paciente invita hasta cinco convivientes con un código de un solo uso; el acompañante corrobora desde su propio dispositivo las dosis que el paciente ya reportó. La corroboración **se añade** al registro, no lo sustituye ni lo modifica.
-
-**Tabla 19.** Reglas del acompañamiento familiar y su fundamento.
-
-| Regla implementada | Fundamento |
-| :--- | :--- |
-| Solo el paciente invita y solo él retira | Convierte el acompañamiento en un consentimiento y no en una vigilancia |
-| El código caduca a los siete días y solo sirve una vez | Una invitación pendiente es, en la práctica, una credencial de alta de cuenta |
-| Solo se corroboran tomas reportadas como **cumplidas** | Una omisión ya es una declaración contra el propio interés y no requiere testigo |
-| La corroboración caduca a las 48 horas | Quien da fe de una dosis debe haber podido presenciarla |
-| El acompañante no accede a la ficha clínica ni registra tomas | Corroborar no es reportar por otro |
-
-El efecto sobre el dato es lo relevante para la investigación: el historial del panel médico distingue ahora, por evento, si la toma cuenta con **dos fuentes** o solo con la palabra del paciente. Esa distinción queda disponible como variable de calidad de la evidencia en el análisis posterior.
-
-#### d) Recuperación del acceso (RF10)
-
-La pantalla de acceso remitía al consultorio a quien olvidara su contraseña. Para una población de adultos mayores, buena parte de ella rural, eso convierte un olvido en un desplazamiento, y para el consultorio en una intervención manual sobre la base de datos. Se implementó el restablecimiento mediante un enlace de un solo uso, válido treinta minutos, con tres cautelas: la respuesta del API es idéntica exista o no la cuenta —de otro modo la ruta permitiría enumerar los correos registrados—, del enlace se persiste únicamente su resumen SHA-256, y solicitar uno nuevo anula los anteriores.
-
-#### e) Acceso del paciente a la aplicación y calidad de la ficha
-
-Dar de alta a un paciente con su correo no le daba acceso a la aplicación: la cuenta podía existir, pero nadie tenía cómo entregarle una contraseña. Se incorporó en la ficha del panel la **generación del acceso móvil**: el médico tratante la solicita, el API crea o renueva la cuenta y devuelve **una sola vez** una contraseña temporal, compuesta con un alfabeto que excluye los caracteres que se confunden al dictarla (O/0, I/l/1). No se almacena en claro ni vuelve a mostrarse.
-
-El formulario de alta y edición **valida la ficha antes de enviarla**. Distingue *errores*, que impiden guardar porque el API los rechazaría de todos modos —menos de cinco fármacos, controles perdidos que superan a los programados, tiempo de enfermedad mayor que la edad—, de *avisos*, que no bloquean porque un dato infrecuente puede ser correcto —un DNI que no tiene ocho dígitos, un puntaje de Morisky que no coincide con la clasificación registrada—. La validación del servidor sigue siendo la que manda; la del formulario evita que el médico descubra el error después de completar veintiuna variables. Protege además la calidad del dataset, porque cada ficha es una fila del conjunto de entrenamiento.
-
-#### f) Evidencia de pruebas del sprint
-
-**Tabla 20.** Batería automatizada al corte, por componente.
-
-| Componente | Casos | Alcance verificado | Resultado |
+| Componente | Casos | Alcance | Resultado |
 | :--- | :---: | :--- | :---: |
-| API Gateway (`pytest`) | 91 | RF01–RF04, RF09, RF10, acceso móvil, RBAC de dominio, no enumeración de cuentas y carga del modelo realmente desplegado | ✔ 91/91 |
-| Aplicación móvil (`flutter test`) | 40 | Contrato del cliente, cola sin conexión, reintento ante arranque en frío, programación de avisos, acceso y alta con código | ✔ 40/40 |
-| Panel web | — | `npm run build` y análisis estático sin errores; recorrido completo verificado en navegador | ✔ |
-| **Total** | **131** | | **✔** |
+| API (`pytest`) | 102 | RF01–RF04, RF07, RF09, RF10, permisos, comorbilidades y carga del modelo desplegado | ✔ 102/102 |
+| App móvil (`flutter test`) | 40 | Sincronización sin conexión, reintento, recordatorios, acceso y grupo familiar | ✔ 40/40 |
+| Panel web | — | Compilación y análisis estático; recorrido verificado en navegador | ✔ |
+| **Total** | **142** | | **✔** |
 
-Las pruebas del acompañamiento familiar y del restablecimiento no verifican únicamente que la función opere: verifican también que **no** haga lo que no debe. Un acompañante no puede corroborar tomas de un paciente ajeno (`403`), ni corroborar dos veces el mismo evento (`409`), ni corroborar fuera de plazo (`409`), ni registrar tomas en nombre del paciente. Y ni el acceso ni la recuperación permiten averiguar qué correos están registrados: la comprobación del código precede a la del correo precisamente por eso.
+**Tabla 20.** Incidencias del Sprint 3.
 
-#### g) Registro de incidencias del sprint
+| ID | Componente | Incidencia | Causa | Corrección | Estado |
+| :---: | :--- | :--- | :--- | :--- | :---: |
+| I-08 | Móvil | La app instalada quedaba siempre «sin conexión» | Faltaba el permiso de internet en la versión de publicación | Declarar el permiso y verificar el APK | Cerrada |
+| I-09 | API / ML | La predicción fallaba con fichas incompletas | Los campos vacíos llegaban como `None` | Convertirlos a `NaN` | Cerrada |
+| I-10 | Móvil | Al cambiar la hora quedaba el aviso anterior | Se asumía el permiso denegado | Consultar el permiso real | Cerrada |
+| I-11 | API | Un correo mal escrito rompía el listado | Validación estricta también en la salida | Validar solo al registrar | Cerrada |
+| I-12 | Datos | Las fichas de demostración quedaban sin cuenta | La carga no completaba fichas existentes | Carga que completa lo que falta | Cerrada |
+| I-13 | Web | El panel decía que la predicción aún no existía | Texto desactualizado | Actualizar el aviso | Cerrada |
+| I-14 | API / Despliegue | En producción no aparecía la predicción | Faltaba una librería y la versión no coincidía con la del entrenamiento | Fijar versiones y probar con el modelo real | Cerrada |
+| I-15 | Móvil | «Sin conexión» con internet disponible | El servidor gratuito tarda en despertar | Reintentar las consultas | Cerrada |
+| I-16 | Web | No se guardaban cambios en fichas D- | Se validaba el código también al editar | Validarlo solo en el alta | Cerrada |
+| I-17 | Web | La contraseña temporal desaparecía | Se recargaba la ficha al generarla | Recargar solo al ocultarla | Cerrada |
+| I-18 | ML | El desempate por sensibilidad no se aplicaba | El código solo desempataba con AUCROC idéntico | Aplicar McNemar antes de elegir | Cerrada |
 
-**Tabla 21.** Registro de incidencias del Sprint 3, al corte del 50 %.
-
-| ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
-| :---: | :--- | :--- | :--- | :--- | :--- | :---: |
-| I-08 | Móvil | La aplicación instalada desde el APK quedaba permanentemente «sin conexión» | Prueba sobre el artefacto entregable | El permiso de INTERNET solo lo declaran los manifiestos de depuración y de perfil, que no se fusionan en la compilación de publicación | Declararlo en el manifiesto principal; verificado con `aapt2` sobre el APK | Cerrada |
-| I-09 | API / ML | La inferencia fallaba para casi cualquier ficha con campos opcionales vacíos | Prueba de integración de RF04 | Los campos opcionales llegan como `None` y los imputadores de *scikit-learn* solo reconocen `NaN` | Convertir a `NaN` antes de construir la fila de características | Cerrada |
-| I-10 | Móvil | Cambiar la hora de un medicamento dejaba en pie el aviso anterior | Revisión del servicio de notificaciones | El permiso se daba por denegado en cada arranque, de modo que la reprogramación no hacía nada | Consultar el estado real al sistema operativo con `areNotificationsEnabled()` | Cerrada |
-| I-11 | API | Una sola dirección de correo mal formada devolvía `500` en todo el listado de pacientes | Prueba de regresión | `EmailStr` se aplicaba también en el esquema de salida | Estricto al entrar, tolerante al salir: texto libre en la salida | Cerrada |
-| I-12 | Datos | La carga inicial saltaba las fichas ya existentes y dejaba la base sin cuentas de paciente | Intento de acceso desde la aplicación | El script solo contemplaba el alta, no completar una ficha a medias | Reescribir la carga para que complete lo que falte y sea idempotente | Cerrada |
-| I-13 | Web | El panel anunciaba que la predicción llegaría en el Sprint 3 cuando ya estaba integrada | Revisión previa a la demostración | Texto informativo no actualizado al cerrar RF04 | Reescribir el aviso y distinguir riesgo observado de riesgo predicho | Cerrada |
-| I-14 | API / Despliegue | En el servicio desplegado la ficha no mostraba la predicción: el modelo no podía cargarse | Revisión de la arquitectura y de las dependencias | `imbalanced-learn` no figuraba entre las dependencias del API y la versión de *scikit-learn* declarada no era la del entrenamiento; las pruebas usaban un modelo sintético y nunca abrían el artefacto real | Fijar las versiones exactas del entorno de entrenamiento y añadir pruebas que cargan el artefacto desplegado y comparan las versiones instaladas con las declaradas | Cerrada |
-| I-15 | Móvil | La aplicación indicaba «sin conexión» con el teléfono conectado a internet | Uso de la aplicación por el Product Owner en dispositivo | El servicio gratuito se suspende sin tráfico y la primera petición tras el arranque en frío se corta | Reintentar las lecturas con espera creciente (3 s y 8 s), nunca las escrituras, con un mensaje que no atribuye el fallo a la red del usuario | Cerrada |
-| I-16 | Web | No se podían guardar cambios en fichas con código de la serie D- | Verificación en navegador | La validación exigía el formato del código también en edición, donde el campo está bloqueado | Validar el código solo en el alta | Cerrada |
-| I-17 | Web | La contraseña temporal del acceso móvil desaparecía antes de poder anotarla | Verificación en navegador | Refrescar la ficha tras generarla desmontaba el componente que la mostraba | Refrescar la ficha solo al ocultar la contraseña | Cerrada |
-
-**Densidad del sprint:** diez defectos sobre cinco componentes tocados (2,0 por
-componente). **Cero abiertos al corte.**
-
-Tres merecen comentario metodológico. **I-14** es el más grave del proyecto: la
-batería de pruebas estaba en verde mientras la predicción no funcionaba en el
-servicio desplegado, porque ninguna prueba abría el archivo que realmente se
-sirve. La corrección no se limitó a añadir la dependencia: incorporó pruebas
-contra el artefacto real, de modo que el mismo desajuste no pueda repetirse sin
-que la batería falle. **I-08** solo era observable sobre el
-artefacto que se entrega: en desarrollo todo funcionaba, y de ahí la regla que se
-incorporó al procedimiento de verificación —probar el APK de publicación y no
-únicamente la ejecución en depuración—. I-14 es la misma lección aplicada al
-modelo. **I-13** no es un fallo de código sino de
-consistencia entre el producto y su propia documentación en pantalla; se registra
-porque un sistema que se contradice a sí mismo ante el usuario es tan defectuoso
-como uno que calcula mal.
-
-#### h) Alcance pendiente del sprint
-
-Conforme al cronograma, restan dentro del Sprint 3: el módulo de **alertas tempranas al médico** (RF05), la **atribución individual con SHAP** (RF06) en sustitución de la importancia global que hoy muestra la ficha, la **exportación de reportes** del panel (RF07) y —condicionada a la extracción documental— la **ejecución de la comparación de algoritmos sobre el dataset real**, que es lo que cierra el OE3.
+**Pendiente del sprint.** Alertas tempranas al médico (RF05), explicación individual con SHAP (RF06) y comparación sobre las historias clínicas reales.
 
 ---
 
-### 1.1.5. Sprint 4: Cierre, rendimiento y validación de usabilidad *(programado)*
+### 1.1.6. Sprint 4: Cierre y validación *(programado)*
 
-**Sprint 4 · Semanas 7–8 · CRISP-DM: *Deployment* y monitoreo.**
+**Semanas 7–8 · CRISP-DM: *Deployment*.**
 
-**Objetivo del sprint.** Verificar el producto contra sus requisitos no
-funcionales, medir la usabilidad con usuarios reales y consolidar las evidencias
-de la investigación.
+**Objetivo.** Medir rendimiento y usabilidad con usuarios reales y consolidar las evidencias.
 
-**Tabla 22.** Sprint Backlog previsto del Sprint 4 (semanas 7–8).
+**Tabla 21.** Sprint Backlog previsto del Sprint 4.
 
-| Elemento de la pila | Tarea prevista | Componente | Est. | Estado |
+| Elemento | Tarea | Componente | Pts | Estado |
 | :---: | :--- | :--- | :---: | :--- |
-| RNF02 / RNF06 | Pruebas de rendimiento y carga sobre el API y el servicio de inferencia | API | 8 | Programada |
-| — (OE5) | Pruebas de usabilidad con la escala SUS y ficha de observación | Web + Móvil | 8 | Programada |
-| — (RNF01–RNF06) | Verificación del cumplimiento de los atributos ISO/IEC 25010 | Todos | 5 | Programada |
-| — | Consolidación del repositorio y de las evidencias de la investigación | Documentación | 3 | Programada |
+| RNF02 / RNF06 | Pruebas de rendimiento y carga | API | 8 | Programada |
+| OE5 | Pruebas de usabilidad con la escala SUS | Web + Móvil | 8 | Programada |
+| RNF01–RNF06 | Verificación de atributos ISO/IEC 25010 | Todos | 5 | Programada |
+| — | Consolidación del repositorio y las evidencias | Documentación | 3 | Programada |
 | | **Comprometido previsto: 24** | | **24** | |
 
-La estimación de este sprint es preliminar: se cerrará en su planificación, una
-vez conocido el desenlace de los elementos que el Sprint 3 aún tiene abiertos.
-
 ---
 
-### 1.1.6. Registro consolidado de incidencias
+### 1.1.7. Registro consolidado de incidencias
 
-El seguimiento de defectos no es un anexo administrativo: es el que sostiene el
-indicador de **densidad de errores por módulo al cierre de cada sprint** del OE4.
-Sin un registro con causa raíz y forma de detección, ese indicador sería un número
-sin respaldo.
+**Tabla 22.** Incidencias por sprint.
 
-**Tabla 23.** Densidad de defectos por sprint y forma de detección.
-
-| Sprint | Defectos registrados | Componentes tocados | Densidad (def./componente) | Detectados por prueba automatizada o verificación dirigida | Abiertos al cierre |
+| Sprint | Incidencias | Componentes tocados | Por componente | Detectadas por prueba o revisión | Abiertas |
 | :---: | :---: | :---: | :---: | :---: | :---: |
-| 1 | 1 | 4 | 0,25 | 0 (retrospectiva) | 0 |
+| 1 | 1 | 4 | 0,25 | 0 de 1 (retrospectiva) | 0 |
 | 2 | 6 | 5 | 1,20 | 5 de 6 | 0 |
-| 3 *(al corte)* | 10 | 5 | 2,00 | 9 de 10 | 0 |
-| **Total** | **17** | — | — | **14 de 17** | **0** |
+| 3 *(al corte)* | 11 | 5 | 2,20 | 10 de 11 | 0 |
+| **Total** | **18** | — | — | **15 de 18** | **0** |
 
-**Lectura del indicador.** La densidad no decrece entre el Sprint 2 y el Sprint 3:
-aumenta, y sería deshonesto presentarla de otro modo. La explicación es que ambos
-sprints incorporaron componentes nuevos —el pipeline de datos y el panel en el
-segundo; la inferencia, el acompañamiento familiar y el empaquetado móvil en el
-tercero—, y el defecto se concentra en lo que se escribe por primera vez, no en lo
-que ya está cubierto por pruebas. El Sprint 3 añade una causa propia: es el
-primero que se ejecuta sobre el entorno desplegado y un dispositivo real, y dos
-de sus defectos (I-14 e I-15) solo se manifestaban allí. Ninguno afectó a
-pacientes, porque el sistema aún no opera con usuarios reales, pero ambos
-llegaron al entorno desplegado. Nueve de los diez se detectaron por prueba o
-verificación dirigida; I-15 lo detectó el Product Owner al usar la aplicación.
-
-**Clasificación por origen.** De los diecisiete registrados, seis provienen de
-una suposición equivocada sobre el comportamiento de una biblioteca de terceros
-(I-02, I-03, I-05, I-06, I-09, I-10), cinco de una diferencia entre el entorno de
-desarrollo y el de entrega (I-08, I-11, I-12, I-14, I-15), dos de maquetación o de
-mensajes (I-04, I-07), dos del flujo de la interfaz (I-16, I-17), uno de
-consistencia entre el producto y su propia interfaz (I-13) y uno de diseño
-detectado en retrospectiva (I-01). La concentración en el primer
-grupo motivó una práctica que se mantiene: comprobar en la documentación de la
-versión concreta de cada dependencia el contrato que se está asumiendo, en lugar
-de deducirlo del nombre del método.
+**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas. Según su origen: seis por el comportamiento de librerías (I-02, I-03, I-05, I-06, I-09, I-10), cinco por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15), cuatro de interfaz (I-04, I-07, I-16, I-17), una de texto desactualizado (I-13), una de diseño (I-01) y una de diferencia entre el protocolo y su implementación (I-18).
 
 ---
 
 ## 1.2. En base a los objetivos del proyecto
 
-**Tabla 24.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
+**Tabla 23.** Estado de los objetivos específicos.
 
-| Objetivo | Resultado esperado | Estado al corte | Evidencia principal |
+| Objetivo | Resultado esperado | Estado | Evidencia |
 | :---: | :--- | :---: | :--- |
-| OE1 | Informe de diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base cuantitativa en consolidación) | Anexo n.° 03 aplicado; Tablas 3 y 4 |
-| OE2 | Documento de requisitos y arquitectura | **Cumplido** | Tablas 2 y 9; `backend-api/app/main.py` |
-| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~70 %) | `preprocess.py`, `train_evaluate.py` y modelo integrado en el sistema; Tablas 12, 13 y 18 |
-| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~70 %) | RF01–RF04, RF08, RF09 y RF10 operativos y desplegados |
-| OE5 | Informe de validación de usabilidad | **Pendiente** (programado semana 7) | Anexo n.° 05 (SUS) formalizado |
-
----
+| OE1 | Diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base propia en ejecución) | Tablas 7 y 8 |
+| OE2 | Requisitos y arquitectura | **Cumplido** (juicio de expertos en curso) | Tablas 2, 5 y 12 |
+| OE3 | Algoritmo seleccionado y reporte comparativo | **En ejecución** (~75 %) | Tablas 14 y 18 |
+| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~80 %) | Tablas 5, 17 y 19 |
+| OE5 | Validación de usabilidad | **Pendiente** (semana 7) | Anexo n.° 05 |
 
 ### 1.2.1. OE1 – Caracterizar el proceso actual de seguimiento terapéutico y los factores de incumplimiento
 
 **Estado: cumplido.**
 
-| Indicador del objetivo | Meta | Resultado al corte |
+| Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| Porcentaje de pacientes polimedicados con adherencia deficiente (línea base) | Medida en el diagnóstico | **En ejecución** (test de Morisky-Green, cierre del Sprint 3); referencias de contexto: 37,1 % nacional [4], 44,7 % en Lambayeque [6] |
-| N.° de factores de incumplimiento identificados y clasificados según el modelo OMS | Clasificados en las 5 dimensiones | **5 dimensiones cubiertas**, con al menos un factor observable por dimensión (Tabla 4) |
-| Porcentaje de procesos de seguimiento no digitalizados | Medida en el diagnóstico | **100 %** de los subprocesos de seguimiento de adherencia carecen de soporte digital (registro de toma, verificación entre citas, alerta de riesgo, auditoría) |
-
-**Demostración.** La entrevista semiestructurada al Dr. Milko Ugaz Zegarra (Anexo n.° 03) evidenció que el seguimiento se apoya exclusivamente en el autorreporte verbal y que la detección del incumplimiento es reactiva. De ese diagnóstico se derivaron las **cuatro brechas tecnológicas** de la Tabla 3, cada una trazada a un requisito funcional, y la **clasificación de los factores de incumplimiento en las cinco dimensiones del modelo de la OMS** (Tabla 4), que a su vez gobierna la estructura de variables del Anexo n.° 04 y, por tanto, del dataset de entrenamiento. La cadena diagnóstico → factor → variable → requisito queda así documentada de extremo a extremo.
+| Pacientes con adherencia deficiente (línea base) | Medida en el diagnóstico | En ejecución (test de Morisky-Green); referencia: 37,1 % nacional [4], 44,7 % en Lambayeque [6] |
+| Factores clasificados según la OMS | 5 dimensiones | **5 dimensiones** cubiertas (Tabla 8) |
+| Procesos de seguimiento no digitalizados | Medido en el diagnóstico | **100 %**: ninguno de los 4 subprocesos (registro de toma, seguimiento entre citas, alerta de riesgo y auditoría) tiene soporte digital |
 
 ### 1.2.2. OE2 – Determinar los requisitos funcionales y no funcionales del sistema
 
 **Estado: cumplido.**
 
-| Indicador del objetivo | Meta | Resultado al corte |
+| Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| Porcentaje de requisitos especificados respecto a los identificados | 100 % | **100 %**: 8 RF y 6 RNF especificados con criterio de aceptación y prioridad MoSCoW |
-| Grado de alineación con estándares de arquitectura de software (juicio de expertos, escala 1–5) | Evaluación por 3 expertos | **En proceso**: expediente formalizado (Anexo n.° 07); evaluación de los tres expertos en curso |
-
-**Demostración.** Los **diez requisitos funcionales** de la Tabla 2 —ocho especificados en el Sprint 2 y dos emergentes incorporados en el Sprint 3— se derivan uno a uno de las brechas del diagnóstico y están priorizados con MoSCoW, con criterio de aceptación y objetivo asociado. Los seis requisitos no funcionales (Tabla 9) están mapeados a atributos de la norma ISO/IEC 25010 [7] y —a diferencia de una especificación meramente declarativa— **cuatro de los seis cuentan ya con materialización técnica verificable** en el código del API Gateway: seguridad (RNF01), instrumentación de desempeño (RNF02), fiabilidad mediante manejo global de excepciones y sonda de salud (RNF04) y modularidad por capas (RNF05).
-
-La arquitectura de microservicios desacoplados quedó definida en cuatro capas —presentación, lógica/servicios, datos e infraestructura— con el microservicio de ML separado del backend transaccional, lo que permite escalar y reentrenar el modelo sin detener la operación clínica (RNF06).
+| Requisitos especificados respecto a los identificados | 100 % | **100 %**: 10 RF y 6 RNF con criterio de aceptación y prioridad |
+| Alineación con estándares de arquitectura (juicio de expertos, 1–5) | 3 expertos | Expediente formalizado (Anexo n.° 07); evaluación en curso |
 
 ### 1.2.3. OE3 – Determinar el algoritmo de aprendizaje automático con mayor capacidad predictiva
 
-**Estado: en ejecución (avance aproximado del 70 %).**
+**Estado: en ejecución.**
 
-| Indicador del objetivo | Meta | Resultado al corte |
+| Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| N.° de algoritmos comparados | ≥ 4 | **4 configurados**: Regresión Logística, Random Forest, XGBoost y SVM (Tabla 12) |
-| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); corrida de verificación: **0,894** (SVM), meta alcanzada por los cuatro algoritmos (Tabla 13); medición sobre la extracción del consultorio en el Sprint 3 |
-| Sensibilidad y especificidad del modelo seleccionado | Reportadas | Corrida de verificación: 0,778 y 0,858 en validación cruzada (Tabla 13) |
-| F1-score en datos de prueba independientes | Reportado | Corrida de verificación: 0,424 sobre el conjunto apartado |
+| Algoritmos comparados | ≥ 4 | **4**: Regresión Logística, Random Forest, XGBoost y SVM |
+| AUCROC en validación cruzada | ≥ 0,80 | Corrida de verificación: **0,856** (SVM seleccionado; Tabla 18) |
+| Sensibilidad y especificidad | Reportadas | Corrida de verificación: 0,794 y 0,757 |
+| F1-score en prueba independiente | Reportado | Corrida de verificación: 0,471 |
 
-**Demostración del avance.** La fase *Data Preparation* está **completa y automatizada**: el script `preprocess.py` valida el esquema contra el Anexo n.° 04, depura el dataset con siete reglas documentadas, perfila y trata los valores faltantes, deriva tres características clínicamente fundamentadas, particiona de forma estratificada, ajusta el preprocesador solo con entrenamiento, aplica SMOTE solo al entrenamiento y serializa tanto los conjuntos resultantes como el preprocesador y un reporte JSON auditable de todas las transformaciones.
-
-La fase *Modeling* está **implementada y verificada en su flujo**: `train_evaluate.py` ajusta los hiperparámetros de los cuatro algoritmos dentro de la validación cruzada, evalúa con cinco pliegues estratificados, mide sobre el conjunto apartado, contrasta los dos mejores con la prueba de McNemar —en su versión binomial exacta cuando hay pocos casos discordantes— y serializa el modelo ganador junto con su preprocesador, de modo que la inferencia en producción aplique exactamente la misma transformación que el entrenamiento.
-
-Tres decisiones metodológicas sostienen la validez de la comparación: **(i)** la exclusión del puntaje de Morisky del conjunto de predictores, por ser la fuente de la etiqueta; **(ii)** el orden estricto partición → ajuste → balanceo, que impide la fuga hacia el conjunto de prueba; y **(iii)** la aplicación de SMOTE **dentro** de cada pliegue de la validación cruzada y no antes, que impide la fuga entre pliegues. Las tres están documentadas en el código y son verificables por revisión.
-
-El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el error clínicamente costoso es el falso negativo, un paciente en riesgo que el sistema no detecta y que por tanto no recibe la alerta temprana (RF05).
-
-**El modelo ya no vive fuera del sistema.** El *pipeline* ganador se serializa junto con su preprocesador y el API lo carga para responder la predicción de un paciente concreto (apartado 1.1.4.a). Esto importa para el objetivo por una razón de método: un modelo evaluado únicamente en un cuaderno de análisis no demuestra capacidad predictiva *en el sistema*, porque nada garantiza que la transformación aplicada en producción coincida con la del entrenamiento. Serializar ambos como una sola unidad es lo que hace verificable esa equivalencia.
-
-**Lo que este avance no demuestra.** El modelo desplegado se entrenó con un conjunto de demostración simulado, declarado como tal en sus metadatos (`datos_reales: false`) y en la propia interfaz. Sus cifras evidencian que el componente funciona de extremo a extremo; **no** responden al indicador del objetivo. Lo pendiente para cerrar el OE3 es la **ejecución sobre el dataset real** una vez concluida la extracción documental del Anexo n.° 04, con el protocolo ya implementado y verificado.
+El protocolo está implementado, verificado e integrado al sistema. Falta ejecutarlo sobre las historias clínicas reales cuando concluya la extracción del Anexo n.° 04.
 
 ### 1.2.4. OE4 – Construir el sistema de soporte clínico
 
-**Estado: en ejecución (avance aproximado del 70 %).**
+**Estado: en ejecución.**
 
-| Indicador del objetivo | Meta | Resultado al corte |
+| Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| Porcentaje de cumplimiento de historias de usuario | 100 % por sprint | **5 de 5** historias cerradas de extremo a extremo y verificadas (HU01–HU05): **100 %** del alcance comprometido para los Sprints 1 y 2, más el alcance adelantado del Sprint 3 |
-| N.° de módulos construidos frente a módulos requeridos | Todos los módulos | **7 de 10** requisitos funcionales operativos de extremo a extremo (RF01–RF04, RF08, RF09, RF10), con los tres componentes del sistema desplegados y un APK de publicación instalable |
-| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **17 incidencias registradas y cerradas**, con su causa raíz y forma de detección en el registro consolidado del apartado 1.1.6 (Tabla 23). Catorce de las diecisiete se detectaron por prueba automatizada o verificación dirigida. **0 abiertas** al corte; 131 de 131 pruebas en verde |
-| Porcentaje de cumplimiento de atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación formal programada para el Sprint 4 |
+| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 79 % al corte |
+| Módulos construidos frente a requeridos | Todos | **8 de 10** RF operativos (RF01–RF04, RF07–RF10); RF06 parcial y RF05 pendiente |
+| Densidad de errores por sprint | Decreciente | 18 incidencias registradas y cerradas (Tabla 22); 142 pruebas en verde |
+| Atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación en el Sprint 4 |
 
-**Demostración del avance.** El núcleo funcional está operativo y verificado:
-
-| Componente | Estado | Artefacto |
-| :--- | :--- | :--- |
-| API Gateway con CORS, middlewares de seguridad y manejo global de excepciones | Implementado y verificado | `backend-api/app/main.py` |
-| Modelo relacional con restricciones de integridad clínica | Implementado y verificado | `backend-api/app/db/models.py` |
-| Autenticación JWT con RBAC médico/paciente (RF01) | Implementado y verificado | `backend-api/app/api/auth.py`, `core/security.py` |
-| Gestión de pacientes polimedicados (RF02) | Implementado y verificado | `backend-api/app/api/pacientes.py` + `schemas/paciente_schema.py` |
-| Registro de toma de medicamentos (RF03) | Implementado y verificado | `backend-api/app/api/adherencia.py` + `schemas/adherencia_schema.py` |
-| Autorización de dominio (acceso a la ficha por rol y por médico tratante) | Implementado y verificado | `backend-api/app/services/acceso.py` |
-| Pipeline de preparación de datos | Implementado y verificado | `ml-pipeline/src/preprocess.py` |
-| Panel médico de auditoría (React + Vite) | Implementado y desplegado | `frontend-web/` |
-| Aplicación del paciente (Flutter) | Implementada, verificada y empaquetada como APK | `app-movil/` |
-| Comparación de algoritmos con validación cruzada | Implementada y verificada | `ml-pipeline/src/train_evaluate.py` |
-| **Predicción de riesgo integrada en el sistema (RF04)** | Implementada, desplegada y verificada | `backend-api/app/services/ml_inference.py`, `api/prediccion.py`, `frontend-web/src/components/PrediccionRiesgo.jsx` |
-| **Alertas de toma en el dispositivo (RF08)** | Implementada y verificada | `app-movil/lib/services/notification_service.dart` |
-| **Grupo familiar de acompañamiento (RF09)** | Implementado y verificado | `backend-api/app/api/familiares.py`, `app-movil/lib/screens/familia_screen.dart` |
-| **Restablecimiento de contraseña (RF10)** | Implementado y verificado | `backend-api/app/api/auth.py`, `frontend-web/src/pages/RestablecerClave.jsx` |
-| Batería de pruebas automatizadas | 131 casos, todos en verde | `backend-api/tests/`, `app-movil/test/` |
-
-**El escenario de extremo a extremo exigido por el hito está operativo sobre infraestructura desplegada:** el médico da de alta al paciente polimedicado desde el panel web; el paciente registra su toma desde la aplicación móvil, incluso sin conexión; un familiar la corrobora desde su propio dispositivo; y el médico consulta, en la misma ficha, la adherencia observada, la predicción del modelo y quién atestigua cada evento.
-
-Quedan pendientes, conforme al cronograma, las **alertas tempranas al médico** (RF05), la **explicabilidad individual con SHAP** (RF06) —la ficha muestra hoy la importancia global del modelo, declarando expresamente esa diferencia— y la **exportación de reportes** del panel (RF07).
+**Escenario de extremo a extremo operativo:** el médico registra al paciente y le genera su acceso; el paciente recibe recordatorios y registra sus tomas desde el celular, incluso sin conexión; un familiar las corrobora; y el médico consulta en la ficha la adherencia, el riesgo predicho y, en reportes, la situación de todos sus pacientes.
 
 ### 1.2.5. OE5 – Evaluar la usabilidad del sistema mediante la escala SUS
 
-**Estado: PENDIENTE DE EJECUCIÓN.**
+**Estado: pendiente.** Se ejecuta en la semana 7 (Sprint 4), con el sistema completo.
 
-Este objetivo **no se ejecuta en el presente corte**. Conforme al cronograma oficial del curso, su ejecución corresponde a la **semana 7 (Sprint 4 – Finalización, hito del 90 %)**, momento en que el sistema alcanza la condición de *Release Candidate* y puede ser sometido a pruebas con usuarios reales. Evaluar la usabilidad antes de disponer de las interfaces completas —panel de auditoría, alertas y recordatorios— produciría una medición no representativa del producto final.
-
-| Indicador del objetivo | Meta | Estado |
+| Indicador | Meta | Estado |
 | :--- | :--- | :--- |
-| Nivel de usabilidad medido con la escala SUS [12] | ≥ 80 puntos | Pendiente (semana 7) |
-| Tasa de éxito en tareas | Medida en pruebas con usuarios | Pendiente (semana 7) |
-| Tiempo promedio de aprendizaje de uso del sistema | Medido en pruebas con usuarios | Pendiente (semana 7) |
+| Usabilidad con la escala SUS [12] | ≥ 80 puntos | Pendiente |
+| Tasa de éxito en tareas | Medida con usuarios | Pendiente |
+| Tiempo promedio de aprendizaje | Medido con usuarios | Pendiente |
 
-**Avance preparatorio realizado.** El instrumento se encuentra **formalizado y listo para su aplicación** (`documentacion/02_instrumentos/Escala_SUS.md`, correspondiente al Anexo n.° 05 – Parte B), junto con la ficha de observación de pruebas con usuarios (Anexo n.° 06). Los sujetos de la evaluación serán el médico del consultorio —usuario del panel web— y una muestra de pacientes polimedicados —usuarios de la aplicación móvil—.
+El instrumento SUS (Anexo n.° 05) y la ficha de observación (Anexo n.° 06) están preparados. Participarán el médico (panel web) y una muestra de pacientes (aplicación móvil).
 
 ---
 
@@ -1002,16 +622,16 @@ Este objetivo **no se ejecuta en el presente corte**. Conforme al cronograma ofi
 
 | Anexo | Título | Ubicación | Estado |
 | :---: | :--- | :--- | :--- |
-| N.° 01 | Carta de aceptación institucional para ejecutar la tesis | Documento firmado por el Dr. Milko Ugaz Zegarra (22/06/2026) | Adjunto |
+| N.° 01 | Carta de aceptación institucional | Documento firmado por el Dr. Milko Ugaz Zegarra (22/06/2026) | Adjunto |
 | N.° 02 | Matriz de consistencia del proyecto | `documentacion/00_documentacion_base/Proyecto_de_Tesis.md` | Adjunto |
 | N.° 03 | Guía de entrevista semiestructurada al personal médico | `documentacion/00_documentacion_base/Proyecto_de_Tesis.md` | Aplicado |
-| N.° 04 | Ficha de recolección de datos clínicos | `documentacion/02_instrumentos/Anexo_04_Ficha_Extraccion_Clinica.md` | En aplicación |
-| N.° 05 | Cuestionario: test de Morisky-Green y escala SUS | `documentacion/02_instrumentos/Test_Morisky.md` · `Escala_SUS.md` | Morisky en aplicación; SUS pendiente (semana 7) |
-| N.° 06 | Ficha de observación de pruebas con usuarios | `documentacion/02_instrumentos/` | Pendiente (semana 7) |
-| N.° 07 | Expediente de juicio de expertos | `documentacion/02_instrumentos/Expediente_Expertos.md` | En proceso |
-| N.° 08 | Repositorio de código del producto acreditable | `backend-api/`, `frontend-web/`, `app-movil/`, `ml-pipeline/` | Adjunto |
-| N.° 09 | Product Backlog priorizado (MoSCoW) e historias de usuario | `documentacion/03_gestion_scrum/Product_Backlog.md` | Adjunto |
-| N.° 10 | Matriz de trazabilidad objetivos → requisitos → funcionalidad → evidencia | `documentacion/03_gestion_scrum/Matriz_Trazabilidad.md` | Adjunto |
-| N.° 11 | Actas de Sprint Review y Retrospectiva (Sprints 1 y 2) | `documentacion/03_gestion_scrum/Actas_Sprint.md` | Adjunto |
+| N.° 04 | Ficha de recolección de datos clínicos | `documentacion/02_instrumentos/Anexo_04_Ficha_Extraccion_Clinica.docx` | En aplicación |
+| N.° 05 | Test de Morisky-Green y escala SUS | `documentacion/02_instrumentos/` | Morisky en aplicación; SUS en la semana 7 |
+| N.° 06 | Ficha de observación de pruebas con usuarios | `documentacion/02_instrumentos/` | Semana 7 |
+| N.° 07 | Expediente de juicio de expertos | `documentacion/02_instrumentos/Anexo_07_Expediente_Expertos.docx` | En proceso |
+| N.° 08 | Repositorio de código del producto | `backend-api/`, `frontend-web/`, `app-movil/`, `ml-pipeline/` | Adjunto |
+| N.° 09 | Product Backlog e historias de usuario | `documentacion/03_gestion_scrum/Anexo_09_Product_Backlog.docx` | Adjunto |
+| N.° 10 | Matriz de trazabilidad | `documentacion/03_gestion_scrum/Anexo_10_Matriz_Trazabilidad.docx` | Adjunto |
+| N.° 11 | Actas de Sprint Review y retrospectiva | `documentacion/03_gestion_scrum/Anexo_11_Actas_Sprint.docx` | Adjunto |
 | N.° 12 | Plantilla de captura de la ficha de extracción | `documentacion/02_instrumentos/Plantilla_Extraccion_Anexo_04.csv` | En uso |
 | N.° 13 | Guía de despliegue del sistema | `DESPLIEGUE.md` | Adjunto |

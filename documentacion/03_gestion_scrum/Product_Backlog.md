@@ -7,7 +7,7 @@ el incumplimiento terapéutico en pacientes hipertensos y diabéticos polimedica
 **Product Owner:** Dr. Milko Ugaz Zegarra (médico internista)
 **Equipo de desarrollo:** Leonardo Guzmán Salazar
 **Técnica de priorización:** MoSCoW
-**Última actualización:** semana 4 del ciclo 2026-II
+**Última actualización:** semana 5 del ciclo 2026-II
 
 ---
 
@@ -38,8 +38,8 @@ incumplimiento.
 | RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | B3 | OE3/OE5 | 3 | **Terminado** |
 | RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | Pendiente |
 | RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Parcial** |
-| RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 3 | **Parcial** |
-| RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 4 | **Terminado** |
+| RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 2–3 | **Terminado** |
+| RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 3 | **Terminado** |
 | RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | B1 | OE4 | 3 | **Terminado** |
 | RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | B4 | OE4 | 3 | **Terminado** |
 
@@ -54,9 +54,16 @@ predicción de ese paciente concreto; la atribución individual con SHAP se
 incorpora en el Sprint 3 y la interfaz declara esa diferencia de forma
 explícita.
 
-RF07 figura como **parcial**: el panel de auditoría existe con indicadores,
-listado priorizado por riesgo y ficha individual, pero la exportación de
-reportes queda para el Sprint 3.
+RF07 quedó **terminado** en el Sprint 3: al panel de auditoría del Sprint 2 se
+sumó la sección de reportes generales, con indicadores de todos los pacientes,
+distribución del riesgo observado y predicho, y exportación a CSV.
+
+**Refinamiento de las variables de la ficha (RF02, Sprint 3).** Al tratarse de
+una clínica privada, el nivel socioeconómico, el aseguramiento y la zona de
+residencia casi no varían entre pacientes y no ayudan a distinguir quién
+incumple. Se reemplazaron por nivel educativo, convivencia y apoyo familiar en
+la medicación. Las comorbilidades pasaron de un número a una lista de
+enfermedades; el modelo usa su total.
 
 RF10 tampoco figuraba en la pila inicial, y su origen es una observación de
 usabilidad: la pantalla de acceso remitía al consultorio a quien olvidara su
@@ -177,9 +184,9 @@ Para que el repositorio y la memoria no se contradigan:
 
 | Artefacto | Este archivo | Pre informe |
 | :--- | :--- | :--- |
-| Product Backlog general | Sección 2 (pila viva, se edita) | Apartado 1.1.1, Tabla 2 (corte del 50 %) |
-| Sprint Backlog de cada sprint | — | Apartados 1.1.2 a 1.1.5, Tablas 6, 8, 16 y 21 |
-| Registro de incidencias | — | Cierre de cada sprint y consolidado en 1.1.6, Tabla 23 |
+| Product Backlog general | Sección 2 (pila viva, se edita) | Apartado 1.1.2, Tabla 5 (corte del 50 %) |
+| Sprint Backlog de cada sprint | — | Apartados 1.1.3 a 1.1.6, Tablas 6, 11, 17 y 21 |
+| Registro de incidencias | — | Tablas 10, 16 y 20; consolidado en 1.1.7, Tabla 22 |
 | Actas de ceremonias | `Actas_Sprint.md` | Resumen en el cierre de cada sprint |
 
 Este archivo es la **pila viva**: se edita al refinar. El pre informe congela el
@@ -192,12 +199,9 @@ posteriores.
 
 **Sprint 3 (semanas 5–6)**
 
-- Ejecutar `train_evaluate.py` sobre el dataset definitivo y seleccionar el algoritmo.
+- Ejecutar `train_evaluate.py` sobre las historias clínicas reales y confirmar el algoritmo.
 - Atribución individual con SHAP, en sustitución de la importancia global (RF06).
 - Alertas tempranas al médico (RF05).
-- Exportación de reportes del panel (RF07).
-- Endpoint agregado de resúmenes de adherencia, para evitar una petición por
-  paciente en el panel.
 
 **Sprint 4 (semanas 7–8)**
 

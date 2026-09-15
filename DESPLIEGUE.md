@@ -91,7 +91,7 @@ haga falta: completa lo que falte y no duplica nada.
 ### 1.5. Verificar en DBeaver
 
 ```sql
-SELECT codigo_anonimizado, sexo, diagnostico, nivel_socioeconomico,
+SELECT codigo_anonimizado, sexo, diagnostico, nivel_educativo, comorbilidades,
        numero_farmacos, puntaje_morisky, incumplimiento_basal
 FROM pacientes
 ORDER BY codigo_anonimizado;

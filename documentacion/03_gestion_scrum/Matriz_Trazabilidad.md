@@ -39,7 +39,7 @@ del repositorio.
 | RF04 | Predicción de riesgo de incumplimiento | ML | `ml-pipeline/src/train_evaluate.py` (modelo) | Flujo verificado; falta dataset real | ◐ |
 | RF05 | Alertas tempranas al médico | Web | — | Sprint 3 | ○ |
 | RF06 | Explicabilidad SHAP | ML/Web | — | Sprint 3 | ○ |
-| RF07 | Panel de auditoría de adherencia | Web | `frontend-web/src/pages/Dashboard.jsx` | Verificado en navegador | ◐ |
+| RF07 | Panel de auditoría y reportes generales exportables | API + Web | `frontend-web/src/pages/Dashboard.jsx`, `Reportes.jsx`, `backend-api/app/api/reportes.py` | `tests/test_reportes.py` + verificación en navegador | ✅ |
 | RF08 | Alertas de toma programadas en el dispositivo | Móvil | `app-movil/lib/services/notification_service.dart` | 7 pruebas · permisos verificados en el APK | ✅ |
 | RF09 | Grupo familiar: invitación, alta por código y corroboración | API | `backend-api/app/api/familiares.py` | 19 pruebas | ✅ |
 | RF09 | Invitación y ciclo de vida de la pertenencia como una sola fila | Datos | `backend-api/app/db/models.py` (`Acompanante`) | Migración Alembic | ✅ |
@@ -105,12 +105,12 @@ adherencia de la OMS, que es lo que da sustento teórico a la selección.
 | :--- | :--- | :--- | :--- |
 | Edad | Paciente | `pacientes.edad` | Mediana + estandarización |
 | Sexo | Paciente | `pacientes.sexo` | Moda + codificación binaria |
-| Nivel socioeconómico | Socioeconómica | `pacientes.nivel_socioeconomico` | Moda + codificación ordinal |
-| Aseguramiento | Socioeconómica | `pacientes.aseguramiento` | Moda + *one-hot* |
-| Zona de residencia | Socioeconómica | `pacientes.zona_residencia` | Moda + codificación binaria |
+| Nivel educativo | Socioeconómica y social | `pacientes.nivel_educativo` | Moda + codificación ordinal |
+| Convivencia | Socioeconómica y social | `pacientes.convivencia` | Moda + codificación binaria |
+| Apoyo familiar en la medicación | Socioeconómica y social | `pacientes.apoyo_familiar` | Moda + codificación binaria |
 | Diagnóstico | Enfermedad | `pacientes.diagnostico` | Moda + *one-hot* |
 | Tiempo de enfermedad | Enfermedad | `pacientes.tiempo_enfermedad_anios` | Mediana + estandarización |
-| Comorbilidades | Enfermedad | `pacientes.comorbilidades` | Mediana + estandarización |
+| Comorbilidades | Enfermedad | `pacientes.comorbilidades` (total de `lista_comorbilidades`) | Mediana + estandarización |
 | N.° de fármacos | Terapia | `pacientes.numero_farmacos` | Criterio de elegibilidad + estandarización |
 | Tomas por día | Terapia | `pacientes.tomas_dia` | Mediana + estandarización |
 | Controles programados | Sistema de salud | `pacientes.controles_programados_6m` | Mediana + estandarización |

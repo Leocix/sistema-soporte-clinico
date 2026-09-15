@@ -16,20 +16,31 @@
 *   **Edad:** ____ años
 *   **Sexo:** [ ] Masculino  [ ] Femenino
 
-**3. Enfermedades y Comorbilidades**
+**3. Contexto Social** *(de la historia clínica o preguntado al aplicar el test de Morisky)*
+*   **Nivel educativo:** [ ] Sin estudios  [ ] Primaria  [ ] Secundaria  [ ] Superior
+*   **Convivencia:** [ ] Vive solo  [ ] Vive acompañado
+*   **¿Un familiar o cuidador le ayuda o le recuerda la medicación?** [ ] Sí  [ ] No
+
+**4. Enfermedades y Comorbilidades**
 *   **Hipertensión Arterial (HTA):** [ ] Sí  [ ] No
 *   **Diabetes Mellitus tipo 2 (DM2):** [ ] Sí  [ ] No
-*   **Número de comorbilidades adicionales:** ____
+*   **Tiempo de enfermedad:** ____ años
+*   **Comorbilidades (marque las que tenga):**
+    [ ] Dislipidemia  [ ] Obesidad  [ ] Enfermedad renal crónica
+    [ ] Cardiopatía isquémica  [ ] Insuficiencia cardiaca  [ ] Enfermedad cerebrovascular
+    [ ] Hipotiroidismo  [ ] EPOC o asma  [ ] Artrosis  [ ] Depresión
+    [ ] Otra enfermedad crónica: ______________
+*   **Total de comorbilidades marcadas:** ____
 
-**4. Variables de Tratamiento (Carga Terapéutica)**
+**5. Variables de Tratamiento (Carga Terapéutica)**
 *   **Número total de fármacos prescritos:** ____
 *   **Frecuencia total de tomas diarias (Complejidad del régimen):** ____ tomas/día
 
-**5. Variables del Sistema de Salud (Seguimiento)**
+**6. Variables del Sistema de Salud (Seguimiento)**
 *   **Número de controles médicos programados en los últimos 6 meses:** ____
 *   **Número de inasistencias a controles (Controles perdidos):** ____
 
-**6. Variable Objetivo (Adherencia)**
+**7. Variable Objetivo (Adherencia)**
 *   **Puntaje Test de Morisky (obtenido mediante encuesta directa):** ____
 *   **Clasificación:** [ ] Adherente (0)  [ ] Incumplimiento (1)
 
@@ -49,12 +60,12 @@ modo que un error de captura no llega silenciosamente al modelo.
 | `codigo_paciente` | Texto | `P-001`, `P-002`, … (correlativo, sin datos identificatorios) |
 | `edad` | Entero | 18 a 120 |
 | `sexo` | Categórica | `M` · `F` |
-| `nivel_socioeconomico` | Ordinal | `bajo` · `medio` · `alto` |
-| `aseguramiento` | Categórica | `sis` · `essalud` · `ninguno` |
-| `zona_residencia` | Categórica | `urbana` · `rural` |
+| `nivel_educativo` | Ordinal | `sin_estudios` · `primaria` · `secundaria` · `superior` |
+| `convivencia` | Categórica | `solo` · `acompanado` |
+| `apoyo_familiar` | Categórica | `si` · `no` |
 | `diagnostico` | Categórica | `hta` · `dm2` · `ambas` |
 | `tiempo_enfermedad_anios` | Decimal | 0 a 80 (se admite `12.5`) |
-| `comorbilidades` | Entero | 0 a 15 |
+| `comorbilidades` | Entero | 0 a 15: total de comorbilidades marcadas |
 | `numero_farmacos` | Entero | **≥ 5** (criterio de elegibilidad) |
 | `tomas_dia` | Entero | 1 a 20 |
 | `controles_programados_6m` | Entero | 0 a 30 |

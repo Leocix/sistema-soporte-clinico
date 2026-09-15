@@ -328,13 +328,15 @@ def main() -> int:
             continue
         cuerpo.remove(hijo)
 
-    # Se actualiza la portada al corte que este documento evidencia.
+    # Se actualiza la portada con la fecha de presentación que declara el Markdown.
+    fecha = re.search(r"\d{1,2} de \w+ de \d{4}", ORIGEN.read_text(encoding="utf-8"))
+    fecha = fecha.group(0) if fecha else "08 de septiembre de 2026"
     for hijo in hijos[:corte]:
         if not hijo.tag.endswith("}p"):
             continue
         texto = texto_de(hijo)
         if re.fullmatch(r"\d{1,2} de \w+ de \d{4}", texto):
-            reemplazar_texto(hijo, "08 de septiembre de 2026")
+            reemplazar_texto(hijo, fecha)
         elif texto.rstrip().rstrip(",").strip() == "Chiclayo":
             reemplazar_texto(hijo, "Chiclayo, 2026")
 
