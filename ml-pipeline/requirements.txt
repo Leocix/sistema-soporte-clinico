@@ -1,11 +1,18 @@
-# Pipeline CRISP-DM del modelo predictivo de incumplimiento terapeutico
-pandas==2.2.3
+# Pipeline CRISP-DM del modelo predictivo de incumplimiento terapeutico.
+#
+# Las cinco primeras deben coincidir EXACTAMENTE con el bloque de inferencia de
+# backend-api/requirements.txt: el API carga lo que este pipeline serializa, y
+# un artefacto creado con una version y abierto con otra falla o predice de
+# forma silenciosamente distinta. `backend-api/tests/test_modelo_desplegado.py`
+# lo verifica.
+scikit-learn==1.6.1
+imbalanced-learn==0.14.2
 numpy==2.2.6
-scikit-learn==1.5.2
-imbalanced-learn==0.12.4
+pandas==2.2.3
+joblib==1.5.1
+
+# Solo para entrenar. `train_evaluate.py` compara XGBoost entre los candidatos;
+# con --sin-xgboost se omite y el modelo resultante no la necesita en el API.
 xgboost==2.1.1
-shap==0.46.0
-joblib==1.4.2
-matplotlib==3.9.2
-seaborn==0.13.2
-jupyterlab==4.2.5
+# Prueba de McNemar entre los dos mejores clasificadores.
+scipy==1.15.3

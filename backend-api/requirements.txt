@@ -1,11 +1,7 @@
 # Dependencias de ejecucion del API Gateway.
 #
-# Se mantienen al minimo a proposito: en el plan gratuito de Render el
-# servicio dispone de poca memoria y el tiempo de construccion es limitado.
-# Las librerias de aprendizaje automatico (scikit-learn, XGBoost, SHAP) pesan
-# cientos de megabytes y hoy no las importa ningun modulo del API, asi que
-# viven en requirements-ml.txt hasta que el microservicio de inferencia
-# (RF04, RF06) las necesite en el Sprint 3.
+# Se mantienen al minimo: en el plan gratuito de Render el servicio dispone de
+# poca memoria y el tiempo de construccion es limitado.
 
 # --- API Gateway (FastAPI) ---
 fastapi==0.118.0
@@ -33,9 +29,19 @@ pytest==8.3.3
 httpx==0.27.2
 
 # --- Inferencia del modelo (RF04) ---
-# scikit-learn es necesaria en produccion: el artefacto serializado la
-# requiere para reconstruir el pipeline de preparacion y el clasificador.
-scikit-learn==1.5.2
-numpy==2.0.2
+# Estas versiones NO son libres: deben ser exactamente las del entorno en el
+# que se entreno `ml-pipeline/models/risk_model_v1.pkl`. El artefacto guarda
+# objetos de estas librerias, y cargarlo con otras versiones falla o —peor—
+# predice de forma silenciosamente distinta. Si se reentrena el modelo con
+# otras versiones, hay que actualizar esta lista y la de ml-pipeline a la vez.
+#
+# imbalanced-learn es obligatoria aunque el API no aplique SMOTE: el pipeline
+# serializado es un `imblearn.pipeline.Pipeline`, y deserializarlo exige que la
+# clase exista. Faltaba en esta lista, de modo que el modelo no podia cargarse
+# en produccion y la prediccion devolvia 503. Lo comprueba
+# `tests/test_modelo_desplegado.py` contra el artefacto real.
+scikit-learn==1.6.1
+imbalanced-learn==0.14.2
+numpy==2.2.6
 pandas==2.2.3
-joblib==1.4.2
+joblib==1.5.1
