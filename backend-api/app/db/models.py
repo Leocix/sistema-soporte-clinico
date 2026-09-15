@@ -32,6 +32,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    JSON,
     Numeric,
     String,
     Text,
@@ -88,21 +89,42 @@ class Sexo(str, enum.Enum):
     FEMENINO = "F"
 
 
-class NivelSocioeconomico(str, enum.Enum):
-    BAJO = "bajo"
-    MEDIO = "medio"
-    ALTO = "alto"
+class NivelEducativo(str, enum.Enum):
+    """Nivel de instruccion alcanzado.
+
+    Condiciona la comprension de las indicaciones, que el diagnostico del
+    consultorio identifico como tercera causa del incumplimiento.
+    """
+
+    SIN_ESTUDIOS = "sin_estudios"
+    PRIMARIA = "primaria"
+    SECUNDARIA = "secundaria"
+    SUPERIOR = "superior"
 
 
-class Aseguramiento(str, enum.Enum):
-    SIS = "sis"
-    ESSALUD = "essalud"
-    NINGUNO = "ninguno"
+class Convivencia(str, enum.Enum):
+    """Si el paciente vive solo o con otras personas."""
+
+    SOLO = "solo"
+    ACOMPANADO = "acompanado"
 
 
-class ZonaResidencia(str, enum.Enum):
-    URBANA = "urbana"
-    RURAL = "rural"
+class Comorbilidad(str, enum.Enum):
+    """Catalogo de enfermedades asociadas frecuentes en el paciente hipertenso
+    o diabetico polimedicado. ``OTRA`` recoge cualquier otra enfermedad cronica
+    relevante; el modelo usa el total de las marcadas."""
+
+    DISLIPIDEMIA = "dislipidemia"
+    OBESIDAD = "obesidad"
+    ENFERMEDAD_RENAL_CRONICA = "enfermedad_renal_cronica"
+    CARDIOPATIA_ISQUEMICA = "cardiopatia_isquemica"
+    INSUFICIENCIA_CARDIACA = "insuficiencia_cardiaca"
+    ENFERMEDAD_CEREBROVASCULAR = "enfermedad_cerebrovascular"
+    HIPOTIROIDISMO = "hipotiroidismo"
+    EPOC_ASMA = "epoc_asma"
+    ARTROSIS = "artrosis"
+    DEPRESION = "depresion"
+    OTRA = "otra"
 
 
 class Diagnostico(str, enum.Enum):
@@ -248,22 +270,30 @@ class Paciente(Base):
     edad: Mapped[int] = mapped_column(Integer, nullable=False)
     sexo: Mapped[Sexo] = mapped_column(_enum(Sexo, "sexo_paciente"), nullable=False)
 
-    # --- Dimension: socioeconomica ---------------------------------------
-    nivel_socioeconomico: Mapped[NivelSocioeconomico | None] = mapped_column(
-        _enum(NivelSocioeconomico, "nivel_socioeconomico")
+    # --- Dimension: socioeconomica y de apoyo social ----------------------
+    # En una clinica privada el nivel economico, el seguro y la zona apenas
+    # varian entre pacientes, de modo que no ayudan a distinguir quien incumple.
+    # Lo que si varia es la instruccion y el apoyo del entorno en la toma.
+    nivel_educativo: Mapped[NivelEducativo | None] = mapped_column(
+        _enum(NivelEducativo, "nivel_educativo")
     )
-    aseguramiento: Mapped[Aseguramiento | None] = mapped_column(
-        _enum(Aseguramiento, "aseguramiento_salud")
+    convivencia: Mapped[Convivencia | None] = mapped_column(
+        _enum(Convivencia, "convivencia")
     )
-    zona_residencia: Mapped[ZonaResidencia | None] = mapped_column(
-        _enum(ZonaResidencia, "zona_residencia")
-    )
+    # Un familiar o cuidador le ayuda o le recuerda la medicacion.
+    apoyo_familiar: Mapped[bool | None] = mapped_column(Boolean)
 
     # --- Dimension: enfermedad -------------------------------------------
     diagnostico: Mapped[Diagnostico] = mapped_column(
         _enum(Diagnostico, "diagnostico_base"), nullable=False
     )
     tiempo_enfermedad_anios: Mapped[float | None] = mapped_column(Numeric(4, 1))
+    # Enfermedades concretas marcadas por el medico (catalogo `Comorbilidad`).
+    lista_comorbilidades: Mapped[list[str]] = mapped_column(
+        JSON, nullable=False, default=list
+    )
+    # Total de la lista: es la variable que usa el modelo. Se guarda aparte
+    # para que la exportacion al dataset no tenga que recalcularla.
     comorbilidades: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # --- Dimension: terapia (carga terapeutica) --------------------------

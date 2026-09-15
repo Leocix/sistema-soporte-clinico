@@ -18,6 +18,9 @@ export default function Layout() {
           <NavLink to="/panel" end className="navegacion__enlace">
             Panel de auditoría
           </NavLink>
+          <NavLink to="/panel/reportes" className="navegacion__enlace">
+            Reportes generales
+          </NavLink>
         </nav>
 
         <p className="lateral__nota">

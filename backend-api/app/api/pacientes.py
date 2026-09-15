@@ -60,6 +60,9 @@ def crear_paciente(
     medico: Usuario = Depends(requiere_rol(Rol.MEDICO)),
 ) -> Paciente:
     datos = payload.model_dump()
+    # Se guardan los codigos del catalogo, y su total como variable del modelo.
+    datos["lista_comorbilidades"] = [c.value for c in datos["lista_comorbilidades"]]
+    datos["comorbilidades"] = len(datos["lista_comorbilidades"])
     codigo = datos.pop("codigo_anonimizado", None) or _siguiente_codigo(db)
 
     if db.query(Paciente).filter(Paciente.codigo_anonimizado == codigo).first():
@@ -173,6 +176,8 @@ def actualizar_paciente(
 
     for campo, valor in cambios.items():
         setattr(paciente, campo, valor)
+    if "lista_comorbilidades" in cambios:
+        paciente.comorbilidades = len(paciente.lista_comorbilidades)
 
     # La coherencia entre controles debe verificarse sobre el estado resultante
     # de la fusion, no solo sobre los campos enviados.

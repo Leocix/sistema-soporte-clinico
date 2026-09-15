@@ -31,6 +31,7 @@ from .api.auth import router as auth_router
 from .api.familiares import router as familiares_router
 from .api.pacientes import router as pacientes_router
 from .api.prediccion import router as prediccion_router
+from .api.reportes import router as reportes_router
 from .core.config import settings
 from .core.exceptions import register_exception_handlers
 from .db.database import Base, engine
@@ -186,6 +187,7 @@ app.include_router(pacientes_router)
 app.include_router(adherencia_router)
 app.include_router(familiares_router)
 app.include_router(prediccion_router)
+app.include_router(reportes_router)
 
 
 # ---------------------------------------------------------------------------

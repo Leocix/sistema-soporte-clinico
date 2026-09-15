@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { mensajeDeError, servicioPacientes } from '../services/api'
+import { COMORBILIDADES } from '../services/etiquetas'
 import { normalizarFicha, validarFicha } from '../services/validacionPaciente'
 
 /**
@@ -22,11 +23,11 @@ const VALORES_INICIALES = {
   edad: '',
   sexo: 'M',
   diagnostico: 'hta',
-  nivel_socioeconomico: '',
-  aseguramiento: '',
-  zona_residencia: '',
+  nivel_educativo: '',
+  convivencia: '',
+  apoyo_familiar: '',
   tiempo_enfermedad_anios: '',
-  comorbilidades: '0',
+  lista_comorbilidades: [],
   numero_farmacos: '',
   tomas_dia: '',
   controles_programados_6m: '0',
@@ -36,7 +37,7 @@ const VALORES_INICIALES = {
 }
 
 const ENTEROS = [
-  'edad', 'comorbilidades', 'numero_farmacos', 'tomas_dia',
+  'edad', 'numero_farmacos', 'tomas_dia',
   'controles_programados_6m', 'controles_perdidos_6m', 'puntaje_morisky',
 ]
 
@@ -44,7 +45,7 @@ const ENTEROS = [
 function convertir(campo, valor) {
   if (ENTEROS.includes(campo)) return Number.parseInt(valor, 10)
   if (campo === 'tiempo_enfermedad_anios') return Number.parseFloat(valor)
-  if (campo === 'incumplimiento_basal') return valor === 'si'
+  if (campo === 'incumplimiento_basal' || campo === 'apoyo_familiar') return valor === 'si'
   return valor
 }
 
@@ -75,6 +76,10 @@ function payloadDeEdicion(valores, iniciales) {
     // paciente viaja al conjunto de datos y a los registros de adherencia.
     if (campo === 'codigo_anonimizado') continue
     if (valor === iniciales[campo]) continue
+    if (Array.isArray(valor)) {
+      if (JSON.stringify(valor) !== JSON.stringify(iniciales[campo])) payload[campo] = valor
+      continue
+    }
     payload[campo] = valor === '' ? null : convertir(campo, valor)
   }
   return payload
@@ -94,11 +99,14 @@ function valoresDesdeFicha(paciente) {
     edad: texto(paciente.edad),
     sexo: paciente.sexo,
     diagnostico: paciente.diagnostico,
-    nivel_socioeconomico: texto(paciente.nivel_socioeconomico),
-    aseguramiento: texto(paciente.aseguramiento),
-    zona_residencia: texto(paciente.zona_residencia),
+    nivel_educativo: texto(paciente.nivel_educativo),
+    convivencia: texto(paciente.convivencia),
+    apoyo_familiar:
+      paciente.apoyo_familiar === null || paciente.apoyo_familiar === undefined
+        ? ''
+        : paciente.apoyo_familiar ? 'si' : 'no',
     tiempo_enfermedad_anios: texto(paciente.tiempo_enfermedad_anios),
-    comorbilidades: texto(paciente.comorbilidades),
+    lista_comorbilidades: paciente.lista_comorbilidades ?? [],
     numero_farmacos: texto(paciente.numero_farmacos),
     tomas_dia: texto(paciente.tomas_dia),
     controles_programados_6m: texto(paciente.controles_programados_6m),
@@ -133,6 +141,19 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
   const cambiar = (evento) => {
     const { name, value } = evento.target
     setValores((previos) => ({ ...previos, [name]: value }))
+  }
+
+  /** Marca o desmarca una comorbilidad conservando el orden del catálogo. */
+  const alternarComorbilidad = (codigo) => {
+    setValores((previos) => {
+      const marcadas = new Set(previos.lista_comorbilidades)
+      if (marcadas.has(codigo)) marcadas.delete(codigo)
+      else marcadas.add(codigo)
+      return {
+        ...previos,
+        lista_comorbilidades: COMORBILIDADES.map(([c]) => c).filter((c) => marcadas.has(c)),
+      }
+    })
   }
 
   const marcarTocado = (evento) => {
@@ -323,13 +344,27 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
                 {notaCampo('tiempo_enfermedad_anios')}
               </label>
 
-              <label className={claseCampo('comorbilidades')}>
-                <span>Comorbilidades</span>
-                <input name="comorbilidades" type="number" min="0" max="15"
-                  value={valores.comorbilidades} onChange={cambiar} onBlur={marcarTocado} />
-                {notaCampo('comorbilidades')}
-              </label>
             </div>
+
+            <fieldset className="comorbilidades">
+              <legend>
+                Comorbilidades
+                <small> · {valores.lista_comorbilidades.length} marcada(s)</small>
+              </legend>
+              <div className="comorbilidades__lista">
+                {COMORBILIDADES.map(([codigo, nombre]) => (
+                  <label key={codigo} className="campo--casilla">
+                    <input
+                      type="checkbox"
+                      checked={valores.lista_comorbilidades.includes(codigo)}
+                      onChange={() => alternarComorbilidad(codigo)}
+                    />
+                    {nombre}
+                  </label>
+                ))}
+              </div>
+              <small>El modelo usa el total de enfermedades marcadas.</small>
+            </fieldset>
           </fieldset>
 
           <fieldset className="formulario__grupo">
@@ -353,38 +388,39 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
           </fieldset>
 
           <fieldset className="formulario__grupo">
-            <legend>Contexto socioeconómico</legend>
+            <legend>Contexto social</legend>
             <div className="rejilla">
-              <label className={claseCampo('nivel_socioeconomico')}>
-                <span>Nivel socioeconómico</span>
-                <select name="nivel_socioeconomico" value={valores.nivel_socioeconomico} onChange={cambiar} onBlur={marcarTocado}>
+              <label className={claseCampo('nivel_educativo')}>
+                <span>Nivel educativo</span>
+                <select name="nivel_educativo" value={valores.nivel_educativo} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">Sin dato</option>
-                  <option value="bajo">Bajo</option>
-                  <option value="medio">Medio</option>
-                  <option value="alto">Alto</option>
+                  <option value="sin_estudios">Sin estudios</option>
+                  <option value="primaria">Primaria</option>
+                  <option value="secundaria">Secundaria</option>
+                  <option value="superior">Superior</option>
                 </select>
-                {notaCampo('nivel_socioeconomico')}
+                <small>Influye en la comprensión de las indicaciones.</small>
+                {notaCampo('nivel_educativo')}
               </label>
 
-              <label className={claseCampo('aseguramiento')}>
-                <span>Aseguramiento</span>
-                <select name="aseguramiento" value={valores.aseguramiento} onChange={cambiar} onBlur={marcarTocado}>
+              <label className={claseCampo('convivencia')}>
+                <span>Convivencia</span>
+                <select name="convivencia" value={valores.convivencia} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">Sin dato</option>
-                  <option value="sis">SIS</option>
-                  <option value="essalud">EsSalud</option>
-                  <option value="ninguno">Ninguno</option>
+                  <option value="solo">Vive solo</option>
+                  <option value="acompanado">Vive acompañado</option>
                 </select>
-                {notaCampo('aseguramiento')}
+                {notaCampo('convivencia')}
               </label>
 
-              <label className={claseCampo('zona_residencia')}>
-                <span>Zona de residencia</span>
-                <select name="zona_residencia" value={valores.zona_residencia} onChange={cambiar} onBlur={marcarTocado}>
+              <label className={claseCampo('apoyo_familiar')}>
+                <span>Apoyo familiar en la medicación</span>
+                <select name="apoyo_familiar" value={valores.apoyo_familiar} onChange={cambiar} onBlur={marcarTocado}>
                   <option value="">Sin dato</option>
-                  <option value="urbana">Urbana</option>
-                  <option value="rural">Rural</option>
+                  <option value="si">Sí, alguien le ayuda o le recuerda</option>
+                  <option value="no">No</option>
                 </select>
-                {notaCampo('zona_residencia')}
+                {notaCampo('apoyo_familiar')}
               </label>
             </div>
           </fieldset>

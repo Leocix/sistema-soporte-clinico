@@ -55,7 +55,7 @@ NUMERICAS = [
     "tasa_inasistencia",
     "cronicidad_relativa",
 ]
-CATEGORICAS = ["nivel_socioeconomico", "sexo", "aseguramiento", "zona_residencia", "diagnostico"]
+CATEGORICAS = ["nivel_educativo", "sexo", "convivencia", "apoyo_familiar", "diagnostico"]
 
 # Umbrales de la banda de riesgo. El umbral alto es configurable porque define
 # a cuantos pacientes alcanza el medico a contactar antes de la cita.
@@ -180,12 +180,14 @@ def _fila(paciente: Paciente) -> tuple[dict, list[str]]:
         **derivadas,
         "sexo": paciente.sexo.value,
         "diagnostico": paciente.diagnostico.value,
-        "nivel_socioeconomico": (
-            paciente.nivel_socioeconomico.value if paciente.nivel_socioeconomico else None
+        "nivel_educativo": (
+            paciente.nivel_educativo.value if paciente.nivel_educativo else None
         ),
-        "aseguramiento": paciente.aseguramiento.value if paciente.aseguramiento else None,
-        "zona_residencia": (
-            paciente.zona_residencia.value if paciente.zona_residencia else None
+        "convivencia": paciente.convivencia.value if paciente.convivencia else None,
+        # En el Anexo n.o 04 se registra como si/no.
+        "apoyo_familiar": (
+            None if paciente.apoyo_familiar is None
+            else ("si" if paciente.apoyo_familiar else "no")
         ),
     }
 

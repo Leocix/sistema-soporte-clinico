@@ -62,14 +62,17 @@ COL_OBJETIVO = "incumplimiento"
 NUMERICAS = [
     "edad",                       # dimension paciente
     "tiempo_enfermedad_anios",    # dimension enfermedad
-    "comorbilidades",             # dimension enfermedad
+    "comorbilidades",             # dimension enfermedad (total de las marcadas)
     "numero_farmacos",            # dimension terapia
     "tomas_dia",                  # dimension terapia
     "controles_programados_6m",   # dimension sistema de salud
     "controles_perdidos_6m",      # dimension sistema de salud
 ]
-ORDINALES = {"nivel_socioeconomico": ["bajo", "medio", "alto"]}
-NOMINALES = ["sexo", "aseguramiento", "zona_residencia", "diagnostico"]
+# Dimension socioeconomica y de apoyo social. En una clinica privada el nivel
+# economico, el seguro y la zona apenas varian; la instruccion y el apoyo del
+# entorno en la toma, si.
+ORDINALES = {"nivel_educativo": ["sin_estudios", "primaria", "secundaria", "superior"]}
+NOMINALES = ["sexo", "convivencia", "apoyo_familiar", "diagnostico"]
 
 # El puntaje de Morisky es la fuente de la variable objetivo (0 = adherente,
 # 1 = incumplimiento). No se usa como predictor: hacerlo introduciria fuga de
@@ -92,9 +95,9 @@ RANGOS_VALIDOS = {
 
 CATEGORIAS_VALIDAS = {
     "sexo": ["M", "F"],
-    "nivel_socioeconomico": ["bajo", "medio", "alto"],
-    "aseguramiento": ["sis", "essalud", "ninguno"],
-    "zona_residencia": ["urbana", "rural"],
+    "nivel_educativo": ["sin_estudios", "primaria", "secundaria", "superior"],
+    "convivencia": ["solo", "acompanado"],
+    "apoyo_familiar": ["si", "no"],
     "diagnostico": ["hta", "dm2", "ambas"],
 }
 
@@ -300,7 +303,7 @@ def construir_preprocesador(numericas: list[str]) -> ColumnTransformer:
     )
     rama_ordinal = Pipeline(
         [("imputar", SimpleImputer(strategy="most_frequent")),
-         ("codificar", OrdinalEncoder(categories=[ORDINALES["nivel_socioeconomico"]]))]
+         ("codificar", OrdinalEncoder(categories=list(ORDINALES.values())))]
     )
     rama_nominal = Pipeline(
         [("imputar", SimpleImputer(strategy="most_frequent")),
@@ -486,6 +489,8 @@ def generar_muestra_sintetica(n: int, ruta: Path) -> Path:
     tomas = rng.integers(2, 9, n)
     programados = rng.integers(2, 9, n)
     perdidos = np.minimum(rng.poisson(1.2, n), programados)
+    vive_solo = rng.random(n) < 0.25
+    con_apoyo = rng.random(n) < 0.55
 
     # Etiqueta generada con una relacion latente entre carga terapeutica,
     # inasistencia y edad, mas ruido, para producir clases desbalanceadas.
@@ -495,6 +500,8 @@ def generar_muestra_sintetica(n: int, ruta: Path) -> Path:
         + 0.12 * tomas
         + 1.9 * (perdidos / np.maximum(programados, 1))
         + 0.02 * rng.integers(40, 90, n)
+        + 0.5 * vive_solo
+        - 0.4 * con_apoyo
         + rng.normal(0, 0.6, n)
     )
     objetivo = (1 / (1 + np.exp(-logit)) > 0.62).astype(int)
@@ -504,9 +511,11 @@ def generar_muestra_sintetica(n: int, ruta: Path) -> Path:
             COL_ID: [f"P-{i:03d}" for i in range(1, n + 1)],
             "edad": rng.integers(40, 90, n),
             "sexo": rng.choice(["M", "F"], n),
-            "nivel_socioeconomico": rng.choice(["bajo", "medio", "alto"], n, p=[0.5, 0.35, 0.15]),
-            "aseguramiento": rng.choice(["sis", "essalud", "ninguno"], n),
-            "zona_residencia": rng.choice(["urbana", "rural"], n, p=[0.7, 0.3]),
+            "nivel_educativo": rng.choice(
+                ["sin_estudios", "primaria", "secundaria", "superior"], n, p=[0.05, 0.25, 0.35, 0.35]
+            ),
+            "convivencia": np.where(vive_solo, "solo", "acompanado"),
+            "apoyo_familiar": np.where(con_apoyo, "si", "no"),
             "diagnostico": rng.choice(["hta", "dm2", "ambas"], n, p=[0.4, 0.25, 0.35]),
             "tiempo_enfermedad_anios": np.round(rng.gamma(3, 2.2, n), 1),
             "comorbilidades": rng.integers(0, 5, n),
@@ -520,8 +529,8 @@ def generar_muestra_sintetica(n: int, ruta: Path) -> Path:
     )
 
     # Se inyectan nulos y valores fuera de rango para ejercitar la limpieza.
-    for col, frac in [("nivel_socioeconomico", 0.08), ("tiempo_enfermedad_anios", 0.12),
-                      ("zona_residencia", 0.05)]:
+    for col, frac in [("nivel_educativo", 0.08), ("tiempo_enfermedad_anios", 0.12),
+                      ("convivencia", 0.05)]:
         df.loc[df.sample(frac=frac, random_state=SEMILLA).index, col] = None
     df.loc[df.sample(n=max(1, n // 50), random_state=7).index, "edad"] = 999
 

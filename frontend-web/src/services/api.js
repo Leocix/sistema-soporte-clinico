@@ -107,6 +107,12 @@ export const servicioPrediccion = {
   riesgo: (idPaciente) => api.get(`/api/prediccion/pacientes/${idPaciente}`),
 }
 
+export const servicioReportes = {
+  general: (dias) => api.get('/api/reportes/general', { params: { dias } }),
+  exportar: (dias) =>
+    api.get('/api/reportes/general.csv', { params: { dias }, responseType: 'blob' }),
+}
+
 export const servicioAdherencia = {
   resumen: (idPaciente) => api.get(`/api/adherencia/pacientes/${idPaciente}/resumen`),
   registros: (idPaciente, params) =>

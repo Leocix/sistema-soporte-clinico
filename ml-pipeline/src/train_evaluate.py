@@ -333,15 +333,26 @@ def importancia_de_variables(pipeline, X_test, y_test, n_repeticiones: int = 20)
 # ---------------------------------------------------------------------------
 # Seleccion y contraste estadistico
 # ---------------------------------------------------------------------------
-def seleccionar_mejor(resultados: list[ResultadoModelo]) -> ResultadoModelo:
-    """Ordena por AUCROC y desempata por sensibilidad.
+def seleccionar_mejor(
+    ordenados: list[ResultadoModelo], contraste: dict | None = None
+) -> ResultadoModelo:
+    """Mayor AUCROC; ante empate estadistico, mayor sensibilidad.
 
-    El desempate no es arbitrario: el error clinicamente costoso es el falso
-    negativo —un paciente en riesgo que el sistema no detecta y que por tanto
-    no recibe la alerta temprana—, de modo que ante un AUCROC equivalente
-    prevalece el modelo que mas incumplimientos identifica.
+    `ordenados` va de mayor a menor AUCROC. Si la prueba de McNemar entre los
+    dos primeros no encuentra diferencia significativa, el AUCROC no basta para
+    preferir a uno y decide la sensibilidad: el error clinicamente costoso es
+    el falso negativo —un paciente en riesgo que el sistema no detecta y que
+    por tanto no recibe la alerta temprana—.
     """
-    return max(resultados, key=lambda r: (r.aucroc_cv, r.sensibilidad_cv))
+    primero = ordenados[0]
+    if len(ordenados) < 2 or not contraste:
+        return primero
+    p_valor = contraste.get("p_valor")
+    empate = p_valor is None or p_valor >= 0.05
+    segundo = ordenados[1]
+    if empate and segundo.sensibilidad_cv > primero.sensibilidad_cv:
+        return segundo
+    return primero
 
 
 def prueba_mcnemar(y_verdadero, prediccion_a, prediccion_b) -> dict:
@@ -390,7 +401,7 @@ def prueba_mcnemar(y_verdadero, prediccion_a, prediccion_b) -> dict:
             "Diferencia estadisticamente significativa (p < 0,05)."
             if significativo
             else "Sin evidencia de diferencia significativa (p >= 0,05); "
-            "la eleccion se sostiene en la sensibilidad y en la simplicidad."
+            "la eleccion entre ambos se decide por la sensibilidad."
         ),
     }
 
@@ -533,14 +544,8 @@ def ejecutar(
         resultados.append(resultado)
         pipelines[nombre] = pipeline
 
-    mejor = seleccionar_mejor(resultados)
-    ordenados = sorted(resultados, key=lambda r: r.aucroc_cv, reverse=True)
-
-    log.info("Calculando la importancia de las variables por permutacion...")
-    factores = importancia_de_variables(pipelines[mejor.nombre], X_test, y_test)
-    log.info(
-        "Variables mas influyentes: %s",
-        ", ".join(f["variable"] for f in factores[:4]),
+    ordenados = sorted(
+        resultados, key=lambda r: (r.aucroc_cv, r.sensibilidad_cv), reverse=True
     )
 
     if len(ordenados) >= 2:
@@ -554,6 +559,16 @@ def ejecutar(
         contraste["modelo_b"] = segundo.nombre
     else:
         contraste = {"prueba": "no aplicable", "interpretacion": "Un solo modelo."}
+
+    mejor = seleccionar_mejor(ordenados, contraste)
+    log.info("Modelo seleccionado: %s", mejor.nombre)
+
+    log.info("Calculando la importancia de las variables por permutacion...")
+    factores = importancia_de_variables(pipelines[mejor.nombre], X_test, y_test)
+    log.info(
+        "Variables mas influyentes: %s",
+        ", ".join(f["variable"] for f in factores[:4]),
+    )
 
     guardar_artefactos(
         resultados,

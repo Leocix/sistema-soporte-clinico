@@ -14,22 +14,33 @@ const DIAGNOSTICO = {
   ambas: 'HTA + DM2',
 }
 
-const NIVEL_SOCIOECONOMICO = {
-  bajo: 'Bajo',
-  medio: 'Medio',
-  alto: 'Alto',
+const NIVEL_EDUCATIVO = {
+  sin_estudios: 'Sin estudios',
+  primaria: 'Primaria',
+  secundaria: 'Secundaria',
+  superior: 'Superior',
 }
 
-const ASEGURAMIENTO = {
-  sis: 'SIS',
-  essalud: 'EsSalud',
-  ninguno: 'Ninguno',
+const CONVIVENCIA = {
+  solo: 'Vive solo',
+  acompanado: 'Vive acompañado',
 }
 
-const ZONA = {
-  urbana: 'Urbana',
-  rural: 'Rural',
-}
+/** Catálogo de comorbilidades, en el orden en que se muestran al marcarlas. */
+export const COMORBILIDADES = [
+  ['dislipidemia', 'Dislipidemia'],
+  ['obesidad', 'Obesidad'],
+  ['enfermedad_renal_cronica', 'Enfermedad renal crónica'],
+  ['cardiopatia_isquemica', 'Cardiopatía isquémica'],
+  ['insuficiencia_cardiaca', 'Insuficiencia cardiaca'],
+  ['enfermedad_cerebrovascular', 'Enfermedad cerebrovascular'],
+  ['hipotiroidismo', 'Hipotiroidismo'],
+  ['epoc_asma', 'EPOC o asma'],
+  ['artrosis', 'Artrosis'],
+  ['depresion', 'Depresión'],
+  ['otra', 'Otra enfermedad crónica'],
+]
+const NOMBRE_COMORBILIDAD = Object.fromEntries(COMORBILIDADES)
 
 const SEXO = {
   M: 'Masculino',
@@ -44,7 +55,14 @@ function traducir(mapa, valor) {
 }
 
 export const etiquetaDiagnostico = (v) => traducir(DIAGNOSTICO, v)
-export const etiquetaNivelSocioeconomico = (v) => traducir(NIVEL_SOCIOECONOMICO, v)
-export const etiquetaAseguramiento = (v) => traducir(ASEGURAMIENTO, v)
-export const etiquetaZona = (v) => traducir(ZONA, v)
+export const etiquetaNivelEducativo = (v) => traducir(NIVEL_EDUCATIVO, v)
+export const etiquetaConvivencia = (v) => traducir(CONVIVENCIA, v)
+export const etiquetaComorbilidad = (v) => traducir(NOMBRE_COMORBILIDAD, v)
+export const etiquetaSiNo = (v) => (v === null || v === undefined ? SIN_DATO : v ? 'Sí' : 'No')
+
+/** Lista legible de comorbilidades: «Dislipidemia, Obesidad» o «Ninguna». */
+export function listaComorbilidades(lista) {
+  if (!lista || lista.length === 0) return 'Ninguna registrada'
+  return lista.map(etiquetaComorbilidad).join(', ')
+}
 export const etiquetaSexo = (v) => traducir(SEXO, v)

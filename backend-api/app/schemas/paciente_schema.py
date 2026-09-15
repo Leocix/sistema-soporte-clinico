@@ -13,11 +13,11 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from ..db.models import (
-    Aseguramiento,
+    Comorbilidad,
+    Convivencia,
     Diagnostico,
-    NivelSocioeconomico,
+    NivelEducativo,
     Sexo,
-    ZonaResidencia,
 )
 
 # Criterio de elegibilidad del estudio (Anexo n.o 04): polimedicacion.
@@ -43,15 +43,16 @@ class PacienteBase(BaseModel):
     edad: int = Field(ge=18, le=120, description="Edad en anios cumplidos")
     sexo: Sexo
 
-    # --- Dimension: socioeconomica ---
-    nivel_socioeconomico: NivelSocioeconomico | None = None
-    aseguramiento: Aseguramiento | None = None
-    zona_residencia: ZonaResidencia | None = None
+    # --- Dimension: socioeconomica y de apoyo social ---
+    nivel_educativo: NivelEducativo | None = None
+    convivencia: Convivencia | None = None
+    apoyo_familiar: bool | None = None
 
     # --- Dimension: enfermedad ---
     diagnostico: Diagnostico
     tiempo_enfermedad_anios: float | None = Field(default=None, ge=0, le=80)
-    comorbilidades: int = Field(default=0, ge=0, le=15)
+    # El medico marca enfermedades concretas; el total lo calcula el sistema.
+    lista_comorbilidades: list[Comorbilidad] = Field(default_factory=list, max_length=15)
 
     # --- Dimension: terapia (carga terapeutica) ---
     numero_farmacos: int = Field(
@@ -79,6 +80,13 @@ class PacienteBase(BaseModel):
         # para que "Jose  Luis " y "Jose Luis" no sean fichas distintas.
         object.__setattr__(self, "nombres", " ".join(self.nombres.split()))
         object.__setattr__(self, "apellidos", " ".join(self.apellidos.split()))
+        return self
+
+    @model_validator(mode="after")
+    def _sin_comorbilidades_repetidas(self) -> PacienteBase:
+        object.__setattr__(
+            self, "lista_comorbilidades", list(dict.fromkeys(self.lista_comorbilidades))
+        )
         return self
 
     @model_validator(mode="after")
@@ -113,12 +121,12 @@ class PacienteUpdate(BaseModel):
     telefono: str | None = Field(default=None, max_length=25)
     edad: int | None = Field(default=None, ge=18, le=120)
     sexo: Sexo | None = None
-    nivel_socioeconomico: NivelSocioeconomico | None = None
-    aseguramiento: Aseguramiento | None = None
-    zona_residencia: ZonaResidencia | None = None
+    nivel_educativo: NivelEducativo | None = None
+    convivencia: Convivencia | None = None
+    apoyo_familiar: bool | None = None
     diagnostico: Diagnostico | None = None
     tiempo_enfermedad_anios: float | None = Field(default=None, ge=0, le=80)
-    comorbilidades: int | None = Field(default=None, ge=0, le=15)
+    lista_comorbilidades: list[Comorbilidad] | None = Field(default=None, max_length=15)
     numero_farmacos: int | None = Field(default=None, ge=MIN_FARMACOS, le=30)
     tomas_dia: int | None = Field(default=None, ge=1, le=20)
     controles_programados_6m: int | None = Field(default=None, ge=0, le=30)
@@ -135,7 +143,13 @@ class PacienteUpdate(BaseModel):
         ``exclude_unset`` distingue "no enviado" de "enviado como null", lo que
         permite borrar un dato opcional sin sobrescribir el resto de la ficha.
         """
-        return self.model_dump(exclude_unset=True)
+        cambios = self.model_dump(exclude_unset=True)
+        if "lista_comorbilidades" in cambios:
+            # Codigos del catalogo sin repetir; enviar null equivale a ninguna.
+            cambios["lista_comorbilidades"] = list(dict.fromkeys(
+                c.value for c in cambios["lista_comorbilidades"] or []
+            ))
+        return cambios
 
 
 class PacienteOut(PacienteBase):
@@ -157,6 +171,9 @@ class PacienteOut(PacienteBase):
     # expone el identificador de la cuenta: al panel solo le hace falta saber
     # si el boton debe decir «generar acceso» o «restablecer contrasena».
     tiene_acceso_movil: bool = False
+
+    # Total de comorbilidades marcadas: la variable que recibe el modelo.
+    comorbilidades: int = 0
 
     id_paciente: str
     codigo_anonimizado: str

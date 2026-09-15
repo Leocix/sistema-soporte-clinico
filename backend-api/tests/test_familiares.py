@@ -299,7 +299,7 @@ def test_el_familiar_no_corrobora_tomas_de_un_paciente_ajeno(
         json={
             "nombres": "Ana", "apellidos": "Reyes Torres",
             "edad": 70, "sexo": "F", "diagnostico": "hta",
-            "comorbilidades": 1, "numero_farmacos": 6, "tomas_dia": 4,
+            "lista_comorbilidades": ["obesidad"], "numero_farmacos": 6, "tomas_dia": 4,
             "controles_programados_6m": 6, "controles_perdidos_6m": 1,
         },
         headers=cab_medico,

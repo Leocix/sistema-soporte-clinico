@@ -12,11 +12,18 @@ const NOMBRE_VARIABLE = {
   controles_perdidos_6m: 'Controles perdidos',
   controles_programados_6m: 'Controles programados',
   edad: 'Edad',
-  nivel_socioeconomico: 'Nivel socioeconómico',
-  aseguramiento: 'Aseguramiento',
-  zona_residencia: 'Zona de residencia',
+  nivel_educativo: 'Nivel educativo',
+  convivencia: 'Convivencia',
+  apoyo_familiar: 'Apoyo familiar en la medicación',
   diagnostico: 'Diagnóstico',
   sexo: 'Sexo',
+}
+
+/** Códigos del Anexo n.° 04 que llegan como valor de una variable categórica. */
+const VALOR_LEGIBLE = {
+  si: 'Sí', no: 'No', solo: 'Vive solo', acompanado: 'Acompañado',
+  sin_estudios: 'Sin estudios', primaria: 'Primaria', secundaria: 'Secundaria', superior: 'Superior',
+  hta: 'HTA', dm2: 'DM2', ambas: 'HTA + DM2', M: 'Masculino', F: 'Femenino',
 }
 
 /**
@@ -67,7 +74,7 @@ export default function PrediccionRiesgo({ prediccion }) {
                 />
               </span>
               <span className="factor__valor">
-                {factor.valor_paciente === null ? 'sin dato' : factor.valor_paciente}
+                {factor.valor_paciente === null ? 'sin dato' : (VALOR_LEGIBLE[factor.valor_paciente] ?? factor.valor_paciente)}
               </span>
             </li>
           ))}

@@ -127,9 +127,11 @@ export function validarFicha(valores, { edicion = false } = {}) {
     }
   }
 
-  const comorbilidades = entero(valores.comorbilidades)
-  if (!vacio(valores.comorbilidades) && (comorbilidades < 0 || comorbilidades > 15)) {
-    errores.comorbilidades = 'Indique entre 0 y 15.'
+  // Vive solo y sin nadie que le ayude con la medicación: no es un error, pero
+  // es justo el perfil en el que el olvido no tiene quien lo corrija.
+  if (valores.convivencia === 'solo' && valores.apoyo_familiar === 'no') {
+    avisos.apoyo_familiar =
+      'Vive solo y sin apoyo en la medicación: considere invitar a un familiar a la aplicación.'
   }
 
   // --- Carga terapéutica ---------------------------------------------------

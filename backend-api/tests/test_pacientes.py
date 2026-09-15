@@ -9,11 +9,11 @@ FICHA_VALIDA = {
     "edad": 72,
     "sexo": "F",
     "diagnostico": "hta",
-    "nivel_socioeconomico": "bajo",
-    "aseguramiento": "sis",
-    "zona_residencia": "urbana",
+    "nivel_educativo": "secundaria",
+    "convivencia": "acompanado",
+    "apoyo_familiar": True,
     "tiempo_enfermedad_anios": 12.5,
-    "comorbilidades": 3,
+    "lista_comorbilidades": ["dislipidemia", "enfermedad_renal_cronica", "depresion"],
     "numero_farmacos": 9,
     "tomas_dia": 6,
     "controles_programados_6m": 6,
@@ -231,4 +231,50 @@ def test_un_correo_heredado_no_valido_no_tumba_el_listado(client, cab_medico, da
 
     # Pero el alta sí sigue exigiendo una dirección válida.
     ficha = {**FICHA_VALIDA, "correo": "otro@dominio.local"}
+    assert client.post("/api/pacientes", json=ficha, headers=cab_medico).status_code == 422
+
+
+# --- Comorbilidades concretas y contexto social ----------------------------
+
+
+def test_el_total_de_comorbilidades_se_calcula_de_la_lista(client, cab_medico):
+    """El medico marca enfermedades; el modelo recibe cuantas son."""
+    ficha = {**FICHA_VALIDA, "lista_comorbilidades": ["obesidad", "artrosis", "obesidad"]}
+    cuerpo = client.post("/api/pacientes", json=ficha, headers=cab_medico).json()
+
+    assert cuerpo["lista_comorbilidades"] == ["obesidad", "artrosis"]
+    assert cuerpo["comorbilidades"] == 2
+    assert cuerpo["nivel_educativo"] == "secundaria"
+    assert cuerpo["apoyo_familiar"] is True
+
+
+def test_editar_la_lista_recalcula_el_total(client, cab_medico, datos):
+    id_paciente = datos["ficha"].id_paciente
+    respuesta = client.patch(
+        f"/api/pacientes/{id_paciente}",
+        json={"lista_comorbilidades": ["hipotiroidismo"]},
+        headers=cab_medico,
+    )
+    assert respuesta.status_code == 200, respuesta.text
+    assert respuesta.json()["comorbilidades"] == 1
+
+    vacia = client.patch(
+        f"/api/pacientes/{id_paciente}", json={"lista_comorbilidades": []}, headers=cab_medico
+    )
+    assert vacia.json()["comorbilidades"] == 0
+
+
+def test_rechaza_comorbilidades_fuera_del_catalogo(client, cab_medico):
+    ficha = {**FICHA_VALIDA, "lista_comorbilidades": ["gripe"]}
+    assert client.post("/api/pacientes", json=ficha, headers=cab_medico).status_code == 422
+
+
+def test_el_total_no_se_envia_a_mano(client, cab_medico):
+    """El total lo calcula el sistema; aceptarlo permitiria contradecir la lista."""
+    ficha = {**FICHA_VALIDA, "comorbilidades": 5}
+    assert client.post("/api/pacientes", json=ficha, headers=cab_medico).status_code == 422
+
+
+def test_ya_no_se_aceptan_las_variables_socioeconomicas_retiradas(client, cab_medico):
+    ficha = {**FICHA_VALIDA, "aseguramiento": "sis"}
     assert client.post("/api/pacientes", json=ficha, headers=cab_medico).status_code == 422

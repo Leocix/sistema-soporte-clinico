@@ -27,11 +27,11 @@ from app.core.security import hash_password  # noqa: E402
 from app.db.database import SessionLocal  # noqa: E402
 from app.db.models import (  # noqa: E402
     Acompanante,
-    Aseguramiento,
+    Convivencia,
     Diagnostico,
     EstadoAcompanante,
     EstadoToma,
-    NivelSocioeconomico,
+    NivelEducativo,
     OrigenRegistro,
     Paciente,
     Parentesco,
@@ -39,7 +39,6 @@ from app.db.models import (  # noqa: E402
     Rol,
     Sexo,
     Usuario,
-    ZonaResidencia,
 )
 
 CORREO_MEDICO = "milko.ugaz@consultorio.pe"
@@ -55,18 +54,24 @@ RELLENO_MIGRACION = "(por registrar)"
 
 # Nombres ficticios, coherentes con el codigo D- de demostracion.
 PACIENTES_DEMO = [
-    # codigo, nombres, apellidos, edad, sexo, diagnostico, nse, aseg, zona,
-    # anios, comorb, farm, tomas, prog, perd, morisky
+    # codigo, nombres, apellidos, edad, sexo, diagnostico, nivel educativo,
+    # convivencia, apoyo familiar, anios, comorbilidades, farm, tomas, prog,
+    # perd, morisky
     ("D-001", "Jose Luis", "Vasquez Rios", 68, Sexo.MASCULINO, Diagnostico.AMBAS,
-     NivelSocioeconomico.BAJO, Aseguramiento.SIS, ZonaResidencia.URBANA, 12.0, 2, 7, 5, 6, 3, 1),
+     NivelEducativo.SECUNDARIA, Convivencia.ACOMPANADO, True, 12.0,
+     ["dislipidemia", "obesidad"], 7, 5, 6, 3, 1),
     ("D-002", "Maria Elena", "Rios Chavez", 72, Sexo.FEMENINO, Diagnostico.HTA,
-     NivelSocioeconomico.BAJO, Aseguramiento.SIS, ZonaResidencia.RURAL, 15.5, 3, 9, 6, 6, 4, 0),
+     NivelEducativo.PRIMARIA, Convivencia.SOLO, False, 15.5,
+     ["dislipidemia", "artrosis", "hipotiroidismo"], 9, 6, 6, 4, 0),
     ("D-003", "Carlos Alberto", "Diaz Mendoza", 65, Sexo.MASCULINO, Diagnostico.DM2,
-     NivelSocioeconomico.MEDIO, Aseguramiento.ESSALUD, ZonaResidencia.URBANA, 8.0, 1, 5, 3, 6, 1, 3),
+     NivelEducativo.SUPERIOR, Convivencia.ACOMPANADO, True, 8.0,
+     ["obesidad"], 5, 3, 6, 1, 3),
     ("D-004", "Lucia", "Fernandez Paz", 59, Sexo.FEMENINO, Diagnostico.AMBAS,
-     NivelSocioeconomico.MEDIO, Aseguramiento.ESSALUD, ZonaResidencia.URBANA, 6.5, 0, 6, 4, 6, 0, 4),
+     NivelEducativo.SUPERIOR, Convivencia.ACOMPANADO, False, 6.5,
+     [], 6, 4, 6, 0, 4),
     ("D-005", "Ricardo", "Campos Leon", 70, Sexo.MASCULINO, Diagnostico.HTA,
-     NivelSocioeconomico.BAJO, Aseguramiento.NINGUNO, ZonaResidencia.RURAL, 20.0, 4, 8, 6, 6, 2, 2),
+     NivelEducativo.SECUNDARIA, Convivencia.SOLO, False, 20.0,
+     ["cardiopatia_isquemica", "enfermedad_renal_cronica", "dislipidemia", "depresion"], 8, 6, 6, 2, 2),
 ]
 
 
@@ -129,8 +134,9 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
     ahora = datetime.now(timezone.utc).replace(minute=0, second=0, microsecond=0)
     creados = completados = cuentas = 0
 
-    for (codigo, nombres, apellidos, edad, sexo, dx, nse, aseg, zona, anios, comorb,
-         farmacos, tomas, programados, perdidos, morisky) in PACIENTES_DEMO:
+    for (codigo, nombres, apellidos, edad, sexo, dx, educacion, convivencia, apoyo,
+         anios, comorbilidades, farmacos, tomas, programados, perdidos,
+         morisky) in PACIENTES_DEMO:
 
         paciente = (
             db.query(Paciente).filter(Paciente.codigo_anonimizado == codigo).first()
@@ -145,8 +151,9 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
                 telefono="9" + codigo.replace("D-", "").rjust(8, "0"),
                 id_medico_tratante=medico.id_usuario,
                 edad=edad, sexo=sexo, diagnostico=dx,
-                nivel_socioeconomico=nse, aseguramiento=aseg, zona_residencia=zona,
-                tiempo_enfermedad_anios=anios, comorbilidades=comorb,
+                nivel_educativo=educacion, convivencia=convivencia, apoyo_familiar=apoyo,
+                tiempo_enfermedad_anios=anios,
+                lista_comorbilidades=comorbilidades, comorbilidades=len(comorbilidades),
                 numero_farmacos=farmacos, tomas_dia=tomas,
                 controles_programados_6m=programados, controles_perdidos_6m=perdidos,
                 puntaje_morisky=morisky,
@@ -166,6 +173,15 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
             if not paciente.correo:
                 paciente.correo = f"{codigo.lower()}@ejemplo.pe"
                 paciente.telefono = "9" + codigo.replace("D-", "").rjust(8, "0")
+                reparada = True
+            # Fichas anteriores al cambio de variables: sin contexto social ni
+            # lista de comorbilidades.
+            if paciente.nivel_educativo is None and not paciente.lista_comorbilidades:
+                paciente.nivel_educativo = educacion
+                paciente.convivencia = convivencia
+                paciente.apoyo_familiar = apoyo
+                paciente.lista_comorbilidades = comorbilidades
+                paciente.comorbilidades = len(comorbilidades)
                 reparada = True
             completados += reparada
 
@@ -208,7 +224,7 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
     if creados:
         print(f"{creados} paciente(s) de demostracion creado(s).")
     if completados:
-        print(f"{completados} ficha(s) preexistente(s) completada(s) con su identidad.")
+        print(f"{completados} ficha(s) preexistente(s) completada(s).")
     print("Cuentas de la aplicacion movil (misma contrasena que el medico):")
     for codigo, *_ in PACIENTES_DEMO:
         print(f"  {codigo.lower()}@ejemplo.pe")

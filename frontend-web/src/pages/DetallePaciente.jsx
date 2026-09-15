@@ -12,11 +12,12 @@ import {
 } from '../services/api'
 import { etiquetaAdherenciaBasal } from '../services/riesgo'
 import {
-  etiquetaAseguramiento,
+  etiquetaConvivencia,
   etiquetaDiagnostico,
-  etiquetaNivelSocioeconomico,
+  etiquetaNivelEducativo,
   etiquetaSexo,
-  etiquetaZona,
+  etiquetaSiNo,
+  listaComorbilidades,
 } from '../services/etiquetas'
 
 /** Ficha clinica individual: variables del Anexo n.o 04 y traza de tomas. */
@@ -49,7 +50,7 @@ const DIMENSIONES = [
     campos: [
       ['Diagnóstico', (p) => etiquetaDiagnostico(p.diagnostico)],
       ['Tiempo de enfermedad', (p) => (p.tiempo_enfermedad_anios ? `${p.tiempo_enfermedad_anios} años` : '—')],
-      ['Comorbilidades', (p) => p.comorbilidades],
+      ['Comorbilidades', (p) => `${p.comorbilidades} · ${listaComorbilidades(p.lista_comorbilidades)}`],
     ],
   },
   {
@@ -61,11 +62,11 @@ const DIMENSIONES = [
     ],
   },
   {
-    titulo: 'Socioeconómica',
+    titulo: 'Contexto social',
     campos: [
-      ['Nivel socioeconómico', (p) => etiquetaNivelSocioeconomico(p.nivel_socioeconomico)],
-      ['Aseguramiento', (p) => etiquetaAseguramiento(p.aseguramiento)],
-      ['Zona de residencia', (p) => etiquetaZona(p.zona_residencia)],
+      ['Nivel educativo', (p) => etiquetaNivelEducativo(p.nivel_educativo)],
+      ['Convivencia', (p) => etiquetaConvivencia(p.convivencia)],
+      ['Apoyo familiar en la medicación', (p) => etiquetaSiNo(p.apoyo_familiar)],
     ],
   },
   {

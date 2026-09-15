@@ -471,6 +471,15 @@ p { margin: 0; }
 }
 .campo--casilla input { width: auto; }
 
+/* Comorbilidades: casillas en columnas, dentro del grupo «Enfermedad». */
+.comorbilidades { border: none; padding: 0; margin: 1rem 0 0; }
+.comorbilidades legend { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.5rem; }
+.comorbilidades legend small { font-weight: 400; color: var(--texto-tenue); }
+.comorbilidades > small { display: block; margin-top: 0.4rem; color: var(--texto-tenue); font-size: 0.76rem; }
+.comorbilidades__lista {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 0.45rem 1rem;
+}
+
 /* Paginas publicas sin panel de presentacion al lado (enlace incompleto). */
 .acceso__formulario--solo { grid-column: 1 / -1; }
 
@@ -654,3 +663,28 @@ p { margin: 0; }
   .contenido { padding: 1.25rem; }
   .encabezado { padding: 1rem 1.25rem; }
 }
+
+/* --- Reportes generales (RF07) --------------------------------------------- */
+
+.tarjeta__titulo { font-size: 0.95rem; font-weight: 650; margin: 0 0 0.9rem; }
+.reporte__rejilla {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;
+}
+.reporte__vacio { color: var(--texto-tenue); font-size: 0.88rem; }
+.reporte__metodo summary { cursor: pointer; font-weight: 600; }
+.reporte__metodo ul { margin: 0.9rem 0 0; padding-left: 1.1rem; display: grid; gap: 0.5rem; }
+.reporte__metodo li { font-size: 0.88rem; color: var(--texto-suave); line-height: 1.5; }
+
+.barras { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.55rem; }
+.barras__fila {
+  display: grid; grid-template-columns: minmax(90px, 38%) 1fr 2.5rem;
+  align-items: center; gap: 0.6rem; font-size: 0.86rem;
+}
+.barras__etiqueta { color: var(--texto-suave); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.barras__pista { height: 10px; background: var(--neutro-fondo); border-radius: 4px; overflow: hidden; }
+.barras__relleno { display: block; height: 100%; background: var(--primario); border-radius: 0 4px 4px 0; min-width: 2px; }
+.barras__relleno--alto { background: var(--alto); }
+.barras__relleno--medio { background: var(--medio); }
+.barras__relleno--bajo { background: var(--bajo); }
+.barras__relleno--sin_datos { background: var(--neutro); }
+.barras__valor { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }

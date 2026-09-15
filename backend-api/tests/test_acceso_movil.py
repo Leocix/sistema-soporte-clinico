@@ -17,7 +17,7 @@ FICHA = {
     "edad": 72,
     "sexo": "F",
     "diagnostico": "hta",
-    "comorbilidades": 3,
+    "lista_comorbilidades": ["dislipidemia", "obesidad", "artrosis"],
     "numero_farmacos": 9,
     "tomas_dia": 6,
     "controles_programados_6m": 6,

@@ -58,10 +58,10 @@ def modelo_entrenado(tmp_path, monkeypatch):
         "carga_terapeutica": rng.integers(10, 70, n),
         "tasa_inasistencia": rng.uniform(0, 1, n),
         "cronicidad_relativa": rng.uniform(0, 5, n),
-        "nivel_socioeconomico": rng.choice(["bajo", "medio", "alto"], n),
+        "nivel_educativo": rng.choice(["sin_estudios", "primaria", "secundaria", "superior"], n),
         "sexo": rng.choice(["M", "F"], n),
-        "aseguramiento": rng.choice(["sis", "essalud", "ninguno"], n),
-        "zona_residencia": rng.choice(["urbana", "rural"], n),
+        "convivencia": rng.choice(["solo", "acompanado"], n),
+        "apoyo_familiar": rng.choice(["si", "no"], n),
         "diagnostico": rng.choice(["hta", "dm2", "ambas"], n),
     })
     etiqueta = (datos["tasa_inasistencia"] > 0.5).astype(int)
@@ -170,11 +170,11 @@ def test_sin_controles_programados_no_se_divide_entre_cero(datos, db_session):
 
 def test_se_informan_las_variables_que_hubo_que_imputar(datos, modelo_entrenado):
     """El médico debe saber sobre cuánta información ausente se predijo."""
-    ficha = datos["ficha"]  # sin nivel socioeconómico ni aseguramiento
+    ficha = datos["ficha"]  # sin nivel educativo ni convivencia
     resultado = ml_inference.predecir(ficha)
 
-    assert "nivel_socioeconomico" in resultado.variables_imputadas
-    assert "aseguramiento" in resultado.variables_imputadas
+    assert "nivel_educativo" in resultado.variables_imputadas
+    assert "convivencia" in resultado.variables_imputadas
 
 
 # --- Riesgos del componente gestionados (ítem 20) ---------------------------

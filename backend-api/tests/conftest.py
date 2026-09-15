@@ -64,7 +64,8 @@ def datos(db_session):
         id_usuario=cuenta_paciente.id_usuario,
         id_medico_tratante=medico.id_usuario,
         edad=68, sexo=Sexo.MASCULINO, diagnostico=Diagnostico.AMBAS,
-        comorbilidades=2, numero_farmacos=7, tomas_dia=5,
+        lista_comorbilidades=["dislipidemia", "obesidad"], comorbilidades=2,
+        numero_farmacos=7, tomas_dia=5,
         controles_programados_6m=6, controles_perdidos_6m=3,
     )
     db_session.add(ficha)

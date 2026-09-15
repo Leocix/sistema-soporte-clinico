@@ -43,7 +43,8 @@ def _paciente(**campos) -> Paciente:
     base = dict(
         codigo_anonimizado="P-900", nombres="Prueba", apellidos="Artefacto",
         edad=68, sexo=Sexo.MASCULINO, diagnostico=Diagnostico.AMBAS,
-        comorbilidades=2, numero_farmacos=7, tomas_dia=5,
+        lista_comorbilidades=["dislipidemia", "obesidad"], comorbilidades=2,
+        numero_farmacos=7, tomas_dia=5,
         controles_programados_6m=6, controles_perdidos_6m=3,
         tiempo_enfermedad_anios=12.0,
     )
@@ -74,18 +75,18 @@ def test_predice_sobre_una_ficha_completa():
 
 
 def test_predice_con_los_opcionales_vacios():
-    """El caso corriente: fichas con socioeconomicos sin completar.
+    """El caso corriente: fichas con el contexto social sin completar.
 
     Es el que fallaba antes de convertir `None` en `NaN` (incidencia I-09), y
     solo el artefacto real, con sus imputadores, lo ejercita de verdad.
     """
     prediccion = ml_inference.predecir(_paciente(
-        nivel_socioeconomico=None, aseguramiento=None, zona_residencia=None,
+        nivel_educativo=None, convivencia=None, apoyo_familiar=None,
         tiempo_enfermedad_anios=None,
     ))
 
     assert 0.0 <= prediccion.probabilidad <= 1.0
-    assert "aseguramiento" in prediccion.variables_imputadas
+    assert "convivencia" in prediccion.variables_imputadas
 
 
 def test_las_versiones_instaladas_son_las_declaradas():
