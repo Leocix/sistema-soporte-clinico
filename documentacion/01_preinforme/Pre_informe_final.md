@@ -56,7 +56,7 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 | Sprint 3 (CRISP-DM: *Modeling* y *Evaluation*) | Semanas 5–6 | En ejecución (adelantado) |
 | Sprint 4 (CRISP-DM: *Deployment*) | Semanas 7–8 | Programado |
 
-> **Convención de lectura.** Las expresiones entre comillas angulares —«*completar con…*»— señalan valores que dependen de mediciones de campo aún en curso (extracción documental del Anexo n.° 04, ejecución experimental sobre el dataset real y pruebas con usuarios). Se dejan explícitamente marcadas para no reportar como hallazgo ningún dato no medido.
+> **Convención de lectura.** Los indicadores que dependen de mediciones de campo —extracción documental del Anexo n.° 04, aplicación del test de Morisky-Green, juicio de expertos y pruebas con usuarios— se reportan con su estado de ejecución y el sprint en que se cierran. No se consigna ningún valor que no haya sido medido.
 
 ---
 
@@ -169,7 +169,7 @@ Se aplicó la **guía de entrevista semiestructurada (Anexo n.° 03)** al médic
 | B3 | Falta de analítica predictiva sobre los datos clínicos | Imposibilidad de anticipar el incumplimiento | RF04, RF06 |
 | B4 | Ausencia de mecanismos de alerta y de recordatorio | El olvido —principal causa percibida— no se mitiga | RF05, RF08 |
 
-**Porcentaje de procesos de seguimiento no digitalizados (indicador de OE1):** «*completar con el cómputo final sobre el inventario de subprocesos levantado en la entrevista*». El diagnóstico preliminar señala que **ninguno** de los subprocesos de seguimiento de adherencia (registro de toma, verificación entre citas, alerta de riesgo, auditoría) cuenta con soporte digital.
+**Porcentaje de procesos de seguimiento no digitalizados (indicador de OE1): 100 %.** La entrevista identificó cuatro subprocesos de seguimiento de la adherencia —registro de la toma, verificación entre citas, alerta de riesgo y auditoría del cumplimiento— y **ninguno de los cuatro** cuenta con soporte digital: los cuatro se resuelven de forma verbal o no se realizan.
 
 #### b) Comprensión de los datos: línea base de adherencia y factores de incumplimiento
 
@@ -187,7 +187,7 @@ Los factores de incumplimiento se clasificaron según el **modelo multidimension
 
 **Referencias de contexto para la línea base.** La evidencia disponible sitúa la magnitud del problema en el entorno inmediato del estudio: el 37,1 % de los pacientes peruanos con hipertensión y diabetes presenta adherencia deficiente según el análisis de seis años de la ENDES [4]; en el Centro de Salud Pimentel (Chiclayo) solo el 31,1 % de los adultos mayores hipertensos alcanza adherencia buena [5]; y en un centro de salud de Lambayeque el 44,7 % de los pacientes crónicos no cumple con la toma de sus medicamentos, con asociación estadísticamente significativa entre polifarmacia y adherencia (p < 0,05) [6].
 
-**Línea base propia del consultorio:** «*completar con el porcentaje de pacientes polimedicados con adherencia deficiente resultante de la aplicación del test de Morisky-Green (Anexo n.° 05) sobre la muestra del consultorio*». El instrumento se encuentra formalizado y su aplicación se ejecuta en paralelo a la extracción documental del Anexo n.° 04.
+**Línea base propia del consultorio: en ejecución.** El test de Morisky-Green (Anexo n.° 05) se aplica a la muestra del consultorio en paralelo a la extracción documental del Anexo n.° 04, y su resultado se incorpora al cierre del Sprint 3. Las referencias anteriores sirven de contraste para interpretar ese valor cuando se obtenga.
 
 #### c) Construcción del Product Backlog
 
@@ -441,7 +441,7 @@ El tratamiento es diferenciado por naturaleza de la variable y —decisión cent
 
 El pipeline emite un **reporte de preparación en formato JSON** (`data/processed/reporte_preparacion.json`) con el porcentaje de celdas faltantes por variable antes de imputar, el conteo de valores fuera de rango y la distribución de clases. Este reporte constituye la evidencia auditable de la fase *Data Preparation*.
 
-**Porcentaje de celdas faltantes en el dataset real:** «*completar con el reporte generado sobre la extracción definitiva del Anexo n.° 04*».
+**Porcentaje de celdas faltantes en el dataset del consultorio:** se obtiene del reporte anterior al ejecutar el pipeline sobre la extracción del Anexo n.° 04, en curso; se reporta al cierre del Sprint 3.
 
 #### e) Balanceo de clases con SMOTE
 
@@ -490,7 +490,7 @@ Por eso `train_evaluate.py` parte del dataset **crudo** y encadena imputación, 
 
 **Verificación del flujo.** El script se ejecutó de extremo a extremo sobre datos sintéticos, recorriendo las cuatro configuraciones, la búsqueda de hiperparámetros, los cinco pliegues, la evaluación en prueba, el contraste de McNemar y la escritura de los tres artefactos. **Los valores de esa corrida son artificiales y no se reportan como resultado de la investigación.**
 
-**Resultados comparativos:** «*completar con la ejecución de `train_evaluate.py` sobre el dataset real; la tabla generada en `data/processed/tabla_comparativa.md` se incorpora directamente a este apartado*».
+**Resultados comparativos: en ejecución.** La comparación se ejecuta sobre el dataset del consultorio una vez concluida la extracción del Anexo n.° 04, dentro del Sprint 3, que es también el que el cronograma asigna a la selección del algoritmo. El script emite la tabla comparativa (`data/processed/tabla_comparativa.md`) en el formato de este informe, de modo que su incorporación no requiere reelaboración.
 
 #### g) Cierre del núcleo funcional: gestión de pacientes (RF02) y registro de adherencia (RF03)
 
@@ -862,7 +862,7 @@ de deducirlo del nombre del método.
 
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
-| Porcentaje de pacientes polimedicados con adherencia deficiente (línea base) | Medida en el diagnóstico | «*completar con el resultado del test de Morisky-Green sobre la muestra del consultorio*»; referencias de contexto: 37,1 % nacional [4], 44,7 % en Lambayeque [6] |
+| Porcentaje de pacientes polimedicados con adherencia deficiente (línea base) | Medida en el diagnóstico | **En ejecución** (test de Morisky-Green, cierre del Sprint 3); referencias de contexto: 37,1 % nacional [4], 44,7 % en Lambayeque [6] |
 | N.° de factores de incumplimiento identificados y clasificados según el modelo OMS | Clasificados en las 5 dimensiones | **5 dimensiones cubiertas**, con al menos un factor observable por dimensión (Tabla 4) |
 | Porcentaje de procesos de seguimiento no digitalizados | Medida en el diagnóstico | **100 %** de los subprocesos de seguimiento de adherencia carecen de soporte digital (registro de toma, verificación entre citas, alerta de riesgo, auditoría) |
 
@@ -875,7 +875,7 @@ de deducirlo del nombre del método.
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
 | Porcentaje de requisitos especificados respecto a los identificados | 100 % | **100 %**: 8 RF y 6 RNF especificados con criterio de aceptación y prioridad MoSCoW |
-| Grado de alineación con estándares de arquitectura de software (juicio de expertos, escala 1–5) | Evaluación por 3 expertos | «*completar con el resultado del expediente de juicio de expertos*» (formato disponible en `documentacion/02_instrumentos/Expediente_Expertos.md`) |
+| Grado de alineación con estándares de arquitectura de software (juicio de expertos, escala 1–5) | Evaluación por 3 expertos | **En proceso**: expediente formalizado (Anexo n.° 07); evaluación de los tres expertos en curso |
 
 **Demostración.** Los **diez requisitos funcionales** de la Tabla 2 —ocho especificados en el Sprint 2 y dos emergentes incorporados en el Sprint 3— se derivan uno a uno de las brechas del diagnóstico y están priorizados con MoSCoW, con criterio de aceptación y objetivo asociado. Los seis requisitos no funcionales (Tabla 9) están mapeados a atributos de la norma ISO/IEC 25010 [7] y —a diferencia de una especificación meramente declarativa— **cuatro de los seis cuentan ya con materialización técnica verificable** en el código del API Gateway: seguridad (RNF01), instrumentación de desempeño (RNF02), fiabilidad mediante manejo global de excepciones y sonda de salud (RNF04) y modularidad por capas (RNF05).
 
@@ -888,7 +888,7 @@ La arquitectura de microservicios desacoplados quedó definida en cuatro capas �
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
 | N.° de algoritmos comparados | ≥ 4 | **4 configurados**: Regresión Logística, Random Forest, XGBoost y SVM (Tabla 12) |
-| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); «*completar con la ejecución sobre el dataset real*» |
+| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); medición sobre el dataset del consultorio en el Sprint 3 |
 | Sensibilidad y especificidad del modelo seleccionado | Reportadas | Calculadas por el script; pendientes de la extracción definitiva |
 | F1-score en datos de prueba independientes | Reportado | Calculado sobre el conjunto apartado; pendiente de la extracción definitiva |
 
