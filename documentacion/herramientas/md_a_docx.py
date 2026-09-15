@@ -203,6 +203,12 @@ def insertar_tabla(doc, bloque: list[str]) -> None:
 # ---------------------------------------------------------------------------
 # Conversión del cuerpo
 # ---------------------------------------------------------------------------
+def _ya_hay_salto(doc) -> bool:
+    """Evita duplicar el salto que la plantilla ya trae al final de la portada."""
+    ultimo = doc.paragraphs[-1]
+    return 'w:br' in ultimo._p.xml and 'type="page"' in ultimo._p.xml
+
+
 def convertir(doc, markdown: str) -> None:
     lineas = markdown.split("\n")
     i = 0
@@ -228,6 +234,10 @@ def convertir(doc, markdown: str) -> None:
         titulo = re.match(r"^(#{1,4})\s+(.*)$", crudo)
         if titulo:
             nivel, texto = len(titulo.group(1)), titulo.group(2)
+            # Las secciones mayores (I. RESULTADOS, II. REFERENCIAS, ANEXOS)
+            # empiezan en pagina nueva, como en el modelo de la Escuela.
+            if nivel == 1 and doc.paragraphs and not _ya_hay_salto(doc):
+                doc.add_page_break()
             p = doc.add_paragraph(style=f"Heading {nivel}")
             escribir_inline(p, texto)
             i += 1

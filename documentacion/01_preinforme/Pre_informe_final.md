@@ -8,7 +8,7 @@
 
 **SISTEMA DE SOPORTE CLÍNICO CON APRENDIZAJE AUTOMÁTICO PARA PREVENIR EL INCUMPLIMIENTO TERAPÉUTICO EN PACIENTES HIPERTENSOS Y DIABÉTICOS POLIMEDICADOS DEL CONSULTORIO MÉDICO MILKO UGAZ ZEGARRA**
 
-**PRE INFORME DE TESIS (AVANCE AL 50 %)**
+**PRE INFORME DE TESIS (AVANCE AL 65 %)**
 
 **PARA EVIDENCIAR LA EJECUCIÓN DE TESIS**
 
@@ -45,7 +45,7 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 **5. Fecha de presentación**
 
-15 de septiembre de 2026 (avance al 50 %, semana 5 del cronograma del curso).
+15 de septiembre de 2026 (avance al 65 %, semana 5 del cronograma del curso).
 
 **6. Estado del avance**
 
@@ -121,18 +121,22 @@ La decisión clínica sigue siendo del médico: el sistema es un apoyo, no un di
 | :--- | :--- | :--- | :--- |
 | Panel web | React + Vite (Vercel) | Médico | Registra pacientes, consulta fichas, riesgo y reportes; genera el acceso móvil del paciente |
 | Aplicación móvil | Flutter (Android) | Paciente y familiar | Recordatorios, registro de tomas sin conexión, grupo familiar y corroboración |
-| API central | FastAPI (Render) | — | Autenticación, reglas del negocio, cálculo de indicadores y predicción |
-| Modelo predictivo | scikit-learn (`ml-pipeline`) | — | Prepara los datos, entrena y compara algoritmos, y genera el modelo que usa la API |
+| API central | FastAPI (Render) | — | Autenticación, reglas del negocio y cálculo de indicadores |
+| Microservicio de inferencia | FastAPI + scikit-learn + SHAP (Render) | — | Carga el modelo, calcula el riesgo de cada paciente y lo explica con SHAP |
+| Pipeline de entrenamiento | scikit-learn (`ml-pipeline`) | — | Prepara los datos, compara algoritmos y genera el modelo que usa el microservicio |
 | Base de datos | PostgreSQL (Aiven) | — | Guarda usuarios, fichas, tomas y grupo familiar |
 
 #### c) Arquitectura y justificación
 
-Se eligió una **arquitectura por capas con servicios desacoplados**: los dos clientes (web y móvil) se comunican solo con la API central mediante REST, y la API es la única que accede a la base de datos y al modelo.
+Se eligió una **arquitectura de microservicios**: los dos clientes (web y móvil) se comunican solo con la API central mediante REST; la API es la única que accede a la base de datos y consulta, también por REST, al **microservicio de inferencia**, que es el único que carga el modelo.
+
+**Flujo:** panel web / app móvil → API central → base de datos · API central → microservicio de inferencia → modelo.
 
 | Decisión | Razón |
 | :--- | :--- |
 | Una API central para web y móvil | Las reglas clínicas y de seguridad se escriben una sola vez y valen para ambos clientes |
-| Modelo separado del resto del código | Se puede reentrenar y reemplazar sin modificar ni detener el sistema (RNF06) |
+| Modelo en un microservicio propio | Se reentrena, reemplaza o escala sin detener el resto del sistema (RNF06); si falla, la consulta clínica sigue funcionando |
+| Clave entre servicios y ficha anonimizada | El microservicio solo recibe variables clínicas con el código P-00N, nunca nombres ni contactos (RNF01) |
 | Aplicación móvil con cola local | El paciente registra su toma aunque no tenga señal; se envía al recuperar conexión |
 | Servicios en la nube gestionados | Despliegue real sin administrar servidores, con conexión cifrada (RNF01) |
 
@@ -175,9 +179,11 @@ El entrenamiento se ejecuta con `ml-pipeline/src/train_evaluate.py` y sigue esto
 5. **Comparación de cuatro algoritmos:** Regresión Logística, Random Forest, XGBoost y SVM, con ajuste de hiperparámetros y validación cruzada de 5 pliegues.
 6. **Selección:** gana el de mayor AUCROC. Si la prueba de McNemar no encuentra diferencia significativa con el segundo, gana el de mayor sensibilidad, porque el error más costoso es no detectar a un paciente en riesgo.
 7. **Evaluación final** sobre el 20 % de prueba, que el modelo nunca vio.
-8. **Despliegue:** se guarda el modelo completo (preparación + algoritmo) y la API lo usa para calcular la probabilidad de cada paciente.
+8. **Despliegue:** se guarda el modelo completo (preparación + algoritmo) y el microservicio de inferencia lo usa para calcular la probabilidad de cada paciente.
 
 La probabilidad se traduce en tres niveles: **bajo** (menos de 40 %), **medio** (40 % a 69 %) y **alto** (70 % o más).
+
+**Explicación con SHAP [11].** Para cada paciente, el microservicio calcula cuánto sube o baja el riesgo cada variable de su ficha respecto de un paciente de referencia. La suma de esas contribuciones lleva exactamente de la probabilidad de referencia a la del paciente, de modo que el médico ve **por qué** ese paciente tiene ese riesgo.
 
 #### g) Cómo se calculan los porcentajes y promedios
 
@@ -190,7 +196,7 @@ La probabilidad se traduce en tres niveles: **bajo** (menos de 40 %), **medio** 
 | Omisiones consecutivas | Tomas omitidas seguidas, contadas desde la más reciente |
 | Riesgo observado | **Alto:** cumplimiento < 60 % o 3+ omisiones seguidas. **Medio:** < 80 % o 2 seguidas. **Bajo:** en otro caso. Resume lo que el paciente ya hizo |
 | Riesgo predicho | Probabilidad que devuelve el modelo con la ficha del paciente. Anticipa lo que puede ocurrir |
-| Factores que más pesan | Cuánto empeora el modelo cuando se desordena cada variable (importancia por permutación) |
+| Por qué tiene ese riesgo (SHAP) | Contribución de cada variable, en puntos porcentuales: positiva si aumenta el riesgo, negativa si lo reduce. Probabilidad de referencia + contribuciones = probabilidad del paciente |
 | Adherencia promedio (reportes) | Promedio del cumplimiento de los pacientes con tomas registradas; cada paciente pesa lo mismo |
 | Tomas corroboradas (reportes) | Tomas cumplidas confirmadas por un familiar ÷ total de tomas cumplidas × 100 |
 
@@ -207,9 +213,9 @@ La pila se priorizó con **MoSCoW** según su relación con la hipótesis: *Must
 | RF01 | Como médico o paciente, quiero iniciar sesión con mi perfil para ver solo lo que me corresponde | Acceso solo con credenciales y perfil válidos; el error no revela qué dato falló | Must | 13 | 1 | **Terminado** |
 | RF02 | Como médico, quiero registrar y editar la ficha del paciente polimedicado para mantener sus datos clínicos al día | Ficha guardada y consultable; se rechaza a pacientes con menos de 5 fármacos | Must | 24 | 2–3 | **Terminado** |
 | RF03 | Como paciente, quiero registrar cada toma desde mi celular para que mi médico conozca mi cumplimiento real | Cada toma queda registrada y sincronizada, sin duplicarse al reenviar | Must | 16 | 2 | **Terminado** |
-| RF04 | Como médico, quiero ver el riesgo de incumplimiento de cada paciente para priorizar a quién contactar | La ficha muestra probabilidad, nivel y factores; el sistema sigue operando si el modelo falla | Must | 13 | 3 | **Terminado** |
+| RF04 | Como médico, quiero ver el riesgo de incumplimiento de cada paciente para priorizar a quién contactar | Un microservicio calcula probabilidad y nivel; el sistema sigue operando si el microservicio falla | Must | 21 | 3 | **Terminado** |
 | RF05 | Como médico, quiero recibir alertas cuando un paciente pase a riesgo alto para actuar antes del control | Alerta visible al médico cuando el riesgo llega a alto | Must | 5 | 3 | Pendiente |
-| RF06 | Como médico, quiero saber qué factores explican el riesgo de un paciente para decidir la intervención | Contribución individual de cada variable (SHAP) en la ficha | Should | 8 | 3 | **Parcial** |
+| RF06 | Como médico, quiero saber qué factores explican el riesgo de un paciente para decidir la intervención | Contribución individual de cada variable (SHAP) en la ficha; las contribuciones suman la probabilidad | Should | 8 | 3 | **Terminado** |
 | RF07 | Como médico, quiero reportes generales de mis pacientes para auditar la adherencia | Panel con indicadores globales, distribución de riesgo y exportación CSV | Should | 10 | 2–3 | **Terminado** |
 | RF08 | Como paciente, quiero recibir recordatorios de mis tomas para no olvidarlas | Aviso en el teléfono a la hora de cada toma, aun sin conexión | Could | 8 | 3 | **Terminado** |
 | RF09 | Como paciente, quiero que un familiar confirme mis tomas para que el registro no dependa solo de mi palabra | El familiar se une con un código de un solo uso y solo corrobora tomas cumplidas de las últimas 48 h | Should | 18 | 3 | **Terminado** |
@@ -219,6 +225,7 @@ La pila se priorizó con **MoSCoW** según su relación con la hipótesis: *Must
 
 - **Sprint 2:** la exportación de reportes (RF07) pasó al Sprint 3.
 - **Sprint 3:** se incorporaron **RF09** y **RF10**, nacidos de la revisión del producto: el registro de tomas dependía solo del paciente, y la recuperación de contraseña obligaba a ir al consultorio.
+- **Sprint 3:** RF04 se amplió con la separación del modelo en un microservicio de inferencia, para ajustarse a la arquitectura aprobada en el proyecto.
 - **Sprint 3:** se refinaron las variables de la ficha (RF02). Al tratarse de una clínica privada, el nivel socioeconómico, el tipo de seguro y la zona de residencia casi no varían entre pacientes y no ayudan a distinguir quién incumple. Se reemplazaron por **nivel educativo, convivencia y apoyo familiar**, que sí varían y se relacionan con la comprensión de las indicaciones y el olvido, las causas señaladas por el médico. Las comorbilidades pasaron de un número a una **lista de enfermedades**, para que la ficha sea específica.
 
 ---
@@ -398,7 +405,7 @@ Métricas: exactitud, sensibilidad, especificidad, F1-score y AUCROC (meta ≥ 0
 
 **Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*.**
 
-**Objetivo.** Integrar el modelo al sistema, completar la app del paciente y el grupo familiar, y seleccionar el algoritmo.
+**Objetivo.** Integrar el modelo al sistema mediante un microservicio de inferencia con explicación SHAP, completar la app del paciente y el grupo familiar, y seleccionar el algoritmo.
 
 **Tabla 17.** Sprint Backlog del Sprint 3.
 
@@ -406,6 +413,7 @@ Métricas: exactitud, sensibilidad, especificidad, F1-score y AUCROC (meta ≥ 0
 | :---: | :--- | :--- | :---: | :--- |
 | RF04 | Servicio de predicción | API | 8 | **Terminada** |
 | RF04 | Tarjeta de riesgo predicho en la ficha | Web | 5 | **Terminada** |
+| RF04 | Microservicio de inferencia independiente y cliente REST en el API | ML + API | 8 | **Terminada** |
 | RF08 | Recordatorios en el dispositivo | Móvil | 5 | **Terminada** |
 | RF08 | APK de publicación | Móvil | 3 | **Terminada** |
 | RF09 | Grupo familiar y corroboración | API | 8 | **Terminada** |
@@ -420,19 +428,44 @@ Métricas: exactitud, sensibilidad, especificidad, F1-score y AUCROC (meta ≥ 0
 | RNF04 | Reintento ante el arranque lento del servidor | Móvil | 2 | **Terminada** |
 | OE3 | Corrida de verificación del protocolo de selección | ML | 3 | **Terminada** |
 | RF05 | Alertas tempranas al médico | API + Web | 5 | Pendiente |
-| RF06 | Explicación individual con SHAP | ML + Web | 8 | Pendiente |
+| RF06 | Explicación individual con SHAP | ML + Web | 8 | **Terminada** |
 | OE3 | Comparación sobre las historias clínicas reales | ML | 5 | Bloqueada: depende de la extracción |
-| | **Comprometido: 86 · Completado al corte: 68 (79 %)** | | **86** | |
+| | **Comprometido: 94 · Completado al corte: 84 (89 %)** | | **94** | |
 
-#### a) Modelo integrado (RF04)
+#### a) Microservicio de inferencia (RF04)
 
-La API carga el modelo una sola vez, arma los datos de la ficha y devuelve la probabilidad, el nivel, los factores que más pesan y las variables que faltaban. Si el modelo no está disponible, la ficha se sigue mostrando sin la tarjeta de riesgo.
+El modelo se separó del API central en el servicio `ml-service`, desplegado de forma independiente. El API le envía por REST la ficha anonimizada con una clave de servicio y recibe la probabilidad, el nivel, las variables que faltaban y la explicación SHAP.
 
-#### b) Selección del algoritmo: corrida de verificación
+| Ruta del microservicio | Qué devuelve |
+| :--- | :--- |
+| `GET /modelo` | Algoritmo, fecha de entrenamiento y procedencia de los datos |
+| `POST /predicciones` | Probabilidad, nivel y explicación SHAP de un paciente |
+| `POST /predicciones/lote` | Probabilidad y nivel de varios pacientes (para reportes) |
+| `GET /health` | Disponibilidad del servicio |
+
+Si el microservicio no responde, la ficha y los reportes se muestran sin el riesgo predicho y el resto del sistema sigue operando.
+
+#### b) Explicación individual con SHAP (RF06)
+
+El microservicio aplica el explicador por permutaciones de SHAP [11], que funciona con cualquier algoritmo, incluido el SVM seleccionado. La referencia son 12 perfiles promedio del entrenamiento (centroides), no fichas de pacientes reales. La ficha muestra las seis variables con más peso, con barras que suben o bajan el riesgo.
+
+**Tabla 18.** Verificación de la explicación SHAP.
+
+| Verificación | Resultado |
+| :--- | :--- |
+| Probabilidad de referencia + contribuciones = probabilidad del paciente | ✔ Cumple en todas las pruebas (tolerancia 0,005) |
+| Coincidencia con el explicador *Kernel* de SHAP | ✔ Correlación 0,993; diferencia máxima 0,029 |
+| Misma ficha, misma explicación | ✔ Reproducible |
+| Más controles perdidos, mayor contribución de la inasistencia | ✔ |
+| Tiempo de respuesta con el servicio activo | ✔ ≈ 90 ms (meta RNF02: ≤ 2 s) |
+
+**Ejemplo con el paciente de demostración D-001.** Riesgo predicho 54 % frente a 34 % del paciente de referencia. Suben el riesgo: controles perdidos (+21,5 pp), inasistencia a controles (+15,4 pp) y tiempo de enfermedad (+6,9 pp). Lo bajan: controles programados (−11,0 pp), apoyo familiar en la medicación (−8,5 pp) y número de fármacos (−6,9 pp).
+
+#### c) Selección del algoritmo: corrida de verificación
 
 El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas: 320 de entrenamiento y 80 de prueba). En la preparación, el 2,25 % de las celdas estaba vacío (tiempo de enfermedad 12 %, nivel educativo 8 %, convivencia 5 %, edad 2 %) y la proporción fue de 334 adherentes y 66 incumplidores; SMOTE equilibró el entrenamiento a 267 y 267.
 
-**Tabla 18.** Comparación de algoritmos en la corrida de verificación (validación cruzada de 5 pliegues; media ± desviación).
+**Tabla 19.** Comparación de algoritmos en la corrida de verificación (validación cruzada de 5 pliegues; media ± desviación).
 
 | Algoritmo | Hiperparámetros | Exactitud | Sensibilidad | Especificidad | F1-score | AUCROC |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: |
@@ -443,28 +476,29 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 
 **Lectura.** Los cuatro algoritmos superan la meta de AUCROC ≥ 0,80. Regresión Logística obtuvo el mayor AUCROC, pero la prueba de McNemar frente a SVM no mostró diferencia significativa (10 casos discordantes, *p* = 0,754). Por el criterio de desempate se seleccionó **SVM**, que detecta más incumplidores (sensibilidad 0,794 frente a 0,625). En el conjunto de prueba, SVM obtuvo exactitud 0,775, sensibilidad 0,615, especificidad 0,806, F1-score 0,471 y AUCROC 0,809. Estas cifras verifican que el protocolo y el sistema funcionan; el resultado del OE3 se obtendrá con el mismo script sobre las historias clínicas reales.
 
-#### c) Aplicación del paciente y grupo familiar (RF08, RF09, RF10)
+#### d) Aplicación del paciente y grupo familiar (RF08, RF09, RF10)
 
 - **App instalable** con barra inferior (Hoy, Medicinas, Familia, Mi cuenta) y recordatorios que funcionan sin conexión.
 - **Grupo familiar:** el paciente invita a un familiar con un código; el familiar confirma las tomas cumplidas desde su teléfono. El historial del médico indica qué tomas tienen testigo.
 - **Recuperación de contraseña** por enlace de un solo uso enviado al correo.
 - **Acceso móvil:** el médico genera desde el panel la contraseña temporal del paciente.
 
-#### d) Ficha refinada y reportes generales (RF02, RF07)
+#### e) Ficha refinada y reportes generales (RF02, RF07)
 
 - **Ficha:** el formulario valida los datos antes de guardar, pide nivel educativo, convivencia y apoyo familiar, y permite marcar comorbilidades concretas; el sistema calcula el total.
 - **Reportes generales:** nueva sección del panel con pacientes activos, adherencia promedio, tomas registradas y corroboradas, distribución del riesgo observado y predicho, pacientes por diagnóstico, comorbilidades y motivos de omisión más frecuentes, y una tabla de pacientes ordenada por riesgo exportable a CSV.
 
-**Tabla 19.** Pruebas automatizadas al corte.
+**Tabla 20.** Pruebas automatizadas al corte.
 
 | Componente | Casos | Alcance | Resultado |
 | :--- | :---: | :--- | :---: |
-| API (`pytest`) | 102 | RF01–RF04, RF07, RF09, RF10, permisos, comorbilidades y carga del modelo desplegado | ✔ 102/102 |
+| API central (`pytest`) | 97 | RF01–RF04, RF07, RF09, RF10, permisos, cliente del microservicio e integración real con el modelo | ✔ 97/97 |
+| Microservicio de inferencia (`pytest`) | 13 | Predicción, lote, clave de servicio, propiedad aditiva de SHAP y versiones del modelo | ✔ 13/13 |
 | App móvil (`flutter test`) | 40 | Sincronización sin conexión, reintento, recordatorios, acceso y grupo familiar | ✔ 40/40 |
 | Panel web | — | Compilación y análisis estático; recorrido verificado en navegador | ✔ |
-| **Total** | **142** | | **✔** |
+| **Total** | **150** | | **✔** |
 
-**Tabla 20.** Incidencias del Sprint 3.
+**Tabla 21.** Incidencias del Sprint 3.
 
 | ID | Componente | Incidencia | Causa | Corrección | Estado |
 | :---: | :--- | :--- | :--- | :--- | :---: |
@@ -479,8 +513,9 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 | I-16 | Web | No se guardaban cambios en fichas D- | Se validaba el código también al editar | Validarlo solo en el alta | Cerrada |
 | I-17 | Web | La contraseña temporal desaparecía | Se recargaba la ficha al generarla | Recargar solo al ocultarla | Cerrada |
 | I-18 | ML | El desempate por sensibilidad no se aplicaba | El código solo desempataba con AUCROC idéntico | Aplicar McNemar antes de elegir | Cerrada |
+| I-19 | Microservicio | La primera explicación SHAP tardaba 5 s | SHAP se prepara internamente en su primer uso | Ejecutar una explicación de prueba al arrancar | Cerrada |
 
-**Pendiente del sprint.** Alertas tempranas al médico (RF05), explicación individual con SHAP (RF06) y comparación sobre las historias clínicas reales.
+**Pendiente del sprint.** Alertas tempranas al médico (RF05) y comparación sobre las historias clínicas reales.
 
 ---
 
@@ -490,7 +525,7 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 
 **Objetivo.** Medir rendimiento y usabilidad con usuarios reales y consolidar las evidencias.
 
-**Tabla 21.** Sprint Backlog previsto del Sprint 4.
+**Tabla 22.** Sprint Backlog previsto del Sprint 4.
 
 | Elemento | Tarea | Componente | Pts | Estado |
 | :---: | :--- | :--- | :---: | :--- |
@@ -504,29 +539,29 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 
 ### 1.1.7. Registro consolidado de incidencias
 
-**Tabla 22.** Incidencias por sprint.
+**Tabla 23.** Incidencias por sprint.
 
 | Sprint | Incidencias | Componentes tocados | Por componente | Detectadas por prueba o revisión | Abiertas |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | 1 | 4 | 0,25 | 0 de 1 (retrospectiva) | 0 |
 | 2 | 6 | 5 | 1,20 | 5 de 6 | 0 |
-| 3 *(al corte)* | 11 | 5 | 2,20 | 10 de 11 | 0 |
-| **Total** | **18** | — | — | **15 de 18** | **0** |
+| 3 *(al corte)* | 12 | 6 | 2,00 | 11 de 12 | 0 |
+| **Total** | **19** | — | — | **16 de 19** | **0** |
 
-**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas. Según su origen: seis por el comportamiento de librerías (I-02, I-03, I-05, I-06, I-09, I-10), cinco por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15), cuatro de interfaz (I-04, I-07, I-16, I-17), una de texto desactualizado (I-13), una de diseño (I-01) y una de diferencia entre el protocolo y su implementación (I-18).
+**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas. Según su origen: seis por el comportamiento de librerías (I-02, I-03, I-05, I-06, I-09, I-10), cinco por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15), cuatro de interfaz (I-04, I-07, I-16, I-17), una de texto desactualizado (I-13), una de diseño (I-01) una de diferencia entre el protocolo y su implementación (I-18) y una de rendimiento en el primer uso (I-19).
 
 ---
 
 ## 1.2. En base a los objetivos del proyecto
 
-**Tabla 23.** Estado de los objetivos específicos.
+**Tabla 24.** Estado de los objetivos específicos.
 
 | Objetivo | Resultado esperado | Estado | Evidencia |
 | :---: | :--- | :---: | :--- |
 | OE1 | Diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base propia en ejecución) | Tablas 7 y 8 |
 | OE2 | Requisitos y arquitectura | **Cumplido** (juicio de expertos en curso) | Tablas 2, 5 y 12 |
-| OE3 | Algoritmo seleccionado y reporte comparativo | **En ejecución** (~75 %) | Tablas 14 y 18 |
-| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~80 %) | Tablas 5, 17 y 19 |
+| OE3 | Algoritmo seleccionado y reporte comparativo | **En ejecución** (~80 %) | Tablas 14, 18 y 19 |
+| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~90 %) | Tablas 5, 17 y 20 |
 | OE5 | Validación de usabilidad | **Pendiente** (semana 7) | Anexo n.° 05 |
 
 ### 1.2.1. OE1 – Caracterizar el proceso actual de seguimiento terapéutico y los factores de incumplimiento
@@ -555,11 +590,11 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 | Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
 | Algoritmos comparados | ≥ 4 | **4**: Regresión Logística, Random Forest, XGBoost y SVM |
-| AUCROC en validación cruzada | ≥ 0,80 | Corrida de verificación: **0,856** (SVM seleccionado; Tabla 18) |
+| AUCROC en validación cruzada | ≥ 0,80 | Corrida de verificación: **0,856** (SVM seleccionado; Tabla 19) |
 | Sensibilidad y especificidad | Reportadas | Corrida de verificación: 0,794 y 0,757 |
 | F1-score en prueba independiente | Reportado | Corrida de verificación: 0,471 |
 
-El protocolo está implementado, verificado e integrado al sistema. Falta ejecutarlo sobre las historias clínicas reales cuando concluya la extracción del Anexo n.° 04.
+El protocolo está implementado, verificado y en servicio a través del microservicio de inferencia, que además explica cada predicción con SHAP. Falta ejecutarlo sobre las historias clínicas reales cuando concluya la extracción del Anexo n.° 04.
 
 ### 1.2.4. OE4 – Construir el sistema de soporte clínico
 
@@ -567,12 +602,12 @@ El protocolo está implementado, verificado e integrado al sistema. Falta ejecut
 
 | Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 79 % al corte |
-| Módulos construidos frente a requeridos | Todos | **8 de 10** RF operativos (RF01–RF04, RF07–RF10); RF06 parcial y RF05 pendiente |
-| Densidad de errores por sprint | Decreciente | 18 incidencias registradas y cerradas (Tabla 22); 142 pruebas en verde |
+| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 89 % al corte |
+| Módulos construidos frente a requeridos | Todos | **9 de 10** RF operativos (RF01–RF04, RF06–RF10); RF05 pendiente |
+| Densidad de errores por sprint | Decreciente | 19 incidencias registradas y cerradas (Tabla 23); 150 pruebas en verde |
 | Atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación en el Sprint 4 |
 
-**Escenario de extremo a extremo operativo:** el médico registra al paciente y le genera su acceso; el paciente recibe recordatorios y registra sus tomas desde el celular, incluso sin conexión; un familiar las corrobora; y el médico consulta en la ficha la adherencia, el riesgo predicho y, en reportes, la situación de todos sus pacientes.
+**Escenario de extremo a extremo operativo:** el médico registra al paciente y le genera su acceso; el paciente recibe recordatorios y registra sus tomas desde el celular, incluso sin conexión; un familiar las corrobora; y el médico consulta en la ficha la adherencia, el riesgo predicho con su explicación SHAP y, en reportes, la situación de todos sus pacientes.
 
 ### 1.2.5. OE5 – Evaluar la usabilidad del sistema mediante la escala SUS
 
