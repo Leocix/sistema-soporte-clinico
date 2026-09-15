@@ -1,13 +1,13 @@
 # App del paciente — CDSS Adherencia
 
-Aplicación Flutter del paciente polimedicado. Cubre RF01 (acceso con perfil de
-paciente), RF03 (registro de la toma con sincronización) y RF08 (recordatorios
-de toma).
+Aplicación Flutter del paciente polimedicado y de su acompañante familiar.
+Cubre RF01 (acceso con perfil de paciente o familiar), RF03 (registro de la toma
+con sincronización sin conexión), RF08 (recordatorios de toma), RF09
+(corroboración por el grupo familiar) y RF10 (recuperación de la contraseña).
 
-Verificado con **Flutter 3.47.2**: `flutter analyze` sin incidencias, **21
-pruebas en verde** y **APK de depuración compilado**, con los permisos de
-notificación confirmados dentro del paquete. Pendiente de ejecutarse en un
-dispositivo real.
+Verificado con **Flutter 3.47.2**: `flutter analyze` sin incidencias, **40
+pruebas en verde** y **APK de publicación** instalado y probado en un
+dispositivo Android real.
 
 ## Puesta en marcha
 

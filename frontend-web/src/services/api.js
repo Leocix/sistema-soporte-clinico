@@ -66,11 +66,6 @@ export function mensajeDeError(error) {
   return 'Ocurrio un error inesperado.'
 }
 
-/** El identificador de traza permite correlacionar el fallo con el log del API. */
-export function trazaDeError(error) {
-  return error?.response?.data?.id_traza ?? null
-}
-
 let alExpirarSesion = null
 
 /** Registra que hacer cuando el API responde 401 (token vencido o invalido). */

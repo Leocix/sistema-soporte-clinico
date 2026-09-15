@@ -179,7 +179,7 @@ Para que el repositorio y la memoria no se contradigan:
 | :--- | :--- | :--- |
 | Product Backlog general | Sección 2 (pila viva, se edita) | Apartado 1.1.1, Tabla 2 (corte del 50 %) |
 | Sprint Backlog de cada sprint | — | Apartados 1.1.2 a 1.1.5, Tablas 6, 8, 16 y 21 |
-| Registro de incidencias | — | Cierre de cada sprint y consolidado en 1.1.6, Tabla 22 |
+| Registro de incidencias | — | Cierre de cada sprint y consolidado en 1.1.6, Tabla 23 |
 | Actas de ceremonias | `Actas_Sprint.md` | Resumen en el cierre de cada sprint |
 
 Este archivo es la **pila viva**: se edita al refinar. El pre informe congela el

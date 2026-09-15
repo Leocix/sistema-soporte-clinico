@@ -441,7 +441,7 @@ El tratamiento es diferenciado por naturaleza de la variable y —decisión cent
 
 El pipeline emite un **reporte de preparación en formato JSON** (`data/processed/reporte_preparacion.json`) con el porcentaje de celdas faltantes por variable antes de imputar, el conteo de valores fuera de rango y la distribución de clases. Este reporte constituye la evidencia auditable de la fase *Data Preparation*.
 
-**Porcentaje de celdas faltantes en el dataset del consultorio:** se obtiene del reporte anterior al ejecutar el pipeline sobre la extracción del Anexo n.° 04, en curso; se reporta al cierre del Sprint 3.
+**Porcentaje de celdas faltantes.** En la corrida de verificación del pipeline (conjunto de demostración de 400 fichas con la estructura del Anexo n.° 04) el reporte registró un **2,25 %** de celdas faltantes, concentradas en el tiempo de enfermedad (12,0 %), el nivel socioeconómico (8,0 %), la zona de residencia (5,0 %) y la edad (2,0 %), además de 8 valores fuera de rango tratados como ausentes. La distribución de clases fue de 344 adherentes y 56 no adherentes (desbalance 6,14 : 1), que SMOTE llevó a 275 : 275 en entrenamiento. El valor sobre la extracción del consultorio se reporta al cierre del Sprint 3.
 
 #### e) Balanceo de clases con SMOTE
 
@@ -488,15 +488,28 @@ El preprocesador ajustado se serializa (`models/preprocesador_v1.pkl`) junto al 
 
 Por eso `train_evaluate.py` parte del dataset **crudo** y encadena imputación, codificación, escalado, SMOTE y clasificador en un único objeto (`imblearn.Pipeline`) que la rutina de validación cruzada reajusta por completo en cada pliegue. El conjunto de prueba se aparta antes de todo y nunca se balancea: conserva la prevalencia real del consultorio, que es la distribución sobre la que operará el sistema.
 
-**Verificación del flujo.** El script se ejecutó de extremo a extremo sobre datos sintéticos, recorriendo las cuatro configuraciones, la búsqueda de hiperparámetros, los cinco pliegues, la evaluación en prueba, el contraste de McNemar y la escritura de los tres artefactos. **Los valores de esa corrida son artificiales y no se reportan como resultado de la investigación.**
+**Verificación del flujo.** El script se ejecutó de extremo a extremo sobre datos sintéticos, recorriendo las cuatro configuraciones, la búsqueda de hiperparámetros, los cinco pliegues, la evaluación en prueba, el contraste de McNemar y la escritura de los tres artefactos.
 
-**Resultados comparativos: en ejecución.** La comparación se ejecuta sobre el dataset del consultorio una vez concluida la extracción del Anexo n.° 04, dentro del Sprint 3, que es también el que el cronograma asigna a la selección del algoritmo. El script emite la tabla comparativa (`data/processed/tabla_comparativa.md`) en el formato de este informe, de modo que su incorporación no requiere reelaboración.
+**Resultados comparativos de la corrida de verificación.** El protocolo completo se ejecutó sobre el conjunto de demostración de 400 fichas (320 de entrenamiento y 80 de prueba), con búsqueda de hiperparámetros y validación cruzada estratificada de 5 pliegues:
+
+**Tabla 13.** Comparación de algoritmos en la corrida de verificación del protocolo (conjunto de demostración, validación cruzada estratificada de 5 pliegues; media ± desviación estándar).
+
+| Algoritmo | Hiperparámetros seleccionados | Exactitud | Sensibilidad | Especificidad | F1-score | AUCROC |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: |
+| **SVM (RBF)** *(seleccionado)* | `C=10`, `gamma=0,01` | 0,847 ± 0,048 | 0,778 ± 0,199 | 0,858 ± 0,049 | 0,586 ± 0,132 | **0,894 ± 0,060** |
+| Regresión Logística | `C=0,1`, `penalty='l2'` | 0,806 ± 0,042 | 0,844 ± 0,259 | 0,800 ± 0,038 | 0,540 ± 0,139 | 0,883 ± 0,071 |
+| Random Forest | `n_estimators=200`, `max_depth=8`, `min_samples_leaf=3` | 0,844 ± 0,040 | 0,400 ± 0,229 | 0,916 ± 0,037 | 0,398 ± 0,179 | 0,880 ± 0,056 |
+| XGBoost | `n_estimators=200`, `learning_rate=0,1`, `max_depth=7` | 0,856 ± 0,050 | 0,511 ± 0,206 | 0,913 ± 0,041 | 0,492 ± 0,182 | 0,873 ± 0,056 |
+
+Sobre el conjunto de prueba apartado, el modelo seleccionado obtuvo exactitud 0,763, sensibilidad 0,636, especificidad 0,783, F1-score 0,424 y **AUCROC 0,862**. La prueba de McNemar entre los dos mejores clasificadores (SVM y Regresión Logística; versión binomial exacta, 6 casos discordantes) no mostró diferencia significativa (*p* = 1,00), de modo que la elección se sostiene en el criterio de desempate declarado.
+
+La corrida confirma tres propiedades del protocolo: los cuatro algoritmos se comparan bajo las mismas particiones; SMOTE dentro de cada pliegue no infla el AUCROC —las cifras de validación y de prueba son coherentes—; y el modelo que llega al sistema es exactamente el seleccionado, pues la ficha del modelo desplegado (`risk_model_v1.json`) reproduce las mismas cifras. Estos valores **verifican el protocolo y el sistema**; el reporte comparativo que responde al OE3 se obtiene con el mismo script sobre la extracción del consultorio, en el Sprint 3.
 
 #### g) Cierre del núcleo funcional: gestión de pacientes (RF02) y registro de adherencia (RF03)
 
 Se completaron los servicios REST de ambas historias, con validación estricta de esquemas Pydantic y control de acceso por rol.
 
-**Tabla 13.** Servicios REST del núcleo funcional expuestos al corte.
+**Tabla 14.** Servicios REST del núcleo funcional expuestos al corte.
 
 | Método | Ruta | Requisito | Autorización |
 | :--- | :--- | :---: | :--- |
@@ -534,7 +547,7 @@ Las rutas de RF04, RF09, RF10 y la de acceso móvil se incorporaron en el Sprint
 
 #### h) Evidencia de pruebas del núcleo funcional
 
-Se construyó una batería automatizada con `pytest` sobre una base de datos en memoria (`backend-api/tests/`). **Resultado al cierre de este sprint: 25 de 25 pruebas en verde.** El recuento acumulado tras el Sprint 3 figura en la Tabla 19.
+Se construyó una batería automatizada con `pytest` sobre una base de datos en memoria (`backend-api/tests/`). **Resultado al cierre de este sprint: 25 de 25 pruebas en verde.** El recuento acumulado tras el Sprint 3 figura en la Tabla 20.
 
 | Grupo | Caso verificado | Resultado |
 | :--- | :--- | :---: |
@@ -566,7 +579,7 @@ lo integran están desplegados y accesibles, lo que permite verificar los
 requisitos no funcionales sobre la infraestructura real y no sobre una
 simulación.
 
-**Tabla 14.** Componentes desplegados y su verificación.
+**Tabla 15.** Componentes desplegados y su verificación.
 
 | Componente | Plataforma | Verificación ejecutada |
 | :--- | :--- | :--- |
@@ -609,7 +622,7 @@ el servicio ya activo durante las pruebas de carga del Sprint 4.
 
 Las actas completas de ambas ceremonias, con los entregables aceptados, las observaciones del Product Owner y los compromisos del sprint siguiente, constan en el Anexo n.° 11.
 
-**Tabla 15.** Registro de incidencias del Sprint 2.
+**Tabla 16.** Registro de incidencias del Sprint 2.
 
 | ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
 | :---: | :--- | :--- | :--- | :--- | :--- | :---: |
@@ -636,7 +649,7 @@ verificación dirigida, y ninguno por casualidad. **Cero abiertos al cierre.**
 
 **Sobre el adelanto de alcance.** Parte del trabajo de este sprint se ejecutó antes del corte del 50 %. La razón no fue de cronograma sino técnica: el Sprint 2 dejó el modelo entrenado y serializado, pero un artefacto `.pkl` en un directorio no es un componente del sistema. Mientras no exista una ruta que lo cargue, lo alimente con los datos de una ficha real y devuelva una probabilidad, el objetivo OE4 —construir el sistema integrando el modelo— permanece sin evidencia. Se decidió por tanto adelantar la integración, que es lo que convierte el modelo en parte del producto acreditable.
 
-**Tabla 16.** Sprint Backlog del Sprint 3 (semanas 5–6), al corte del 50 %.
+**Tabla 17.** Sprint Backlog del Sprint 3 (semanas 5–6), al corte del 50 %.
 
 | Elemento de la pila | Tarea comprometida | Componente | Est. | Estado |
 | :---: | :--- | :--- | :---: | :--- |
@@ -666,7 +679,7 @@ cuatro elementos restantes conservan su compromiso dentro del mismo sprint.
 
 El módulo `backend-api/app/services/ml_inference.py` carga el *pipeline* serializado una sola vez por proceso (`lru_cache`), construye la fila de características a partir de la ficha del paciente y devuelve la probabilidad de incumplimiento junto con su interpretación clínica. La ruta `GET /api/prediccion/pacientes/{id}` la expone al panel médico.
 
-**Tabla 17.** Contrato de la predicción devuelta por el sistema.
+**Tabla 18.** Contrato de la predicción devuelta por el sistema.
 
 | Campo | Contenido | Por qué forma parte del contrato |
 | :--- | :--- | :--- |
@@ -703,7 +716,7 @@ Toda la traza de adherencia construida hasta el Sprint 2 es **autorreporte**: el
 
 Se incorporó un **grupo familiar de acompañamiento**: el paciente invita hasta cinco convivientes con un código de un solo uso; el acompañante corrobora desde su propio dispositivo las dosis que el paciente ya reportó. La corroboración **se añade** al registro, no lo sustituye ni lo modifica.
 
-**Tabla 18.** Reglas del acompañamiento familiar y su fundamento.
+**Tabla 19.** Reglas del acompañamiento familiar y su fundamento.
 
 | Regla implementada | Fundamento |
 | :--- | :--- |
@@ -727,7 +740,7 @@ El formulario de alta y edición **valida la ficha antes de enviarla**. Distingu
 
 #### f) Evidencia de pruebas del sprint
 
-**Tabla 19.** Batería automatizada al corte, por componente.
+**Tabla 20.** Batería automatizada al corte, por componente.
 
 | Componente | Casos | Alcance verificado | Resultado |
 | :--- | :---: | :--- | :---: |
@@ -740,7 +753,7 @@ Las pruebas del acompañamiento familiar y del restablecimiento no verifican ún
 
 #### g) Registro de incidencias del sprint
 
-**Tabla 20.** Registro de incidencias del Sprint 3, al corte del 50 %.
+**Tabla 21.** Registro de incidencias del Sprint 3, al corte del 50 %.
 
 | ID | Componente | Incidencia | Detección | Causa raíz | Corrección | Estado |
 | :---: | :--- | :--- | :--- | :--- | :--- | :---: |
@@ -786,7 +799,7 @@ Conforme al cronograma, restan dentro del Sprint 3: el módulo de **alertas temp
 funcionales, medir la usabilidad con usuarios reales y consolidar las evidencias
 de la investigación.
 
-**Tabla 21.** Sprint Backlog previsto del Sprint 4 (semanas 7–8).
+**Tabla 22.** Sprint Backlog previsto del Sprint 4 (semanas 7–8).
 
 | Elemento de la pila | Tarea prevista | Componente | Est. | Estado |
 | :---: | :--- | :--- | :---: | :--- |
@@ -808,7 +821,7 @@ indicador de **densidad de errores por módulo al cierre de cada sprint** del OE
 Sin un registro con causa raíz y forma de detección, ese indicador sería un número
 sin respaldo.
 
-**Tabla 22.** Densidad de defectos por sprint y forma de detección.
+**Tabla 23.** Densidad de defectos por sprint y forma de detección.
 
 | Sprint | Defectos registrados | Componentes tocados | Densidad (def./componente) | Detectados por prueba automatizada o verificación dirigida | Abiertos al cierre |
 | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -844,13 +857,13 @@ de deducirlo del nombre del método.
 
 ## 1.2. En base a los objetivos del proyecto
 
-**Tabla 23.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
+**Tabla 24.** Estado de cumplimiento de los objetivos específicos al corte de la semana 4.
 
 | Objetivo | Resultado esperado | Estado al corte | Evidencia principal |
 | :---: | :--- | :---: | :--- |
 | OE1 | Informe de diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base cuantitativa en consolidación) | Anexo n.° 03 aplicado; Tablas 3 y 4 |
 | OE2 | Documento de requisitos y arquitectura | **Cumplido** | Tablas 2 y 9; `backend-api/app/main.py` |
-| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~70 %) | `preprocess.py`, `train_evaluate.py` y modelo integrado en el sistema; Tablas 12 y 17 |
+| OE3 | Modelo predictivo seleccionado y reporte comparativo | **En ejecución** (~70 %) | `preprocess.py`, `train_evaluate.py` y modelo integrado en el sistema; Tablas 12, 13 y 18 |
 | OE4 | Sistema de soporte clínico funcional | **En ejecución** (~70 %) | RF01–RF04, RF08, RF09 y RF10 operativos y desplegados |
 | OE5 | Informe de validación de usabilidad | **Pendiente** (programado semana 7) | Anexo n.° 05 (SUS) formalizado |
 
@@ -888,9 +901,9 @@ La arquitectura de microservicios desacoplados quedó definida en cuatro capas �
 | Indicador del objetivo | Meta | Resultado al corte |
 | :--- | :--- | :--- |
 | N.° de algoritmos comparados | ≥ 4 | **4 configurados**: Regresión Logística, Random Forest, XGBoost y SVM (Tabla 12) |
-| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); medición sobre el dataset del consultorio en el Sprint 3 |
-| Sensibilidad y especificidad del modelo seleccionado | Reportadas | Calculadas por el script; pendientes de la extracción definitiva |
-| F1-score en datos de prueba independientes | Reportado | Calculado sobre el conjunto apartado; pendiente de la extracción definitiva |
+| AUCROC en validación cruzada estratificada | ≥ 0,80 | Protocolo **implementado y verificado** (5 pliegues estratificados, semilla fija); corrida de verificación: **0,894** (SVM), meta alcanzada por los cuatro algoritmos (Tabla 13); medición sobre la extracción del consultorio en el Sprint 3 |
+| Sensibilidad y especificidad del modelo seleccionado | Reportadas | Corrida de verificación: 0,778 y 0,858 en validación cruzada (Tabla 13) |
+| F1-score en datos de prueba independientes | Reportado | Corrida de verificación: 0,424 sobre el conjunto apartado |
 
 **Demostración del avance.** La fase *Data Preparation* está **completa y automatizada**: el script `preprocess.py` valida el esquema contra el Anexo n.° 04, depura el dataset con siete reglas documentadas, perfila y trata los valores faltantes, deriva tres características clínicamente fundamentadas, particiona de forma estratificada, ajusta el preprocesador solo con entrenamiento, aplica SMOTE solo al entrenamiento y serializa tanto los conjuntos resultantes como el preprocesador y un reporte JSON auditable de todas las transformaciones.
 
@@ -912,7 +925,7 @@ El criterio de selección es el mayor AUCROC, con desempate por sensibilidad: el
 | :--- | :--- | :--- |
 | Porcentaje de cumplimiento de historias de usuario | 100 % por sprint | **5 de 5** historias cerradas de extremo a extremo y verificadas (HU01–HU05): **100 %** del alcance comprometido para los Sprints 1 y 2, más el alcance adelantado del Sprint 3 |
 | N.° de módulos construidos frente a módulos requeridos | Todos los módulos | **7 de 10** requisitos funcionales operativos de extremo a extremo (RF01–RF04, RF08, RF09, RF10), con los tres componentes del sistema desplegados y un APK de publicación instalable |
-| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **17 incidencias registradas y cerradas**, con su causa raíz y forma de detección en el registro consolidado del apartado 1.1.6 (Tabla 22). Catorce de las diecisiete se detectaron por prueba automatizada o verificación dirigida. **0 abiertas** al corte; 131 de 131 pruebas en verde |
+| Densidad de errores por módulo al cierre de cada sprint | Decreciente | **17 incidencias registradas y cerradas**, con su causa raíz y forma de detección en el registro consolidado del apartado 1.1.6 (Tabla 23). Catorce de las diecisiete se detectaron por prueba automatizada o verificación dirigida. **0 abiertas** al corte; 131 de 131 pruebas en verde |
 | Porcentaje de cumplimiento de atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación formal programada para el Sprint 4 |
 
 **Demostración del avance.** El núcleo funcional está operativo y verificado:
