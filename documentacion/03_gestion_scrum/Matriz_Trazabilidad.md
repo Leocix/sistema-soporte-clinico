@@ -36,9 +36,9 @@ del repositorio.
 | RF03 | Registro de toma con sincronización idempotente | API | `backend-api/app/api/adherencia.py` | 12 pruebas | ✅ |
 | RF03 | Cola local y envío en lote sin conexión | Móvil | `app-movil/lib/services/sincronizacion.dart` | 9 pruebas | ✅ |
 | RF03 | Confirmación de dosis y registro de omisión | Móvil | `app-movil/lib/screens/home_screen.dart`, `registro_toma.dart` | Verificado por análisis y pruebas | ✅ |
-| RF04 | Predicción de riesgo de incumplimiento | ML | `ml-pipeline/src/train_evaluate.py` (modelo) | Flujo verificado; falta dataset real | ◐ |
-| RF05 | Alertas tempranas al médico | Web | — | Sprint 3 | ○ |
-| RF06 | Explicabilidad SHAP | ML/Web | — | Sprint 3 | ○ |
+| RF04 | Predicción de riesgo en un microservicio de inferencia | ML + API | `ml-service/app/modelo.py`, `backend-api/app/services/ml_inference.py` | 13 pruebas del microservicio + 12 del API (2 de integración real) | ✅ |
+| RF05 | Alertas tempranas al médico | Web | — | Pendiente | ○ |
+| RF06 | Explicación individual con SHAP | ML + Web | `ml-service/app/modelo.py`, `frontend-web/src/components/PrediccionRiesgo.jsx` | Propiedad aditiva probada; contraste con KernelExplainer (r = 0,993) | ✅ |
 | RF07 | Panel de auditoría y reportes generales exportables | API + Web | `frontend-web/src/pages/Dashboard.jsx`, `Reportes.jsx`, `backend-api/app/api/reportes.py` | `tests/test_reportes.py` + verificación en navegador | ✅ |
 | RF08 | Alertas de toma programadas en el dispositivo | Móvil | `app-movil/lib/services/notification_service.dart` | 7 pruebas · permisos verificados en el APK | ✅ |
 | RF09 | Grupo familiar: invitación, alta por código y corroboración | API | `backend-api/app/api/familiares.py` | 19 pruebas | ✅ |

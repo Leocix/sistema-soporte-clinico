@@ -9,15 +9,25 @@ from pydantic import BaseModel, Field
 class FactorInfluyente(BaseModel):
     """Variable que mas pesa en el modelo, con el valor de este paciente.
 
-    La importancia es global del modelo, no la contribucion de la variable a
-    esta prediccion concreta. La atribucion individual con SHAP corresponde a
-    RF06 (Sprint 3), y el campo `alcance` de la respuesta lo hace explicito
-    para que la interfaz no pueda presentarla como personal.
+    La importancia es global del modelo. La contribucion de cada variable a la
+    prediccion concreta de este paciente va en `contribuciones` (SHAP).
     """
 
     variable: str
     importancia: float
     valor_paciente: float | str | None = None
+
+
+class ContribucionShap(BaseModel):
+    """Aporte de una variable a la prediccion de ESTE paciente (RF06).
+
+    Positivo: empuja la probabilidad hacia el incumplimiento; negativo: la
+    aleja. El valor base mas la suma de las contribuciones da la probabilidad.
+    """
+
+    variable: str
+    valor_paciente: float | str | None = None
+    contribucion: float
 
 
 class FichaModelo(BaseModel):
@@ -42,9 +52,17 @@ class PrediccionRiesgo(BaseModel):
     probabilidad: float = Field(ge=0, le=1, description="Probabilidad de incumplimiento")
     nivel: str = Field(description="alto, medio o bajo")
 
+    # Explicacion individual con SHAP (RF06), de mayor a menor peso.
+    valor_base: float | None = Field(
+        default=None, description="Probabilidad del paciente de referencia"
+    )
+    contribuciones: list[ContribucionShap] = []
+
+    # Importancia global del modelo, como contexto de la explicacion individual.
     factores: list[FactorInfluyente]
     alcance_factores: str = (
-        "Importancia global del modelo, no contribucion individual de este paciente."
+        "Importancia global del modelo: cuanto depende el modelo de cada variable "
+        "en general, no en este paciente."
     )
 
     # Variables que la ficha no tenia y que el pipeline imputo; permiten al

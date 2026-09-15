@@ -83,4 +83,6 @@ def predecir_riesgo(
         factores=resultado.factores,
         variables_imputadas=resultado.variables_imputadas,
         modelo=resultado.ficha_modelo,
+        valor_base=resultado.valor_base,
+        contribuciones=resultado.contribuciones,
     )

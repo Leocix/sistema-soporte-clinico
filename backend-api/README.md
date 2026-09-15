@@ -33,11 +33,11 @@ Una vez arriba: <http://127.0.0.1:8000/docs> (documentación interactiva) y
 pip install -r requirements.txt
 ```
 
-Incluye las librerías de inferencia (scikit-learn, imbalanced-learn, numpy,
-pandas, joblib) **con las versiones exactas del entorno de entrenamiento**: el
-modelo serializado solo es fiable con ellas. `tests/test_modelo_desplegado.py`
-carga el artefacto real y falla si las versiones instaladas no coinciden con
-las declaradas.
+El API no carga el modelo: lo consulta por REST al microservicio de
+inferencia (`ml-service/`), que debe estar en marcha para ver el riesgo en la
+ficha. Configure `ML_SERVICE_URL` y `ML_SERVICE_CLAVE` en `.env`. Si el
+microservicio no responde, el resto del API funciona y la predicción devuelve
+`503`.
 
 Copia `.env.example` como `.env` y complétalo. La clave de firma se genera con:
 
@@ -87,20 +87,22 @@ el dataset de entrenamiento ni en los resultados de la tesis**.
 python -m pytest -q
 ```
 
-91 casos sobre una base en memoria: reglas clínicas, idempotencia de la
+97 casos sobre una base en memoria: reglas clínicas, idempotencia de la
 sincronización, control de acceso por rol, grupo familiar, recuperación de
-contraseña, acceso móvil y carga del modelo desplegado.
+contraseña, acceso móvil, reportes y cliente del microservicio. Los 2 de
+`test_integracion_ml.py` conectan con el microservicio y el modelo reales y se
+omiten si no están instaladas las dependencias de `ml-service`.
 
 ## Estructura
 
 ```
 app/
 ├── main.py              # CORS, middlewares de seguridad, manejo global de errores
-├── api/                 # auth, pacientes, adherencia, familiares, prediccion
+├── api/                 # auth, pacientes, adherencia, familiares, prediccion, reportes
 ├── core/                # config, security (JWT + RBAC), exceptions
 ├── db/                  # database (motor y sesión), models (SQLAlchemy)
 ├── schemas/             # Validación estricta de entrada y salida (Pydantic)
-└── services/            # acceso a la ficha, inferencia del modelo, correo
+└── services/            # acceso a la ficha, cliente del microservicio, correo
 alembic/                 # Migraciones versionadas del esquema clínico
 scripts/                 # seed.py
 tests/                   # Batería de pruebas del núcleo funcional

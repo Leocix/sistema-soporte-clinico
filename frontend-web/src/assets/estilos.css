@@ -397,6 +397,30 @@ p { margin: 0; }
   .factor__barra { display: none; }
 }
 
+/* Explicación SHAP: barras divergentes desde un eje central. */
+.shap__lectura { font-size: 0.86rem; color: var(--texto-suave); margin: 0 0 0.6rem; }
+.shap { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.shap__fila {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 34%) 70px;
+  align-items: center; gap: 0.6rem; font-size: 0.86rem;
+}
+.shap__nombre { display: flex; flex-direction: column; min-width: 0; }
+.shap__nombre small { color: var(--texto-suave); font-size: 0.76rem; }
+.shap__eje { display: grid; grid-template-columns: 1fr 1fr; height: 10px; }
+.shap__mitad { display: flex; background: rgba(23, 32, 51, 0.07); }
+.shap__mitad--baja { justify-content: flex-end; border-right: 2px solid var(--texto-tenue); }
+.shap__barra { display: block; height: 100%; }
+.shap__barra--sube { background: var(--alto); border-radius: 0 4px 4px 0; }
+.shap__barra--baja { background: var(--bajo); border-radius: 4px 0 0 4px; }
+.shap__valor { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+.shap__valor--sube { color: var(--alto); }
+.shap__valor--baja { color: var(--bajo); }
+
+@media (max-width: 560px) {
+  .shap__fila { grid-template-columns: minmax(0, 1fr) 70px; }
+  .shap__eje { display: none; }
+}
+
 /* --- Detalle del paciente --------------------------------------------------- */
 
 .detalle { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 1.5rem; align-items: start; }

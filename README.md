@@ -20,11 +20,12 @@ antes de la cita.
 
 | Directorio | Componente | Estado |
 | :--- | :--- | :--- |
-| [`backend-api/`](backend-api/) | API Gateway (FastAPI + PostgreSQL) | RF01–RF03 operativos |
-| [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Acceso, auditoría y ficha clínica |
+| [`backend-api/`](backend-api/) | API central (FastAPI + PostgreSQL) | Acceso, pacientes, tomas, grupo familiar, reportes |
+| [`ml-service/`](ml-service/) | Microservicio de inferencia (FastAPI + scikit-learn + SHAP) | Predicción y explicación individual |
+| [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Ficha, riesgo con SHAP y reportes generales |
 | [`app-movil/`](app-movil/) | App del paciente y su familia (Flutter) | Acceso, registro de tomas sin conexión, alertas y grupo familiar |
 | [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación, comparación de algoritmos y modelo en servicio |
-| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe al 50 % |
+| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe al 50 % y avance al 65 % |
 
 ## Requisitos funcionales
 
@@ -34,9 +35,9 @@ antes de la cita.
 | RF02 | Gestión de pacientes polimedicados y esquema farmacológico | Must | Implementado |
 | RF03 | Registro de la toma de medicamentos desde la app móvil | Must | Implementado |
 | RF04 | Predicción del riesgo de incumplimiento | Must | Implementado |
-| RF05 | Alertas tempranas al médico | Must | Sprint 3 |
-| RF06 | Explicabilidad de la predicción (SHAP) | Should | Parcial: importancia global |
-| RF07 | Panel de auditoría con reportes exportables | Should | Parcial |
+| RF05 | Alertas tempranas al médico | Must | Pendiente |
+| RF06 | Explicabilidad de la predicción (SHAP) | Should | Implementado |
+| RF07 | Panel de auditoría con reportes exportables | Should | Implementado |
 | RF08 | Recordatorios de toma al paciente | Could | Implementado |
 | RF09 | Corroboración de la toma por el grupo familiar | Should | Implementado |
 | RF10 | Restablecimiento de la contraseña por correo | Should | Implementado |
@@ -44,6 +45,10 @@ antes de la cita.
 ## Puesta en marcha
 
 Requiere Python 3.12+, Node 20+ y una base PostgreSQL (o SQLite en local).
+
+```bash
+cd ml-service && pip install -r requirements.txt && uvicorn app.main:app --port 8001
+```
 
 ```bash
 cd backend-api && pip install -r requirements.txt && alembic upgrade head && python run.py
@@ -62,6 +67,10 @@ Aiven, Render y Vercel, en [`DESPLIEGUE.md`](DESPLIEGUE.md).
 
 ```bash
 cd backend-api && python -m pytest -q
+```
+
+```bash
+cd ml-service && python -m pytest -q
 ```
 
 ```bash

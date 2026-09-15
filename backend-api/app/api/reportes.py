@@ -92,7 +92,11 @@ def clasificar_riesgo_observado(tasa: float | None, racha: int) -> str:
     return "bajo"
 
 
-def _fila(paciente: Paciente, eventos: list[RegistroAdherencia]) -> FilaPaciente:
+def _fila(
+    paciente: Paciente,
+    eventos: list[RegistroAdherencia],
+    prediccion: tuple[float, str] | None,
+) -> FilaPaciente:
     """Indicadores de un paciente; `eventos` en orden cronologico."""
     cumplidos = sum(e.estado in ESTADOS_CUMPLIDOS for e in eventos)
     omitidos = sum(e.estado is EstadoToma.OMITIDA for e in eventos)
@@ -106,11 +110,7 @@ def _fila(paciente: Paciente, eventos: list[RegistroAdherencia]) -> FilaPaciente
         elif evento.estado in ESTADOS_CUMPLIDOS:
             break
 
-    try:
-        prediccion = ml_inference.predecir(paciente)
-        probabilidad, nivel = prediccion.probabilidad, prediccion.nivel
-    except ModeloNoDisponibleError:
-        probabilidad = nivel = None
+    probabilidad, nivel = prediccion if prediccion else (None, None)
 
     return FilaPaciente(
         id_paciente=paciente.id_paciente,
@@ -149,7 +149,15 @@ def construir_reporte(db: Session, medico: Usuario, dias: int | None) -> Reporte
     for evento in eventos:
         por_paciente[evento.id_paciente].append(evento)
 
-    filas = [_fila(p, por_paciente[p.id_paciente]) for p in pacientes]
+    # Una sola peticion al microservicio para todos los pacientes.
+    try:
+        predicciones = ml_inference.predecir_lote(pacientes)
+    except ModeloNoDisponibleError:
+        predicciones = {}
+    filas = [
+        _fila(p, por_paciente[p.id_paciente], predicciones.get(p.codigo_anonimizado))
+        for p in pacientes
+    ]
     # Los de mayor riesgo primero: es el orden util para decidir a quien llamar.
     orden = {"alto": 0, "medio": 1, "bajo": 2, "sin_datos": 3}
     filas.sort(key=lambda f: (orden[f.riesgo_observado], f.tasa_adherencia or 0))

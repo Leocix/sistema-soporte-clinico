@@ -298,6 +298,28 @@ def evaluar_en_prueba(pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> dict
     }
 
 
+def fondo_de_referencia(pipeline, X_train: pd.DataFrame, n_grupos: int = 12) -> dict:
+    """Pacientes de referencia contra los que SHAP mide cada contribucion.
+
+    SHAP explica una prediccion comparandola con lo que el modelo diria de un
+    paciente "tipico". En lugar de guardar fichas reales del entrenamiento
+    —que con datos del consultorio serian registros clinicos dentro del
+    repositorio—, se guardan los centroides de k-medias en el espacio ya
+    preparado (imputado, codificado y escalado). Resumen la poblacion sin
+    corresponder a ningun paciente concreto.
+    """
+    from sklearn.cluster import KMeans
+
+    preparador = pipeline.named_steps["prep"]
+    matriz = preparador.transform(X_train)
+    grupos = min(n_grupos, len(matriz))
+    kmedias = KMeans(n_clusters=grupos, n_init=10, random_state=SEMILLA).fit(matriz)
+    return {
+        "columnas_preparadas": [str(c) for c in preparador.get_feature_names_out()],
+        "centroides": [[round(float(v), 6) for v in fila] for fila in kmedias.cluster_centers_],
+    }
+
+
 def importancia_de_variables(pipeline, X_test, y_test, n_repeticiones: int = 20) -> list[dict]:
     """Importancia por permutacion de cada variable del Anexo n.o 04.
 
@@ -459,6 +481,8 @@ def guardar_artefactos(
         "semilla": SEMILLA,
         # Importancia global del modelo, no atribucion por paciente.
         "factores_influyentes": contexto["factores"],
+        # Referencia de la explicacion individual con SHAP (RF06).
+        "fondo_shap": contexto["fondo_shap"],
     }
     (DIR_MODELOS / "risk_model_v1.json").write_text(
         json.dumps(ficha, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -585,6 +609,7 @@ def ejecutar(
             "algoritmos_comparados": len(resultados),
             "origen_datos": origen_datos,
             "factores": factores,
+            "fondo_shap": fondo_de_referencia(pipelines[mejor.nombre], X_train),
         },
     )
     return resultados, mejor

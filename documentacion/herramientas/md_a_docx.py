@@ -22,8 +22,10 @@ from docx.shared import Pt, RGBColor
 
 RAIZ = Path(r"C:\Users\Leona\OneDrive\Desktop\Sistema-Soporte-Clinico\documentacion\01_preinforme")
 PLANTILLA = RAIZ / "Pre_informe_40.docx"
-ORIGEN = RAIZ / "Pre_informe_final.md"
-DESTINO = RAIZ / "Pre_informe_final.docx"
+# Por defecto el pre informe al 50 %; otro corte se indica como argumento:
+#     python ../herramientas/md_a_docx.py Pre_informe_65.md
+ORIGEN = RAIZ / (sys.argv[1] if len(sys.argv) > 1 else "Pre_informe_final.md")
+DESTINO = ORIGEN.with_suffix(".docx")
 
 # Ancho útil de la página, en pulgadas, para repartir las columnas de las tablas.
 ANCHO_UTIL = 6.3

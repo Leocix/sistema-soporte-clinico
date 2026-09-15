@@ -24,9 +24,9 @@ export default function Layout() {
         </nav>
 
         <p className="lateral__nota">
-          La ficha muestra la predicción del modelo (RF04) junto a la adherencia
-          ya observada. La atribución individual con SHAP (RF06) queda para el
-          Sprint&nbsp;3.
+          La ficha muestra el riesgo predicho por el modelo (RF04) y qué variables
+          lo explican en cada paciente (SHAP, RF06), junto a la adherencia ya
+          observada.
         </p>
       </aside>
 

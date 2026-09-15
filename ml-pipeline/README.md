@@ -31,7 +31,9 @@ python src/train_evaluate.py --entrada data/raw/dataset_clinico.csv
 Compara Regresión Logística, Random Forest, XGBoost y SVM con validación
 cruzada estratificada de 5 pliegues. Produce
 `data/processed/tabla_comparativa.md` (lista para el pre informe),
-`reporte_modelado.json` y `models/risk_model_v1.pkl`.
+`reporte_modelado.json`, `models/risk_model_v1.pkl` y su ficha
+`risk_model_v1.json`, que incluye los centroides de referencia que usa el
+microservicio (`ml-service/`) para la explicación SHAP.
 
 Opciones útiles:
 

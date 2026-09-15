@@ -120,14 +120,19 @@ nada pendiente, no hace nada. Si `DATABASE_URL` está mal, el servicio no
 arranca y el fallo aparece en los *logs* de Render: es deliberado, preferible a
 un API en pie que no puede leer datos.
 
-> `requirements.txt` incluye scikit-learn, imbalanced-learn, numpy, pandas
-> y joblib **con las versiones exactas del entorno de entrenamiento**: el
-> artefacto serializado es un pipeline de imbalanced-learn y solo se puede
-> abrir con esas librerías y esas versiones. XGBoost no está: pesa cientos de
-> megabytes y solo hace falta para entrenar, de modo que el modelo desplegado
-> se produce con `--sin-xgboost`. Si la comparación sobre el dataset real
-> seleccionara XGBoost, habría que añadirlo a `requirements.txt` con la versión
-> de `ml-pipeline/requirements.txt`.
+El blueprint crea además el **microservicio de inferencia**
+`cdss-adherencia-ml` (directorio `ml-service/`), que carga el modelo y calcula
+la predicción y SHAP. Sus librerías (scikit-learn, imbalanced-learn, numpy,
+pandas, joblib, shap) tienen las versiones exactas del entrenamiento; el API ya
+no las instala. XGBoost no está: el modelo desplegado se produce con
+`--sin-xgboost`.
+
+> Si el API se creó a mano y no con el blueprint, cree también a mano un
+> segundo *Web Service*: directorio raíz `ml-service`, construcción
+> `pip install -r requirements.txt`, arranque
+> `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, sonda `/health`, y las
+> variables `PYTHON_VERSION=3.12.6`, `ENVIRONMENT=produccion` y
+> `CLAVE_SERVICIO` (una clave larga generada como la `SECRET_KEY`).
 
 ### 2.2. Completar las variables de entorno
 
@@ -140,6 +145,8 @@ mano en **Environment** del panel de Render:
 | `SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
 | `CORS_ORIGINS` | La URL del panel en Vercel (paso 3). Déjala vacía en el primer despliegue y complétala después |
 | `ALLOWED_HOSTS` | El host que asigna Render, p. ej. `cdss-adherencia-api.onrender.com` |
+| `ML_SERVICE_URL` | La URL pública del microservicio, p. ej. `https://cdss-adherencia-ml.onrender.com` |
+| `ML_SERVICE_CLAVE` | La misma clave que `CLAVE_SERVICIO` del microservicio (el blueprint la enlaza sola) |
 
 ### 2.2.1. Correo saliente para el restablecimiento (opcional)
 
@@ -175,7 +182,14 @@ queda expuesta en un servicio público.
 curl https://cdss-adherencia-api.onrender.com/health
 ```
 
-Debe responder `{"estado":"ok","version":"0.2.0"}`.
+Debe responder `{"estado":"ok","version":"0.2.0"}`. Y el microservicio:
+
+```bash
+curl https://cdss-adherencia-ml.onrender.com/health
+```
+
+Si la ficha del paciente no muestra la tarjeta de riesgo, revise que
+`ML_SERVICE_URL` y `ML_SERVICE_CLAVE` estén completas en el API.
 
 > **Plan gratuito de Render:** el servicio se suspende tras 15 minutos sin
 > tráfico y la primera petición posterior tarda unos 50 segundos en responder.
@@ -250,7 +264,7 @@ el Sprint 3.
 - [ ] `ENVIRONMENT=produccion` en Render (oculta `/docs`)
 - [ ] `sslmode=require` en la cadena de conexión
 - [ ] `CORS_ORIGINS` apuntando al dominio real del panel
-- [ ] Servicio de Render despierto
+- [ ] API y microservicio de Render despiertos (abrir ambos `/health`)
 - [ ] Pacientes de demostración (`D-`) retirados si se muestran datos reales
 - [ ] APK reconstruido tras el último cambio: `flutter build apk --release`
 - [ ] `FRONTEND_URL` apuntando al dominio real del panel, si se activó el correo

@@ -7,7 +7,7 @@ el incumplimiento terapéutico en pacientes hipertensos y diabéticos polimedica
 **Product Owner:** Dr. Milko Ugaz Zegarra (médico internista)
 **Equipo de desarrollo:** Leonardo Guzmán Salazar
 **Técnica de priorización:** MoSCoW
-**Última actualización:** semana 5 del ciclo 2026-II
+**Última actualización:** semana 5 del ciclo 2026-II (avance al 65 %)
 
 ---
 
@@ -37,7 +37,7 @@ incumplimiento.
 | RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | B1, B2 | OE4 | 2 | **Terminado** |
 | RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | B3 | OE3/OE5 | 3 | **Terminado** |
 | RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | Pendiente |
-| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Parcial** |
+| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Terminado** |
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 2–3 | **Terminado** |
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 3 | **Terminado** |
 | RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | B1 | OE4 | 3 | **Terminado** |
@@ -47,12 +47,7 @@ incumplimiento.
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
 B4 ausencia de alertas y recordatorios.
 
-RF06 figura como **parcial**: la ficha muestra los factores que más pesan en el
-modelo, medidos por importancia de permutación, que es agnóstica al algoritmo.
-Es una importancia **global**, no la contribución de cada variable a la
-predicción de ese paciente concreto; la atribución individual con SHAP se
-incorpora en el Sprint 3 y la interfaz declara esa diferencia de forma
-explícita.
+RF06 quedó **terminado** al 65 %: el microservicio de inferencia calcula con SHAP cuánto aporta cada variable al riesgo de cada paciente, y la ficha lo muestra con barras que suben o bajan la probabilidad.
 
 RF07 quedó **terminado** en el Sprint 3: al panel de auditoría del Sprint 2 se
 sumó la sección de reportes generales, con indicadores de todos los pacientes,
@@ -200,7 +195,6 @@ posteriores.
 **Sprint 3 (semanas 5–6)**
 
 - Ejecutar `train_evaluate.py` sobre las historias clínicas reales y confirmar el algoritmo.
-- Atribución individual con SHAP, en sustitución de la importancia global (RF06).
 - Alertas tempranas al médico (RF05).
 
 **Sprint 4 (semanas 7–8)**

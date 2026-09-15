@@ -9,6 +9,12 @@ cd documentacion/01_preinforme
 python ../herramientas/md_a_docx.py
 ```
 
+Para otro corte, indique el Markdown; el Word se crea con el mismo nombre:
+
+```bash
+python ../herramientas/md_a_docx.py Pre_informe_65.md
+```
+
 El documento **no se construye desde cero**: parte de `Pre_informe_40.docx`,
 que es la plantilla institucional entregada por la Escuela y ya trae la portada
 de la universidad, la sección de información general y los estilos de
