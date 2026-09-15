@@ -29,15 +29,6 @@ class Medicamento {
   /// crearia un evento nuevo en lugar de actualizar el existente.
   String get etiqueta => dosis.isEmpty ? nombre : '$nombre $dosis';
 
-  Medicamento copiarCon(
-          {String? nombre, String? dosis, List<String>? horarios}) =>
-      Medicamento(
-        id: id,
-        nombre: nombre ?? this.nombre,
-        dosis: dosis ?? this.dosis,
-        horarios: horarios ?? this.horarios,
-      );
-
   factory Medicamento.desdeJson(Map<String, dynamic> json) => Medicamento(
         id: json['id'] as String,
         nombre: json['nombre'] as String,

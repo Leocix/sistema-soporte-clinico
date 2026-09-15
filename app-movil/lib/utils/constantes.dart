@@ -53,7 +53,3 @@ String formatoFecha(DateTime fecha) {
   final m = fecha.month.toString().padLeft(2, '0');
   return '$d/$m/${fecha.year}';
 }
-
-/// Formatea fecha y hora como `01/09/2026 08:05`.
-String formatoFechaHora(DateTime fecha) =>
-    '${formatoFecha(fecha)} ${formatoHora(fecha)}';

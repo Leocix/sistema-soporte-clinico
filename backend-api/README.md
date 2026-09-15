@@ -23,7 +23,6 @@ o, de forma equivalente:
 uvicorn app.main:app --reload --port 8000
 ```
 
-En Windows también sirve un doble clic sobre `dev.bat`.
 
 Una vez arriba: <http://127.0.0.1:8000/docs> (documentación interactiva) y
 <http://127.0.0.1:8000/health> (sonda de disponibilidad).
@@ -34,10 +33,11 @@ Una vez arriba: <http://127.0.0.1:8000/docs> (documentación interactiva) y
 pip install -r requirements.txt
 ```
 
-`requirements-ml.txt` contiene aparte las librerías del microservicio de
-inferencia (scikit-learn, XGBoost, SHAP). No hacen falta para ejecutar el API
-actual y pesan cientos de megabytes, así que solo se instalan cuando se
-trabaja en RF04/RF06.
+Incluye las librerías de inferencia (scikit-learn, imbalanced-learn, numpy,
+pandas, joblib) **con las versiones exactas del entorno de entrenamiento**: el
+modelo serializado solo es fiable con ellas. `tests/test_modelo_desplegado.py`
+carga el artefacto real y falla si las versiones instaladas no coinciden con
+las declaradas.
 
 Copia `.env.example` como `.env` y complétalo. La clave de firma se genera con:
 
@@ -81,37 +81,28 @@ Crea la cuenta del Dr. Milko Ugaz y, con `--demo`, cinco pacientes ficticios
 se distinguen a simple vista de los reales (`P-0NN`) y **no deben incluirse en
 el dataset de entrenamiento ni en los resultados de la tesis**.
 
-### Esquema para DBeaver
-
-```bash
-python scripts/generar_ddl.py
-```
-
-Regenera `schema_postgresql.sql` desde los modelos. Sirve para inspeccionar la
-estructura o crear el esquema a mano en DBeaver. La fuente de verdad siguen
-siendo los modelos y las migraciones: no edites ese `.sql` directamente.
-
 ## Pruebas
 
 ```bash
 python -m pytest -q
 ```
 
-25 casos sobre una base en memoria: reglas clínicas, idempotencia de la
-sincronización y control de acceso por rol.
+93 casos sobre una base en memoria: reglas clínicas, idempotencia de la
+sincronización, control de acceso por rol, grupo familiar, recuperación de
+contraseña, acceso móvil y carga del modelo desplegado.
 
 ## Estructura
 
 ```
 app/
 ├── main.py              # CORS, middlewares de seguridad, manejo global de errores
-├── api/                 # Controladores: auth, pacientes, adherencia
+├── api/                 # auth, pacientes, adherencia, familiares, prediccion
 ├── core/                # config, security (JWT + RBAC), exceptions
 ├── db/                  # database (motor y sesión), models (SQLAlchemy)
 ├── schemas/             # Validación estricta de entrada y salida (Pydantic)
-└── services/            # Reglas de negocio: acceso a la ficha del paciente
+└── services/            # acceso a la ficha, inferencia del modelo, correo
 alembic/                 # Migraciones versionadas del esquema clínico
-scripts/                 # seed.py, generar_ddl.py
+scripts/                 # seed.py
 tests/                   # Batería de pruebas del núcleo funcional
 ```
 

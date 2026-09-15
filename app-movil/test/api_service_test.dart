@@ -444,7 +444,7 @@ void main() {
   });
 
   group('reintento cuando el servicio está arrancando', () {
-    ServicioApi _conFallos(int fallosPrevios, {List<Duration>? esperas}) {
+    ServicioApi conFallos(int fallosPrevios, {List<Duration>? esperas}) {
       var intentos = 0;
       return ServicioApi(
         urlBase: _urlBase,
@@ -470,21 +470,21 @@ void main() {
       // Es lo que hace el alojamiento gratuito al despertar: no responde
       // despacio, corta la conexión. Sin reintento, el paciente veía «sin
       // conexión» teniendo internet perfecto.
-      final resumen = await _conFallos(2).miResumen();
+      final resumen = await conFallos(2).miResumen();
 
       expect(resumen.tasaAdherencia, 75.0);
     });
 
     test('si el fallo persiste, se rinde y lo informa', () async {
       await expectLater(
-        _conFallos(99).miResumen(),
+        conFallos(99).miResumen(),
         throwsA(isA<ErrorDeConexion>()),
       );
     });
 
     test('el mensaje del fallo no culpa a la conexión del paciente', () async {
       try {
-        await _conFallos(99).miResumen();
+        await conFallos(99).miResumen();
         fail('debía fallar');
       } on ErrorDeConexion catch (e) {
         expect(e.mensaje, contains('No se pudo conectar con el servidor'));

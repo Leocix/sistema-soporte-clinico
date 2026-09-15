@@ -237,7 +237,7 @@ un solo integrante. Cumplen por tanto una función de ordenación y de control d
 alcance comprometido, no de previsión de capacidad de un equipo: la velocidad que
 de ellos se deriva solo es comparable entre sprints de este mismo proyecto.
 
-Se configuró el repositorio y el entorno de trabajo con la estructura definida en `estructura_repositorio.txt`, que separa cuatro componentes desplegables de forma independiente, coherentes con la arquitectura de microservicios del proyecto:
+Se configuró el repositorio y el entorno de trabajo con una estructura que separa cuatro componentes desplegables de forma independiente, coherentes con la arquitectura de microservicios del proyecto:
 
 ```
 sistema-soporte-clinico/

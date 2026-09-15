@@ -204,20 +204,7 @@ class ServicioApi {
     return Usuario.desdeJson(datos);
   }
 
-  // --- Ficha y adherencia propias -----------------------------------------
-
-  /// Ficha clinica del paciente autenticado.
-  ///
-  /// La aplicacion no conoce el `id_paciente`: el servidor lo resuelve desde
-  /// el token, de modo que ningun identificador de terceros llegue al
-  /// dispositivo.
-  Future<FichaPaciente> miFicha() async {
-    final datos = await _enviar(
-      () => _cliente.get(_uri('/api/pacientes/mi-ficha'), headers: _cabeceras),
-      reintentable: true,
-    ) as Map<String, dynamic>;
-    return FichaPaciente.desdeJson(datos);
-  }
+  // --- Adherencia propia --------------------------------------------------
 
   Future<ResumenAdherencia> miResumen({DateTime? desde}) async {
     final datos = await _enviar(

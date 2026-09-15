@@ -53,9 +53,7 @@ esto, Aiven rechaza la conexión.
 
 ### 1.3. Crear el esquema
 
-Dos caminos. **Usa el primero**; el segundo es para inspección manual.
-
-**a) Con Alembic (recomendado).** Es el que mantiene el historial de cambios:
+Con Alembic, que es el que mantiene el historial de cambios del esquema:
 
 ```bash
 cd backend-api
@@ -65,14 +63,11 @@ alembic upgrade head
 Apunta `DATABASE_URL` a Aiven antes de ejecutarlo (en `.env` o como variable
 de entorno).
 
-**b) Con el script DDL en DBeaver.** Abrir `backend-api/schema_postgresql.sql`
-en el editor SQL de DBeaver y ejecutarlo completo. Crea los ocho tipos
-enumerados, las tres tablas, sus restricciones de integridad clínica y sus
-índices.
-
-> El `.sql` se genera desde los modelos con `python scripts/generar_ddl.py`.
-> No lo edites a mano: si cambias el esquema, cambia el modelo y crea una
-> migración.
+> No se versiona un script DDL aparte. Existió uno generado desde los
+> modelos, pero quedó desfasado en cuanto el esquema creció con el grupo
+> familiar y el restablecimiento de contraseña: un `.sql` que describe un
+> esquema que ya no existe es peor que no tenerlo. Para inspeccionar la
+> estructura en DBeaver, conéctese a la base ya migrada.
 
 ### 1.4. Cargar la cuenta del médico
 
@@ -125,14 +120,14 @@ nada pendiente, no hace nada. Si `DATABASE_URL` está mal, el servicio no
 arranca y el fallo aparece en los *logs* de Render: es deliberado, preferible a
 un API en pie que no puede leer datos.
 
-> `requirements.txt` incluye scikit-learn, numpy, pandas y joblib porque el
-> artefacto serializado los necesita para reconstruir el pipeline durante la
-> inferencia (RF04). XGBoost y SHAP quedan aparte en `requirements-ml.txt`:
-> pesan cientos de megabytes y solo hacen falta para entrenar. Por eso el
-> modelo desplegado se produce con `--sin-xgboost`, de modo que el servicio no
-> arrastre esa dependencia. Si la comparación sobre el dataset real
-> seleccionara XGBoost, el comando de construcción pasaría a ser
-> `pip install -r requirements.txt -r requirements-ml.txt`.
+> `requirements.txt` incluye scikit-learn, imbalanced-learn, numpy, pandas
+> y joblib **con las versiones exactas del entorno de entrenamiento**: el
+> artefacto serializado es un pipeline de imbalanced-learn y solo se puede
+> abrir con esas librerías y esas versiones. XGBoost no está: pesa cientos de
+> megabytes y solo hace falta para entrenar, de modo que el modelo desplegado
+> se produce con `--sin-xgboost`. Si la comparación sobre el dataset real
+> seleccionara XGBoost, habría que añadirlo a `requirements.txt` con la versión
+> de `ml-pipeline/requirements.txt`.
 
 ### 2.2. Completar las variables de entorno
 

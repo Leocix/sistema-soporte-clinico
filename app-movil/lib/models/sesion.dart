@@ -57,28 +57,3 @@ class Usuario {
         'rol': perfil.codigo,
       };
 }
-
-/// Ficha clinica del paciente, tal como la devuelve `/api/pacientes/mi-ficha`.
-///
-/// Solo se conservan los campos que la aplicacion muestra. El resto de
-/// variables del Anexo n.o 04 son competencia del panel medico.
-class FichaPaciente {
-  const FichaPaciente({
-    required this.idPaciente,
-    required this.codigoAnonimizado,
-    required this.numeroFarmacos,
-    required this.tomasDia,
-  });
-
-  final String idPaciente;
-  final String codigoAnonimizado;
-  final int numeroFarmacos;
-  final int tomasDia;
-
-  factory FichaPaciente.desdeJson(Map<String, dynamic> json) => FichaPaciente(
-        idPaciente: json['id_paciente'] as String,
-        codigoAnonimizado: json['codigo_anonimizado'] as String,
-        numeroFarmacos: json['numero_farmacos'] as int,
-        tomasDia: json['tomas_dia'] as int,
-      );
-}

@@ -243,9 +243,4 @@ class ServicioNotificaciones {
     await iniciar();
     return (permitido: await comprobarPermiso(), avisos: await programados());
   }
-
-  Future<void> cancelarTodos() async {
-    await iniciar();
-    await _plugin.cancelAll();
-  }
 }
