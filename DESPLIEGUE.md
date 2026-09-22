@@ -115,10 +115,12 @@ En Render: **New → Blueprint**, conectar el repositorio. Render detecta
 - `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - Sonda de salud en `/health`
 
-Las migraciones se aplican en cada arranque. Alembic es idempotente: si no hay
-nada pendiente, no hace nada. Si `DATABASE_URL` está mal, el servicio no
-arranca y el fallo aparece en los *logs* de Render: es deliberado, preferible a
-un API en pie que no puede leer datos.
+Las migraciones se aplican en cada arranque con `python scripts/migrar.py`.
+Alembic es idempotente: si no hay nada pendiente, no hace nada. El script
+**reintenta la conexión** (5 s, 15 s y 30 s) antes de rendirse, para que un
+corte de segundos en la base gestionada no tumbe el despliegue. Si tras los
+reintentos sigue sin conectar, el servicio no arranca y el motivo aparece en
+los *logs*: es deliberado, preferible a un API en pie que no puede leer datos.
 
 El blueprint crea además el **microservicio de inferencia**
 `cdss-adherencia-ml` (directorio `ml-service/`), que carga el modelo y calcula
@@ -254,6 +256,27 @@ La clasificación de riesgo que muestra el panel es **provisional**: se calcula
 sobre la adherencia ya observada, no con el modelo predictivo. La predicción
 del modelo (RF04) y los factores influyentes con SHAP (RF06) la sustituyen en
 el Sprint 3.
+
+---
+
+## Si el despliegue falla
+
+| Lo que dice el *log* | Qué revisar |
+| :--- | :--- |
+| `could not translate host name ... Name or service not known` | El nombre de la base no se resolvió. Casi siempre es pasajero: vuelva a desplegar (**Manual Deploy → Deploy latest commit**). Si se repite, compruebe en Aiven que el servicio esté **Running** —los servicios inactivos pueden apagarse— y que `DATABASE_URL` en Render no tenga espacios ni saltos de línea al copiarla |
+| `password authentication failed` | Usuario o contraseña de `DATABASE_URL`. Vuelva a copiar el *Service URI* desde Aiven |
+| `database ... does not exist` | El nombre de la base en `DATABASE_URL` (en Aiven suele ser `defaultdb`) |
+| `MODELO_NO_DISPONIBLE` en la ficha | Falta `ML_SERVICE_URL` o `ML_SERVICE_CLAVE` en el API, o el microservicio está dormido |
+| El panel dice «sin conexión» y el API responde | El servicio estaba suspendido por inactividad: la primera petición tarda unos 50 s |
+
+Una comprobación rápida desde su equipo, para saber si el problema es de la
+base o del servicio:
+
+```bash
+curl https://cdss-adherencia-api.onrender.com/health
+```
+
+Si responde `{"estado":"ok"}`, el API está en pie y conectado.
 
 ---
 

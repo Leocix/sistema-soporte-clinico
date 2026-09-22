@@ -338,7 +338,7 @@ Se implementó el inicio de sesión con token JWT y control de acceso por perfil
 | RNF01 | Datos protegidos en tránsito y en reposo | Seguridad | HTTPS, cabeceras de seguridad, contraseñas cifradas, código anonimizado; 20 pruebas de verificación (Tabla 21) |
 | RNF02 | Respuesta de la predicción en ≤ 2 s | Eficiencia | Tiempo medido en cada respuesta (≈ 13 ms por predicción) |
 | RNF03 | Interfaz usable por médicos y adultos mayores | Usabilidad | Barra de navegación rotulada; evaluación SUS en el Sprint 4 |
-| RNF04 | Disponibilidad para la consulta clínica | Fiabilidad | Manejo global de errores, sonda `/health`, reintento en la app |
+| RNF04 | Disponibilidad para la consulta clínica | Fiabilidad | Manejo global de errores, sonda `/health`, reintento en la app y reintento de la conexión al arrancar el servicio |
 | RNF05 | Código modular | Mantenibilidad | Capas `api`, `core`, `db`, `schemas`, `services` |
 | RNF06 | Escalable y reentrenable | Portabilidad | Modelo desacoplado de la API |
 
@@ -537,11 +537,11 @@ El cifrado del tráfico (TLS) y el cifrado en reposo son garantías de la plataf
 
 | Componente | Casos | Alcance | Resultado |
 | :--- | :---: | :--- | :---: |
-| API central (`pytest`) | 134 | RF01–RF05, RF07, RF09, RF10, permisos, seguridad (RNF01) e integración real con el modelo | ✔ 134/134 |
+| API central (`pytest`) | 142 | RF01–RF05, RF07, RF09, RF10, permisos, seguridad (RNF01), resistencia del arranque e integración real con el modelo | ✔ 142/142 |
 | Microservicio de inferencia (`pytest`) | 13 | Predicción, lote, clave de servicio, propiedad aditiva de SHAP y versiones del modelo | ✔ 13/13 |
 | App móvil (`flutter test`) | 40 | Sincronización sin conexión, reintento, recordatorios, acceso y grupo familiar | ✔ 40/40 |
 | Panel web | — | Compilación y análisis estático; recorrido verificado en navegador | ✔ |
-| **Total** | **187** | | **✔** |
+| **Total** | **195** | | **✔** |
 
 **Tabla 23.** Incidencias del Sprint 3.
 
@@ -561,6 +561,7 @@ El cifrado del tráfico (TLS) y el cifrado en reposo son garantías de la plataf
 | I-19 | Microservicio | La primera explicación SHAP tardaba 5 s | SHAP se prepara internamente en su primer uso | Ejecutar una explicación de prueba al arrancar | Cerrada |
 | I-20 | API | La alerta de riesgo predicho hacía fallar la bandeja | El umbral se trasladó al microservicio y el API seguía consultándolo | Usar el nivel de riesgo que devuelve el microservicio | Cerrada |
 | I-21 | API | Una alerta cerrada por el médico reaparecía en la consulta siguiente | Las reglas no distinguían un caso ya atendido | Plazo de silencio tras atender o descartar, salvo que la evidencia empeore | Cerrada |
+| I-22 | Despliegue | El servicio publicado dejó de arrancar y no se podía entrar al sistema | Las migraciones se aplican al arrancar y la base gestionada no resolvió su nombre en ese instante: un fallo de segundos tumbaba el despliegue entero | Reintentar la conexión (5 s, 15 s y 30 s) antes de rendirse, con un mensaje que indica qué revisar | Cerrada |
 
 **Pendiente del sprint.** Solo la comparación de algoritmos sobre las historias clínicas reales, que depende de la extracción documental.
 
@@ -592,10 +593,14 @@ El cifrado del tráfico (TLS) y el cifrado en reposo son garantías de la plataf
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | 1 | 4 | 0,25 | 0 de 1 (retrospectiva) | 0 |
 | 2 | 6 | 5 | 1,20 | 5 de 6 | 0 |
-| 3 *(al corte)* | 14 | 6 | 2,33 | 13 de 14 | 0 |
-| **Total** | **21** | — | — | **18 de 21** | **0** |
+| 3 *(al corte)* | 15 | 6 | 2,50 | 13 de 15 | 0 |
+| **Total** | **22** | — | — | **18 de 22** | **0** |
 
-**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas. Según su origen: seis por el comportamiento de librerías (I-02, I-03, I-05, I-06, I-09, I-10), cinco por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15), cuatro de interfaz (I-04, I-07, I-16, I-17), una de texto desactualizado (I-13), una de diseño (I-01) dos de diferencia entre lo documentado y lo implementado (I-18, I-20), una de rendimiento en el primer uso (I-19) y una de diseño de la propia alerta (I-21).
+**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas.
+
+Según su origen: seis por el comportamiento de librerías de terceros (I-02, I-03, I-05, I-06, I-09, I-10), seis por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15, I-22), cuatro de interfaz (I-04, I-07, I-16, I-17), dos por diferencias entre lo documentado y lo implementado (I-18, I-20), una de texto desactualizado (I-13), una de rendimiento en el primer uso (I-19), una de diseño de la propia alerta (I-21) y una de diseño detectada en retrospectiva (I-01).
+
+El grupo que más pesa sigue siendo el de las diferencias entre desarrollo y publicación, y de ahí la práctica que se mantiene: verificar cada cambio sobre el artefacto que se entrega —el APK de publicación, el servicio desplegado— y no solo sobre la ejecución local.
 
 ---
 
@@ -651,7 +656,7 @@ El protocolo está implementado, verificado y en servicio a través del microser
 | :--- | :--- | :--- |
 | Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 95 % al corte |
 | Módulos construidos frente a requeridos | Todos | **10 de 10** RF operativos (RF01–RF10) |
-| Densidad de errores por sprint | Decreciente | 21 incidencias registradas y cerradas (Tabla 25); 187 pruebas en verde |
+| Densidad de errores por sprint | Decreciente | 22 incidencias registradas y cerradas (Tabla 25); 195 pruebas en verde |
 | Atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación en el Sprint 4 |
 
 **Escenario de extremo a extremo operativo:** el médico registra al paciente y le genera su acceso; el paciente recibe recordatorios y registra sus tomas desde el celular, incluso sin conexión; un familiar las corrobora; y el médico recibe una alerta cuando ese paciente empieza a fallar, consulta en la ficha la adherencia y el riesgo predicho con su explicación SHAP, y ve en reportes la situación de todos sus pacientes.

@@ -13,8 +13,10 @@ services:
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     # Las migraciones se aplican al arrancar, de modo que un despliegue nuevo
     # deje el esquema al dia sin intervencion manual. Alembic es idempotente:
-    # si no hay migraciones pendientes, no hace nada.
-    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # si no hay migraciones pendientes, no hace nada. El script reintenta la
+    # conexion antes de rendirse: un corte de segundos en la base gestionada no
+    # debe tumbar el despliegue entero.
+    startCommand: python scripts/migrar.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeploy: true
     envVars:
