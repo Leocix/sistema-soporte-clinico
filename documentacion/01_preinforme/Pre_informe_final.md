@@ -8,7 +8,7 @@
 
 **SISTEMA DE SOPORTE CLÍNICO CON APRENDIZAJE AUTOMÁTICO PARA PREVENIR EL INCUMPLIMIENTO TERAPÉUTICO EN PACIENTES HIPERTENSOS Y DIABÉTICOS POLIMEDICADOS DEL CONSULTORIO MÉDICO MILKO UGAZ ZEGARRA**
 
-**PRE INFORME DE TESIS (AVANCE AL 65 %)**
+**PRE INFORME DE TESIS (AVANCE AL 80 %)**
 
 **PARA EVIDENCIAR LA EJECUCIÓN DE TESIS**
 
@@ -45,7 +45,7 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 **5. Fecha de presentación**
 
-15 de septiembre de 2026 (avance al 65 %, semana 5 del cronograma del curso).
+22 de septiembre de 2026 (avance al 80 %, semana 6 del cronograma del curso).
 
 **6. Estado del avance**
 
@@ -53,7 +53,7 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 | :--- | :---: | :--- |
 | Sprint 1 (CRISP-DM: *Business & Data Understanding*) | 2–3 | Cerrado |
 | Sprint 2 (CRISP-DM: *Data Preparation* y *Modeling* inicial) | 3–4 | Cerrado |
-| Sprint 3 (CRISP-DM: *Modeling* y *Evaluation*) | 5–6 | En ejecución |
+| Sprint 3 (CRISP-DM: *Modeling* y *Evaluation*) | 5–6 | En cierre |
 | Sprint 4 (CRISP-DM: *Deployment*) | 7–8 | Programado |
 
 > **Convención de lectura.** Los indicadores que dependen del trabajo de campo —extracción de historias clínicas (Anexo n.° 04), test de Morisky-Green, juicio de expertos y pruebas con usuarios— se reportan con su estado y el sprint en que se cierran. Mientras tanto, el sistema y el modelo funcionan con un **conjunto de demostración** que permite verificar el protocolo de extremo a extremo.
@@ -94,7 +94,7 @@ El producto se desarrolla integrando **SCRUM y CRISP-DM**. El sprint de SCRUM es
 | :---: | :--- | :--- | :---: | :---: | :--- |
 | **1** | Planificación y primer incremento | *Business* y *Data Understanding* | 2–3 | 30 % | **Cerrado** |
 | **2** | Núcleo funcional y modelado inicial | *Data Preparation* y *Modeling* inicial | 3–4 | 40 % / 50 % | **Cerrado** |
-| **3** | Modelo integrado y funcionalidades complementarias | *Modeling* (selección) y *Evaluation* | 5–6 | 65 % / 80 % | **En ejecución** |
+| **3** | Modelo integrado, alertas y estabilización | *Modeling* (selección) y *Evaluation* | 5–6 | 65 % / 80 % | **En cierre** |
 | **4** | Cierre, rendimiento y usabilidad | *Deployment* | 7–8 | 90 % / 100 % | Programado |
 
 ---
@@ -109,7 +109,8 @@ Para lograrlo, el sistema hace tres cosas:
 
 1. **Registra la toma real** de cada medicamento desde el celular del paciente, con recordatorios y confirmación de un familiar.
 2. **Calcula el riesgo** de incumplimiento de cada paciente con un modelo de aprendizaje automático.
-3. **Muestra al médico** la ficha, la adherencia observada, el riesgo predicho y reportes de todos sus pacientes.
+3. **Avisa al médico** cuando un paciente empieza a fallar, sin que tenga que revisarlos uno por uno.
+4. **Muestra al médico** la ficha, la adherencia observada, el riesgo predicho y reportes de todos sus pacientes.
 
 La decisión clínica sigue siendo del médico: el sistema es un apoyo, no un diagnóstico.
 
@@ -119,7 +120,7 @@ La decisión clínica sigue siendo del médico: el sistema es un apoyo, no un di
 
 | Componente | Tecnología | Usuario | Qué hace |
 | :--- | :--- | :--- | :--- |
-| Panel web | React + Vite (Vercel) | Médico | Registra pacientes, consulta fichas, riesgo y reportes; genera el acceso móvil del paciente |
+| Panel web | React + Vite (Vercel) | Médico | Registra pacientes, consulta fichas, alertas, riesgo y reportes; genera el acceso móvil del paciente |
 | Aplicación móvil | Flutter (Android) | Paciente y familiar | Recordatorios, registro de tomas sin conexión, grupo familiar y corroboración |
 | API central | FastAPI (Render) | — | Autenticación, reglas del negocio y cálculo de indicadores |
 | Microservicio de inferencia | FastAPI + scikit-learn + SHAP (Render) | — | Carga el modelo, calcula el riesgo de cada paciente y lo explica con SHAP |
@@ -199,6 +200,7 @@ La probabilidad se traduce en tres niveles: **bajo** (menos de 40 %), **medio** 
 | Por qué tiene ese riesgo (SHAP) | Contribución de cada variable, en puntos porcentuales: positiva si aumenta el riesgo, negativa si lo reduce. Probabilidad de referencia + contribuciones = probabilidad del paciente |
 | Adherencia promedio (reportes) | Promedio del cumplimiento de los pacientes con tomas registradas; cada paciente pesa lo mismo |
 | Tomas corroboradas (reportes) | Tomas cumplidas confirmadas por un familiar ÷ total de tomas cumplidas × 100 |
+| Alerta temprana | Se genera cuando el paciente acumula 3 omisiones seguidas, su cumplimiento baja del 60 % con al menos 5 tomas registradas, o el modelo lo clasifica en riesgo alto |
 
 ---
 
@@ -214,7 +216,7 @@ La pila se priorizó con **MoSCoW** según su relación con la hipótesis: *Must
 | RF02 | Como médico, quiero registrar y editar la ficha del paciente polimedicado para mantener sus datos clínicos al día | Ficha guardada y consultable; se rechaza a pacientes con menos de 5 fármacos | Must | 24 | 2–3 | **Terminado** |
 | RF03 | Como paciente, quiero registrar cada toma desde mi celular para que mi médico conozca mi cumplimiento real | Cada toma queda registrada y sincronizada, sin duplicarse al reenviar | Must | 16 | 2 | **Terminado** |
 | RF04 | Como médico, quiero ver el riesgo de incumplimiento de cada paciente para priorizar a quién contactar | Un microservicio calcula probabilidad y nivel; el sistema sigue operando si el microservicio falla | Must | 21 | 3 | **Terminado** |
-| RF05 | Como médico, quiero recibir alertas cuando un paciente pase a riesgo alto para actuar antes del control | Alerta visible al médico cuando el riesgo llega a alto | Must | 5 | 3 | Pendiente |
+| RF05 | Como médico, quiero recibir alertas cuando un paciente pase a riesgo alto para actuar antes del control | Bandeja con el motivo y la cifra que lo sustenta; el médico registra qué hizo y el aviso no se repite mientras tanto | Must | 15 | 3 | **Terminado** |
 | RF06 | Como médico, quiero saber qué factores explican el riesgo de un paciente para decidir la intervención | Contribución individual de cada variable (SHAP) en la ficha; las contribuciones suman la probabilidad | Should | 8 | 3 | **Terminado** |
 | RF07 | Como médico, quiero reportes generales de mis pacientes para auditar la adherencia | Panel con indicadores globales, distribución de riesgo y exportación CSV | Should | 10 | 2–3 | **Terminado** |
 | RF08 | Como paciente, quiero recibir recordatorios de mis tomas para no olvidarlas | Aviso en el teléfono a la hora de cada toma, aun sin conexión | Could | 8 | 3 | **Terminado** |
@@ -333,7 +335,7 @@ Se implementó el inicio de sesión con token JWT y control de acceso por perfil
 
 | Código | Requisito | Atributo | Cómo se cumple |
 | :---: | :--- | :--- | :--- |
-| RNF01 | Datos protegidos en tránsito y en reposo | Seguridad | HTTPS, cabeceras de seguridad, contraseñas cifradas, código anonimizado |
+| RNF01 | Datos protegidos en tránsito y en reposo | Seguridad | HTTPS, cabeceras de seguridad, contraseñas cifradas, código anonimizado; 20 pruebas de verificación (Tabla 21) |
 | RNF02 | Respuesta de la predicción en ≤ 2 s | Eficiencia | Tiempo medido en cada respuesta (≈ 13 ms por predicción) |
 | RNF03 | Interfaz usable por médicos y adultos mayores | Usabilidad | Barra de navegación rotulada; evaluación SUS en el Sprint 4 |
 | RNF04 | Disponibilidad para la consulta clínica | Fiabilidad | Manejo global de errores, sonda `/health`, reintento en la app |
@@ -427,10 +429,12 @@ Métricas: exactitud, sensibilidad, especificidad, F1-score y AUCROC (meta ≥ 0
 | RNF03 | Barra inferior de navegación | Móvil | 3 | **Terminada** |
 | RNF04 | Reintento ante el arranque lento del servidor | Móvil | 2 | **Terminada** |
 | OE3 | Corrida de verificación del protocolo de selección | ML | 3 | **Terminada** |
-| RF05 | Alertas tempranas al médico | API + Web | 5 | Pendiente |
+| RF05 | Reglas de alerta y bandeja del médico | API | 5 | **Terminada** |
+| RF05 | Pantalla de alertas con cierre y nota | Web | 5 | **Terminada** |
+| RNF01 | Batería de verificación de seguridad del API | API | 5 | **Terminada** |
 | RF06 | Explicación individual con SHAP | ML + Web | 8 | **Terminada** |
 | OE3 | Comparación sobre las historias clínicas reales | ML | 5 | Bloqueada: depende de la extracción |
-| | **Comprometido: 94 · Completado al corte: 84 (89 %)** | | **94** | |
+| | **Comprometido: 104 · Completado al corte: 99 (95 %)** | | **104** | |
 
 #### a) Microservicio de inferencia (RF04)
 
@@ -488,17 +492,58 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 - **Ficha:** el formulario valida los datos antes de guardar, pide nivel educativo, convivencia y apoyo familiar, y permite marcar comorbilidades concretas; el sistema calcula el total.
 - **Reportes generales:** nueva sección del panel con pacientes activos, adherencia promedio, tomas registradas y corroboradas, distribución del riesgo observado y predicho, pacientes por diagnóstico, comorbilidades y motivos de omisión más frecuentes, y una tabla de pacientes ordenada por riesgo exportable a CSV.
 
-**Tabla 20.** Pruebas automatizadas al corte.
+#### f) Alertas tempranas (RF05)
+
+El sistema avisa al médico sin que tenga que revisar paciente por paciente, que es la brecha B4 del diagnóstico. Las reglas se evalúan al sincronizar una toma desde la aplicación y al abrir la bandeja.
+
+**Tabla 20.** Reglas de alerta y su fundamento.
+
+| Alerta | Cuándo se genera | Por qué ese umbral |
+| :--- | :--- | :--- |
+| Omisiones seguidas | 3 o más tomas omitidas consecutivas | Indica abandono en curso, no un olvido puntual |
+| Adherencia baja | Cumplimiento menor al 60 % con al menos 5 tomas resueltas | Por debajo del 60 % la adherencia es deficiente; el mínimo de tomas evita avisar por el ruido de un paciente recién incorporado |
+| Riesgo predicho alto | El modelo clasifica al paciente en riesgo alto | Es la única regla que mira hacia delante, y la razón de ser del componente inteligente |
+
+**Tres decisiones para que la bandeja se siga leyendo.** Una bandeja con veinte avisos repetidos se deja de mirar, y entonces la alerta no sirve de nada:
+
+1. **Un aviso abierto por tipo y paciente.** La evidencia nueva actualiza el aviso existente en lugar de crear otro.
+2. **Los avisos se cierran solos** cuando la condición desaparece: si el paciente vuelve a cumplir, el aviso queda como resuelto con su historia intacta.
+3. **Lo que el médico cierra no reaparece al instante.** Tras atender un aviso no vuelve en siete días, y tras descartarlo, en treinta, salvo que la evidencia empeore.
+
+El médico cierra cada alerta con una nota de lo que hizo —una llamada, un control adelantado— y esa nota queda registrada: es la evidencia de que el sistema sirvió para intervenir a tiempo.
+
+#### g) Verificación de seguridad (RNF01)
+
+Se construyó una batería de 20 pruebas que comprueban lo que el sistema **no** debe hacer.
+
+**Tabla 21.** Verificación de seguridad del API.
+
+| Qué se comprueba | Resultado |
+| :--- | :---: |
+| Las contraseñas se guardan solo cifradas, y dos iguales producen cifrados distintos | ✔ |
+| Un token firmado con otra clave, vencido o mal formado no da acceso | ✔ |
+| Un paciente que se declara médico en su token sigue sin serlo | ✔ |
+| El acceso y la recuperación responden igual exista o no la cuenta | ✔ |
+| Un médico no alcanza fichas, historiales ni predicciones de pacientes ajenos | ✔ |
+| El paciente no accede a las vistas del médico | ✔ |
+| Una búsqueda con instrucciones SQL no altera la base | ✔ |
+| Los errores no revelan trazas, consultas ni rutas internas | ✔ |
+| Las respuestas llevan las cabeceras de seguridad y prohíben la caché | ✔ |
+| Al microservicio no viajan nombres, documentos ni contactos | ✔ |
+
+El cifrado del tráfico (TLS) y el cifrado en reposo son garantías de la plataforma y se verifican sobre el servicio desplegado: conexión HTTPS con HSTS en Render y `sslmode=require` contra Aiven.
+
+**Tabla 22.** Pruebas automatizadas al corte.
 
 | Componente | Casos | Alcance | Resultado |
 | :--- | :---: | :--- | :---: |
-| API central (`pytest`) | 97 | RF01–RF04, RF07, RF09, RF10, permisos, cliente del microservicio e integración real con el modelo | ✔ 97/97 |
+| API central (`pytest`) | 134 | RF01–RF05, RF07, RF09, RF10, permisos, seguridad (RNF01) e integración real con el modelo | ✔ 134/134 |
 | Microservicio de inferencia (`pytest`) | 13 | Predicción, lote, clave de servicio, propiedad aditiva de SHAP y versiones del modelo | ✔ 13/13 |
 | App móvil (`flutter test`) | 40 | Sincronización sin conexión, reintento, recordatorios, acceso y grupo familiar | ✔ 40/40 |
 | Panel web | — | Compilación y análisis estático; recorrido verificado en navegador | ✔ |
-| **Total** | **150** | | **✔** |
+| **Total** | **187** | | **✔** |
 
-**Tabla 21.** Incidencias del Sprint 3.
+**Tabla 23.** Incidencias del Sprint 3.
 
 | ID | Componente | Incidencia | Causa | Corrección | Estado |
 | :---: | :--- | :--- | :--- | :--- | :---: |
@@ -514,8 +559,10 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 | I-17 | Web | La contraseña temporal desaparecía | Se recargaba la ficha al generarla | Recargar solo al ocultarla | Cerrada |
 | I-18 | ML | El desempate por sensibilidad no se aplicaba | El código solo desempataba con AUCROC idéntico | Aplicar McNemar antes de elegir | Cerrada |
 | I-19 | Microservicio | La primera explicación SHAP tardaba 5 s | SHAP se prepara internamente en su primer uso | Ejecutar una explicación de prueba al arrancar | Cerrada |
+| I-20 | API | La alerta de riesgo predicho hacía fallar la bandeja | El umbral se trasladó al microservicio y el API seguía consultándolo | Usar el nivel de riesgo que devuelve el microservicio | Cerrada |
+| I-21 | API | Una alerta cerrada por el médico reaparecía en la consulta siguiente | Las reglas no distinguían un caso ya atendido | Plazo de silencio tras atender o descartar, salvo que la evidencia empeore | Cerrada |
 
-**Pendiente del sprint.** Alertas tempranas al médico (RF05) y comparación sobre las historias clínicas reales.
+**Pendiente del sprint.** Solo la comparación de algoritmos sobre las historias clínicas reales, que depende de la extracción documental.
 
 ---
 
@@ -525,7 +572,7 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 
 **Objetivo.** Medir rendimiento y usabilidad con usuarios reales y consolidar las evidencias.
 
-**Tabla 22.** Sprint Backlog previsto del Sprint 4.
+**Tabla 24.** Sprint Backlog previsto del Sprint 4.
 
 | Elemento | Tarea | Componente | Pts | Estado |
 | :---: | :--- | :--- | :---: | :--- |
@@ -539,29 +586,29 @@ El protocolo completo se ejecutó sobre el conjunto de demostración (400 fichas
 
 ### 1.1.7. Registro consolidado de incidencias
 
-**Tabla 23.** Incidencias por sprint.
+**Tabla 25.** Incidencias por sprint.
 
 | Sprint | Incidencias | Componentes tocados | Por componente | Detectadas por prueba o revisión | Abiertas |
 | :---: | :---: | :---: | :---: | :---: | :---: |
 | 1 | 1 | 4 | 0,25 | 0 de 1 (retrospectiva) | 0 |
 | 2 | 6 | 5 | 1,20 | 5 de 6 | 0 |
-| 3 *(al corte)* | 12 | 6 | 2,00 | 11 de 12 | 0 |
-| **Total** | **19** | — | — | **16 de 19** | **0** |
+| 3 *(al corte)* | 14 | 6 | 2,33 | 13 de 14 | 0 |
+| **Total** | **21** | — | — | **18 de 21** | **0** |
 
-**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas. Según su origen: seis por el comportamiento de librerías (I-02, I-03, I-05, I-06, I-09, I-10), cinco por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15), cuatro de interfaz (I-04, I-07, I-16, I-17), una de texto desactualizado (I-13), una de diseño (I-01) una de diferencia entre el protocolo y su implementación (I-18) y una de rendimiento en el primer uso (I-19).
+**Lectura.** Las incidencias aumentan en el Sprint 3 porque es el primero que se ejecuta sobre el servidor publicado y un teléfono real, y el que más componentes nuevos incorpora. Todas están cerradas. Según su origen: seis por el comportamiento de librerías (I-02, I-03, I-05, I-06, I-09, I-10), cinco por diferencias entre el entorno de desarrollo y el publicado (I-08, I-11, I-12, I-14, I-15), cuatro de interfaz (I-04, I-07, I-16, I-17), una de texto desactualizado (I-13), una de diseño (I-01) dos de diferencia entre lo documentado y lo implementado (I-18, I-20), una de rendimiento en el primer uso (I-19) y una de diseño de la propia alerta (I-21).
 
 ---
 
 ## 1.2. En base a los objetivos del proyecto
 
-**Tabla 24.** Estado de los objetivos específicos.
+**Tabla 26.** Estado de los objetivos específicos.
 
 | Objetivo | Resultado esperado | Estado | Evidencia |
 | :---: | :--- | :---: | :--- |
 | OE1 | Diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base propia en ejecución) | Tablas 7 y 8 |
 | OE2 | Requisitos y arquitectura | **Cumplido** (juicio de expertos en curso) | Tablas 2, 5 y 12 |
 | OE3 | Algoritmo seleccionado y reporte comparativo | **En ejecución** (~80 %) | Tablas 14, 18 y 19 |
-| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~90 %) | Tablas 5, 17 y 20 |
+| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~95 %) | Tablas 5, 17 y 22 |
 | OE5 | Validación de usabilidad | **Pendiente** (semana 7) | Anexo n.° 05 |
 
 ### 1.2.1. OE1 – Caracterizar el proceso actual de seguimiento terapéutico y los factores de incumplimiento
@@ -602,12 +649,12 @@ El protocolo está implementado, verificado y en servicio a través del microser
 
 | Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 89 % al corte |
-| Módulos construidos frente a requeridos | Todos | **9 de 10** RF operativos (RF01–RF04, RF06–RF10); RF05 pendiente |
-| Densidad de errores por sprint | Decreciente | 19 incidencias registradas y cerradas (Tabla 23); 150 pruebas en verde |
+| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 95 % al corte |
+| Módulos construidos frente a requeridos | Todos | **10 de 10** RF operativos (RF01–RF10) |
+| Densidad de errores por sprint | Decreciente | 21 incidencias registradas y cerradas (Tabla 25); 187 pruebas en verde |
 | Atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | Verificación en el Sprint 4 |
 
-**Escenario de extremo a extremo operativo:** el médico registra al paciente y le genera su acceso; el paciente recibe recordatorios y registra sus tomas desde el celular, incluso sin conexión; un familiar las corrobora; y el médico consulta en la ficha la adherencia, el riesgo predicho con su explicación SHAP y, en reportes, la situación de todos sus pacientes.
+**Escenario de extremo a extremo operativo:** el médico registra al paciente y le genera su acceso; el paciente recibe recordatorios y registra sus tomas desde el celular, incluso sin conexión; un familiar las corrobora; y el médico recibe una alerta cuando ese paciente empieza a fallar, consulta en la ficha la adherencia y el riesgo predicho con su explicación SHAP, y ve en reportes la situación de todos sus pacientes.
 
 ### 1.2.5. OE5 – Evaluar la usabilidad del sistema mediante la escala SUS
 

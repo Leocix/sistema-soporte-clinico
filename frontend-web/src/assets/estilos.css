@@ -712,3 +712,33 @@ p { margin: 0; }
 .barras__relleno--bajo { background: var(--bajo); }
 .barras__relleno--sin_datos { background: var(--neutro); }
 .barras__valor { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* --- Alertas tempranas (RF05) ---------------------------------------------- */
+
+.navegacion__enlace { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.navegacion__contador {
+  background: var(--alto); color: #fff; font-size: 0.72rem; font-weight: 700;
+  min-width: 1.35rem; height: 1.35rem; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 0.35rem;
+}
+
+.alertas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.alerta-tarjeta { display: grid; gap: 0.6rem; border-left: 4px solid var(--neutro); }
+.alerta-tarjeta--alto { border-left-color: var(--alto); }
+.alerta-tarjeta--medio { border-left-color: var(--medio); }
+.alerta-tarjeta__cabecera {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+}
+.alerta-tarjeta__fecha { margin-left: auto; font-size: 0.78rem; color: var(--texto-tenue); }
+.alerta-tarjeta__motivo { margin: 0; font-weight: 550; }
+.alerta-tarjeta__nota { margin: 0; font-size: 0.85rem; color: var(--texto-suave); }
+.alerta-tarjeta__acciones { display: flex; gap: 0.6rem; justify-content: flex-end; flex-wrap: wrap; }
+.alerta-tarjeta__cierre { display: grid; gap: 0.6rem; }
+.alerta-tarjeta__cierre textarea {
+  font: inherit; padding: 0.55rem 0.7rem; border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-chico); background: var(--superficie); color: var(--texto);
+  resize: vertical; width: 100%;
+}
+.alerta-tarjeta__cierre textarea:focus {
+  outline: 2px solid var(--primario); outline-offset: 1px; border-color: var(--primario);
+}

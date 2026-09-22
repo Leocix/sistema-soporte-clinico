@@ -34,12 +34,9 @@ from ..db.database import get_db
 from ..db.models import EstadoToma, Paciente, RegistroAdherencia, Rol, Usuario
 from ..schemas.adherencia_schema import ESTADOS_CUMPLIDOS
 from ..services import ml_inference
+from ..services.riesgo import Observado, clasificar
 
 router = APIRouter(prefix="/api/reportes", tags=["Reportes"])
-
-# Umbrales del riesgo observado (identicos a los de la ficha del paciente).
-TASA_ALTA, TASA_MEDIA = 60, 80
-RACHA_ALTA, RACHA_MEDIA = 3, 2
 
 
 class FilaPaciente(BaseModel):
@@ -82,33 +79,14 @@ class ReporteGeneral(BaseModel):
     pacientes: list[FilaPaciente]
 
 
-def clasificar_riesgo_observado(tasa: float | None, racha: int) -> str:
-    if tasa is None:
-        return "sin_datos"
-    if tasa < TASA_ALTA or racha >= RACHA_ALTA:
-        return "alto"
-    if tasa < TASA_MEDIA or racha >= RACHA_MEDIA:
-        return "medio"
-    return "bajo"
-
-
 def _fila(
     paciente: Paciente,
     eventos: list[RegistroAdherencia],
     prediccion: tuple[float, str] | None,
 ) -> FilaPaciente:
     """Indicadores de un paciente; `eventos` en orden cronologico."""
-    cumplidos = sum(e.estado in ESTADOS_CUMPLIDOS for e in eventos)
-    omitidos = sum(e.estado is EstadoToma.OMITIDA for e in eventos)
-    resueltos = cumplidos + omitidos
-    tasa = round(100 * cumplidos / resueltos, 1) if resueltos else None
-
-    racha = 0
-    for evento in reversed(eventos):
-        if evento.estado is EstadoToma.OMITIDA:
-            racha += 1
-        elif evento.estado in ESTADOS_CUMPLIDOS:
-            break
+    observado = Observado(eventos)
+    tasa, racha, resueltos = observado.tasa, observado.racha, observado.resueltos
 
     probabilidad, nivel = prediccion if prediccion else (None, None)
 
@@ -124,7 +102,7 @@ def _fila(
         tasa_adherencia=tasa,
         omisiones_consecutivas=racha,
         tomas_corroboradas=sum(e.id_confirmante is not None for e in eventos),
-        riesgo_observado=clasificar_riesgo_observado(tasa, racha),
+        riesgo_observado=clasificar(tasa, racha),
         probabilidad_predicha=probabilidad,
         riesgo_predicho=nivel,
     )

@@ -1,9 +1,23 @@
+import { useEffect, useState } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { useAuth } from '../context/useAuth'
+import { servicioAlertas } from '../services/api'
 
 /** Estructura base del panel clinico: barra lateral, encabezado y contenido. */
 export default function Layout() {
   const { usuario, cerrarSesion } = useAuth()
+  // Cuantas alertas esperan al medico. Se consulta al entrar: sin este numero,
+  // la bandeja solo se mira cuando a alguien se le ocurre abrirla.
+  const [pendientes, setPendientes] = useState(0)
+
+  useEffect(() => {
+    let vigente = true
+    servicioAlertas
+      .listar('abierta')
+      .then(({ data }) => vigente && setPendientes(data.abiertas))
+      .catch(() => {})
+    return () => { vigente = false }
+  }, [])
 
   return (
     <div className="panel">
@@ -18,15 +32,23 @@ export default function Layout() {
           <NavLink to="/panel" end className="navegacion__enlace">
             Panel de auditoría
           </NavLink>
+          <NavLink to="/panel/alertas" className="navegacion__enlace">
+            Alertas tempranas
+            {pendientes > 0 && (
+              <span className="navegacion__contador" aria-label={`${pendientes} pendientes`}>
+                {pendientes}
+              </span>
+            )}
+          </NavLink>
           <NavLink to="/panel/reportes" className="navegacion__enlace">
             Reportes generales
           </NavLink>
         </nav>
 
         <p className="lateral__nota">
-          La ficha muestra el riesgo predicho por el modelo (RF04) y qué variables
-          lo explican en cada paciente (SHAP, RF06), junto a la adherencia ya
-          observada.
+          Las alertas avisan cuando un paciente acumula omisiones, su cumplimiento
+          cae o el modelo predice riesgo alto. La ficha explica ese riesgo variable
+          por variable (SHAP).
         </p>
       </aside>
 

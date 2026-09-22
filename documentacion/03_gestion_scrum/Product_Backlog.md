@@ -7,7 +7,7 @@ el incumplimiento terapéutico en pacientes hipertensos y diabéticos polimedica
 **Product Owner:** Dr. Milko Ugaz Zegarra (médico internista)
 **Equipo de desarrollo:** Leonardo Guzmán Salazar
 **Técnica de priorización:** MoSCoW
-**Última actualización:** semana 5 del ciclo 2026-II (avance al 65 %)
+**Última actualización:** semana 6 del ciclo 2026-II (avance al 80 %)
 
 ---
 
@@ -36,7 +36,7 @@ incumplimiento.
 | RF02 | Registrar y gestionar pacientes polimedicados y su esquema farmacológico | Must | B2 | OE4 | 2 | **Terminado** |
 | RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | B1, B2 | OE4 | 2 | **Terminado** |
 | RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | B3 | OE3/OE5 | 3 | **Terminado** |
-| RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | Pendiente |
+| RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | **Terminado** |
 | RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Terminado** |
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 2–3 | **Terminado** |
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 3 | **Terminado** |
@@ -195,7 +195,6 @@ posteriores.
 **Sprint 3 (semanas 5–6)**
 
 - Ejecutar `train_evaluate.py` sobre las historias clínicas reales y confirmar el algoritmo.
-- Alertas tempranas al médico (RF05).
 
 **Sprint 4 (semanas 7–8)**
 

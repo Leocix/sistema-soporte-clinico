@@ -27,6 +27,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .api.adherencia import router as adherencia_router
+from .api.alertas import router as alertas_router
 from .api.auth import router as auth_router
 from .api.familiares import router as familiares_router
 from .api.pacientes import router as pacientes_router
@@ -188,6 +189,7 @@ app.include_router(adherencia_router)
 app.include_router(familiares_router)
 app.include_router(prediccion_router)
 app.include_router(reportes_router)
+app.include_router(alertas_router)
 
 
 # ---------------------------------------------------------------------------

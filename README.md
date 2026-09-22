@@ -22,10 +22,10 @@ antes de la cita.
 | :--- | :--- | :--- |
 | [`backend-api/`](backend-api/) | API central (FastAPI + PostgreSQL) | Acceso, pacientes, tomas, grupo familiar, reportes |
 | [`ml-service/`](ml-service/) | Microservicio de inferencia (FastAPI + scikit-learn + SHAP) | Predicción y explicación individual |
-| [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Ficha, riesgo con SHAP y reportes generales |
+| [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Ficha, riesgo con SHAP, alertas tempranas y reportes |
 | [`app-movil/`](app-movil/) | App del paciente y su familia (Flutter) | Acceso, registro de tomas sin conexión, alertas y grupo familiar |
 | [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación, comparación de algoritmos y modelo en servicio |
-| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe de tesis (avance al 65 %) |
+| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe de tesis (avance al 80 %) |
 
 ## Requisitos funcionales
 
@@ -35,7 +35,7 @@ antes de la cita.
 | RF02 | Gestión de pacientes polimedicados y esquema farmacológico | Must | Implementado |
 | RF03 | Registro de la toma de medicamentos desde la app móvil | Must | Implementado |
 | RF04 | Predicción del riesgo de incumplimiento | Must | Implementado |
-| RF05 | Alertas tempranas al médico | Must | Pendiente |
+| RF05 | Alertas tempranas al médico | Must | Implementado |
 | RF06 | Explicabilidad de la predicción (SHAP) | Should | Implementado |
 | RF07 | Panel de auditoría con reportes exportables | Should | Implementado |
 | RF08 | Recordatorios de toma al paciente | Could | Implementado |

@@ -30,6 +30,7 @@ from ..schemas.adherencia_schema import (
     ResultadoSincronizacion,
     ResumenAdherencia,
 )
+from ..services import alertas as servicio_alertas
 from ..services.acceso import ficha_del_paciente_autenticado, obtener_paciente_autorizado
 
 router = APIRouter(prefix="/api/adherencia", tags=["Adherencia"])
@@ -122,6 +123,7 @@ def registrar_toma(
     registro, fue_creado = _registrar_evento(db, paciente, payload)
     db.commit()
     db.refresh(registro)
+    _revisar_alertas(db, paciente)
 
     # 201 cuando el evento es nuevo; 200 cuando el envio es un reintento que
     # actualizo el evento ya sincronizado.
@@ -173,6 +175,8 @@ def sincronizar_lote(
     db.commit()
     for registro in registros:
         db.refresh(registro)
+    for paciente in {r.id_paciente: r for r in registros}.values():
+        _revisar_alertas(db, paciente.paciente)
 
     return ResultadoSincronizacion(
         creados=creados,
@@ -210,6 +214,19 @@ def _consultar_registros(
     if limite is not None:
         consulta = consulta.limit(limite)
     return consulta.all()
+
+
+def _revisar_alertas(db: Session, paciente: Paciente) -> None:
+    """Reevalua las reglas de alerta del paciente tras registrar una toma.
+
+    Es el momento en que la evidencia cambia: una omision mas puede completar
+    la racha que el medico necesita conocer hoy, no en su proxima consulta. No
+    se pide la prediccion al microservicio —encarecerian cada sincronizacion de
+    la app— porque esa regla se evalua al abrir la bandeja.
+    """
+    eventos = _consultar_registros(db, paciente, None, None, ascendente=True)
+    servicio_alertas.evaluar_paciente(db, paciente, eventos)
+    db.commit()
 
 
 def _construir_resumen(

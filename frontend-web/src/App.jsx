@@ -8,6 +8,7 @@ import RestablecerClave from './pages/RestablecerClave'
 import Dashboard from './pages/Dashboard'
 import DetallePaciente from './pages/DetallePaciente'
 import Reportes from './pages/Reportes'
+import Alertas from './pages/Alertas'
 
 /** Enrutador del panel medico. */
 export default function App() {
@@ -33,6 +34,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="pacientes/:id" element={<DetallePaciente />} />
             <Route path="reportes" element={<Reportes />} />
+            <Route path="alertas" element={<Alertas />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

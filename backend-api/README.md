@@ -98,11 +98,11 @@ omiten si no están instaladas las dependencias de `ml-service`.
 ```
 app/
 ├── main.py              # CORS, middlewares de seguridad, manejo global de errores
-├── api/                 # auth, pacientes, adherencia, familiares, prediccion, reportes
+├── api/                 # auth, pacientes, adherencia, familiares, prediccion, reportes, alertas
 ├── core/                # config, security (JWT + RBAC), exceptions
 ├── db/                  # database (motor y sesión), models (SQLAlchemy)
 ├── schemas/             # Validación estricta de entrada y salida (Pydantic)
-└── services/            # acceso a la ficha, cliente del microservicio, correo
+└── services/            # acceso a la ficha, riesgo, alertas, cliente del microservicio, correo
 alembic/                 # Migraciones versionadas del esquema clínico
 scripts/                 # seed.py
 tests/                   # Batería de pruebas del núcleo funcional
