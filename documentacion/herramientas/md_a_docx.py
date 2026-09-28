@@ -340,9 +340,19 @@ def main() -> int:
             continue
         cuerpo.remove(hijo)
 
-    # Se actualiza la portada con la fecha de presentación que declara el Markdown.
-    fecha = re.search(r"\d{1,2} de \w+ de \d{4}", ORIGEN.read_text(encoding="utf-8"))
+    # La portada y la informacion general vienen de la plantilla; se actualizan
+    # con lo que declara el Markdown. El titulo importa especialmente: el
+    # formato institucional exige que identifique por nombre el lugar donde se
+    # ejecuta la investigacion, y el de la plantilla decia solo "consultorio de
+    # medicina interna".
+    fuente = ORIGEN.read_text(encoding="utf-8")
+    fecha = re.search(r"\d{1,2} de \w+ de \d{4}", fuente)
     fecha = fecha.group(0) if fecha else "08 de septiembre de 2026"
+    encontrado = re.search(
+        r"\*\*2\. Título del informe de tesis\*\*\s+([^\n]+)", fuente
+    )
+    titulo = encontrado.group(1).strip() if encontrado else None
+
     for hijo in hijos[:corte]:
         if not hijo.tag.endswith("}p"):
             continue
@@ -351,6 +361,10 @@ def main() -> int:
             reemplazar_texto(hijo, fecha)
         elif texto.rstrip().rstrip(",").strip() == "Chiclayo":
             reemplazar_texto(hijo, "Chiclayo, 2026")
+        elif titulo and texto.lower().startswith("sistema de soporte clínico"):
+            # Aparece dos veces: en la portada y en el punto 2 de la
+            # informacion general.
+            reemplazar_texto(hijo, titulo)
 
     # Cuerpo nuevo: desde el índice del Markdown hasta el final.
     md = ORIGEN.read_text(encoding="utf-8")

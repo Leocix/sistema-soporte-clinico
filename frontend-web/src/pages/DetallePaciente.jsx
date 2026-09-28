@@ -102,6 +102,7 @@ export default function DetallePaciente() {
   const [editando, setEditando] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [confirmacion, setConfirmacion] = useState(null)
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -157,6 +158,10 @@ export default function DetallePaciente() {
 
   return (
     <>
+      {confirmacion && (
+        <p className="mensaje mensaje--exito" role="status">{confirmacion}</p>
+      )}
+
       <div className="seccion__cabecera">
         <div>
           <Link className="enlace enlace--volver" to="/panel">← Panel de auditoría</Link>
@@ -309,6 +314,7 @@ export default function DetallePaciente() {
           alGuardar={(actualizado) => {
             setEditando(false)
             setPaciente(actualizado)
+            setConfirmacion('Ficha actualizada. El riesgo se recalcula con los datos nuevos.')
             // La predicción depende de las variables que se acaban de editar,
             // así que se recalcula en lugar de mostrar la anterior.
             cargar()

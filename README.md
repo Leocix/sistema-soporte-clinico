@@ -25,7 +25,51 @@ antes de la cita.
 | [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Ficha, riesgo con SHAP, alertas tempranas y reportes |
 | [`app-movil/`](app-movil/) | App del paciente y su familia (Flutter) | Acceso, registro de tomas sin conexión, alertas y grupo familiar |
 | [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación, comparación de algoritmos y modelo en servicio |
-| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe de tesis (avance al 80 %) |
+| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe de tesis (avance al 90 %) y guion de demostración |
+
+## Estructura del repositorio
+
+Cada componente se despliega por separado y trae su propio `README.md`, sus
+dependencias y sus pruebas.
+
+```
+sistema-soporte-clinico/
+├── backend-api/            API central (FastAPI)
+│   ├── app/
+│   │   ├── api/            Rutas: auth, pacientes, adherencia, familiares,
+│   │   │                   prediccion, reportes, alertas
+│   │   ├── core/           Configuracion, seguridad (JWT + RBAC), errores
+│   │   ├── db/             Modelos SQLAlchemy y sesion
+│   │   ├── schemas/        Validacion de entrada y salida (Pydantic)
+│   │   └── services/       Reglas: acceso, riesgo, alertas, correo,
+│   │                       cliente del microservicio de inferencia
+│   ├── alembic/versions/   Migraciones versionadas del esquema clinico
+│   ├── scripts/            Carga inicial, migracion con reintentos, carga
+│   └── tests/              142 pruebas (pytest)
+├── ml-service/             Microservicio de inferencia (FastAPI + SHAP)
+│   ├── app/                Carga del modelo, prediccion y explicacion
+│   └── tests/              13 pruebas contra el modelo desplegado
+├── ml-pipeline/            Pipeline CRISP-DM
+│   ├── src/                preprocess.py y train_evaluate.py
+│   └── models/             Modelo en servicio y su ficha de procedencia
+├── frontend-web/           Panel medico (React + Vite)
+│   └── src/
+│       ├── pages/          Panel, ficha, alertas, reportes, acceso
+│       ├── components/     Formulario, prediccion, alertas de riesgo
+│       └── services/       Cliente HTTP, etiquetas, validacion, riesgo
+├── app-movil/              Aplicacion del paciente y del familiar (Flutter)
+│   ├── lib/                Pantallas, servicios y modelos
+│   └── test/               40 pruebas
+├── documentacion/          Evidencias academicas
+│   ├── 00_documentacion_base/  Proyecto de tesis, cronograma, silabo
+│   ├── 01_preinforme/          Pre informe (Markdown y Word)
+│   ├── 02_instrumentos/        Anexos 04 a 07 y plantilla de captura
+│   ├── 03_gestion_scrum/       Product Backlog, trazabilidad, actas
+│   ├── 04_demostracion/        Guion de la demostracion del producto
+│   └── herramientas/           Generador del Word desde el Markdown
+├── render.yaml             Despliegue del API y del microservicio
+└── DESPLIEGUE.md           Guia completa de puesta en produccion
+```
 
 ## Requisitos funcionales
 
@@ -71,6 +115,12 @@ cd backend-api && python -m pytest -q
 
 ```bash
 cd ml-service && python -m pytest -q
+```
+
+Rendimiento con usuarios simultáneos (RNF02, RNF06):
+
+```bash
+python backend-api/scripts/prueba_carga.py --url http://127.0.0.1:8000 --correo <medico> --usuarios 10
 ```
 
 ```bash

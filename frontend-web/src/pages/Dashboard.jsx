@@ -20,6 +20,9 @@ export default function Dashboard() {
   const [resumenes, setResumenes] = useState({})
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  // El sistema confirma lo que acaba de ocurrir: sin esta linea, el medico da
+  // de alta a un paciente y la pantalla vuelve al listado sin decir nada.
+  const [confirmacion, setConfirmacion] = useState(null)
   const [mostrarAlta, setMostrarAlta] = useState(false)
 
   const cargar = useCallback(async () => {
@@ -155,7 +158,11 @@ export default function Dashboard() {
           </label>
         </div>
 
-        {error && <p className="mensaje mensaje--error" role="alert">{error}</p>}
+        {confirmacion && (
+        <p className="mensaje mensaje--exito" role="status">{confirmacion}</p>
+      )}
+
+      {error && <p className="mensaje mensaje--error" role="alert">{error}</p>}
 
         {cargando ? (
           <div className="cargando" role="status">
@@ -244,7 +251,14 @@ export default function Dashboard() {
       {mostrarAlta && (
         <FormularioPaciente
           alCancelar={() => setMostrarAlta(false)}
-          alGuardar={() => { setMostrarAlta(false); setPagina(1); cargar() }}
+          alGuardar={(nuevo) => {
+            setMostrarAlta(false)
+            setPagina(1)
+            setConfirmacion(
+              `Paciente ${nuevo.codigo_anonimizado} registrado. Genere su acceso móvil desde la ficha.`,
+            )
+            cargar()
+          }}
         />
       )}
     </>

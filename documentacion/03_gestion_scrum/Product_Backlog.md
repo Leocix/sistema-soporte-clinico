@@ -7,7 +7,7 @@ el incumplimiento terapéutico en pacientes hipertensos y diabéticos polimedica
 **Product Owner:** Dr. Milko Ugaz Zegarra (médico internista)
 **Equipo de desarrollo:** Leonardo Guzmán Salazar
 **Técnica de priorización:** MoSCoW
-**Última actualización:** semana 6 del ciclo 2026-II (avance al 80 %)
+**Última actualización:** semana 7 del ciclo 2026-II (avance al 90 %)
 
 ---
 
@@ -198,9 +198,14 @@ posteriores.
 
 **Sprint 4 (semanas 7–8)**
 
-- Pruebas de rendimiento y carga (RNF02, RNF06).
-- Pruebas de usabilidad con escala SUS (OE5).
-- Verificación de atributos ISO/IEC 25010.
+- Pruebas de usabilidad con la escala SUS (OE5): requiere al médico y a una
+  muestra de pacientes.
+- Ejecución de la comparación de algoritmos sobre las historias clínicas
+  reales, cuando concluya la extracción del Anexo n.° 04.
+
+Ya ejecutados en este sprint: prueba de rendimiento y carga (RNF02, RNF06),
+verificación de los atributos ISO/IEC 25010, guion de demostración y
+consolidación del repositorio.
 
 ---
 

@@ -19,6 +19,7 @@ Riesgos gestionados
 from __future__ import annotations
 
 import logging
+import time
 from dataclasses import dataclass, field
 
 import httpx
@@ -41,19 +42,29 @@ class Prediccion:
     contribuciones: list[dict] = field(default_factory=list)
 
 
+_cliente_compartido: httpx.Client | None = None
+
+
 def _cliente() -> httpx.Client:
-    """Cliente HTTP hacia el microservicio. Las pruebas lo sustituyen."""
-    return httpx.Client(
-        base_url=settings.ml_service_url,
-        headers={"X-Clave-Servicio": settings.ml_service_clave},
-        timeout=settings.ml_service_timeout,
-    )
+    """Cliente HTTP hacia el microservicio. Las pruebas lo sustituyen.
+
+    Se reutiliza entre peticiones: abrir una conexion nueva por cada prediccion
+    anade el saludo TCP y TLS a cada consulta, y el panel pide predicciones de
+    todos los pacientes cada vez que se abre la bandeja o un reporte.
+    """
+    global _cliente_compartido
+    if _cliente_compartido is None or _cliente_compartido.is_closed:
+        _cliente_compartido = httpx.Client(
+            base_url=settings.ml_service_url,
+            headers={"X-Clave-Servicio": settings.ml_service_clave},
+            timeout=settings.ml_service_timeout,
+        )
+    return _cliente_compartido
 
 
 def _pedir(metodo: str, ruta: str, **kwargs) -> dict:
     try:
-        with _cliente() as cliente:
-            respuesta = cliente.request(metodo, ruta, **kwargs)
+        respuesta = _cliente().request(metodo, ruta, **kwargs)
     except httpx.HTTPError as exc:
         log.warning("microservicio_inalcanzable ruta=%s error=%s", ruta, exc)
         raise ModeloNoDisponibleError() from exc
@@ -117,10 +128,52 @@ def predecir(paciente: Paciente) -> Prediccion:
     )
 
 
+# Predicciones recientes de las vistas que recorren a todos los pacientes
+# —reportes y bandeja de alertas—. La clave incluye la fecha de actualizacion
+# de la ficha, de modo que editar a un paciente invalida su entrada al
+# instante; el plazo cubre el caso contrario, el de dos aperturas seguidas de
+# la misma pantalla. La ficha individual nunca usa esta cache: ahi el medico
+# mira a un paciente concreto y la prediccion se calcula de nuevo.
+VIGENCIA_CACHE_S = 60.0
+_cache_lote: dict[tuple[str, str], tuple[float, tuple[float, str]]] = {}
+
+
+def _clave(paciente: Paciente) -> tuple[str, str]:
+    actualizacion = paciente.fecha_actualizacion
+    return paciente.codigo_anonimizado, actualizacion.isoformat() if actualizacion else ""
+
+
+def limpiar_cache() -> None:
+    """Olvida las predicciones guardadas (lo usan las pruebas)."""
+    _cache_lote.clear()
+
+
 def predecir_lote(pacientes: list[Paciente]) -> dict[str, tuple[float, str]]:
     """Probabilidad y nivel por codigo anonimizado, sin SHAP (para reportes)."""
     if not pacientes:
         return {}
-    cuerpo = _pedir("POST", "/predicciones/lote",
-                    json={"fichas": [ficha_para_modelo(p) for p in pacientes]})
-    return {p["codigo_anonimizado"]: (p["probabilidad"], p["nivel"]) for p in cuerpo["predicciones"]}
+
+    ahora = time.monotonic()
+    conocidos: dict[str, tuple[float, str]] = {}
+    pendientes: list[Paciente] = []
+    for paciente in pacientes:
+        guardado = _cache_lote.get(_clave(paciente))
+        if guardado is not None and ahora - guardado[0] < VIGENCIA_CACHE_S:
+            conocidos[paciente.codigo_anonimizado] = guardado[1]
+        else:
+            pendientes.append(paciente)
+
+    if pendientes:
+        cuerpo = _pedir("POST", "/predicciones/lote",
+                        json={"fichas": [ficha_para_modelo(p) for p in pendientes]})
+        recientes = {
+            p["codigo_anonimizado"]: (p["probabilidad"], p["nivel"])
+            for p in cuerpo["predicciones"]
+        }
+        for paciente in pendientes:
+            prediccion = recientes.get(paciente.codigo_anonimizado)
+            if prediccion is not None:
+                _cache_lote[_clave(paciente)] = (ahora, prediccion)
+        conocidos.update(recientes)
+
+    return conocidos

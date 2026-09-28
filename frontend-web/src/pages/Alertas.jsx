@@ -35,6 +35,7 @@ export default function Alertas() {
   const [bandeja, setBandeja] = useState(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [confirmacion, setConfirmacion] = useState(null)
   const [abierta, setAbierta] = useState(null)
   const [nota, setNota] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -62,6 +63,11 @@ export default function Alertas() {
       await servicioAlertas[accion](alerta.id_alerta, nota.trim() || null)
       setAbierta(null)
       setNota('')
+      setConfirmacion(
+        accion === 'atender'
+          ? `Alerta de ${alerta.codigo_anonimizado} registrada como atendida.`
+          : `Alerta de ${alerta.codigo_anonimizado} descartada.`,
+      )
       await cargar()
     } catch (fallo) {
       setError(mensajeDeError(fallo))
@@ -91,6 +97,10 @@ export default function Alertas() {
           </select>
         </label>
       </div>
+
+      {confirmacion && (
+        <p className="mensaje mensaje--exito" role="status">{confirmacion}</p>
+      )}
 
       {error && <p className="mensaje mensaje--error" role="alert">{error}</p>}
 

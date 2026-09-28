@@ -79,6 +79,16 @@ def datos(db_session):
     }
 
 
+@pytest.fixture(autouse=True)
+def _sin_predicciones_guardadas():
+    """Cada prueba parte sin predicciones en cache."""
+    from app.services import ml_inference
+
+    ml_inference.limpiar_cache()
+    yield
+    ml_inference.limpiar_cache()
+
+
 @pytest.fixture()
 def client(db_session):
     def _get_db():

@@ -280,6 +280,20 @@ Si responde `{"estado":"ok"}`, el API está en pie y conectado.
 
 ---
 
+## Antes de una demostración
+
+Los servicios gratuitos se suspenden tras quince minutos sin tráfico. Despiértelos
+cinco minutos antes, no durante la sustentación:
+
+```bash
+python backend-api/scripts/despertar.py --api https://cdss-adherencia-api.onrender.com --panel <URL del panel>
+```
+
+El guion completo de la demostración, paso a paso, está en
+`documentacion/04_demostracion/Guion_demostracion.md`.
+
+---
+
 ## Lista de verificación antes de la sustentación
 
 - [ ] `SECRET_KEY` de producción distinta de la de desarrollo
@@ -287,7 +301,7 @@ Si responde `{"estado":"ok"}`, el API está en pie y conectado.
 - [ ] `ENVIRONMENT=produccion` en Render (oculta `/docs`)
 - [ ] `sslmode=require` en la cadena de conexión
 - [ ] `CORS_ORIGINS` apuntando al dominio real del panel
-- [ ] API y microservicio de Render despiertos (abrir ambos `/health`)
+- [ ] API y microservicio despiertos (`python backend-api/scripts/despertar.py`)
 - [ ] Pacientes de demostración (`D-`) retirados si se muestran datos reales
 - [ ] APK reconstruido tras el último cambio: `flutter build apk --release`
 - [ ] `FRONTEND_URL` apuntando al dominio real del panel, si se activó el correo
