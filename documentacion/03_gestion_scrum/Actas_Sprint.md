@@ -103,3 +103,119 @@ clasificación de riesgo se rotula explícitamente como observada, no predicha.
 2. Ejecutar la comparación de algoritmos y seleccionar el modelo.
 3. Desarrollar el microservicio de inferencia y la explicabilidad SHAP.
 4. Implementar las alertas tempranas y la exportación de reportes.
+
+---
+
+# Sprint 3 — Modelo integrado, alertas y estabilización
+
+**Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*
+· Hitos 65 % y 80 %**
+
+## Objetivo del sprint
+
+Llevar el modelo del cuaderno de análisis al sistema en producción, explicar
+cada predicción al médico, completar la aplicación del paciente con el
+acompañamiento familiar y avisar al médico antes de que el paciente se
+descompense.
+
+## Sprint Review
+
+**Incrementos presentados**
+
+| Entregable | Resultado |
+| :--- | :--- |
+| Microservicio de inferencia independiente (RF04) | Aceptado |
+| Explicación individual de cada predicción con SHAP (RF06) | Aceptado |
+| Grupo familiar de acompañamiento y corroboración (RF09) | Aceptado |
+| Recordatorios de toma en el dispositivo (RF08) | Aceptado |
+| Restablecimiento de contraseña por correo (RF10) | Aceptado |
+| Acceso móvil del paciente generado desde el panel | Aceptado |
+| Alertas tempranas al médico (RF05) | Aceptado |
+| Reportes generales con exportación (RF07) | Aceptado |
+| Verificación de seguridad del API (RNF01) | Aceptado |
+| Comparación de algoritmos sobre historias clínicas reales | **No entregado**: depende de la extracción documental |
+
+**Observaciones del Product Owner**
+
+Al revisar la ficha, el médico señaló que el nivel socioeconómico, el tipo de
+seguro y la zona de residencia no distinguen a sus pacientes, porque en una
+clínica privada apenas varían. Se refinaron las variables: nivel educativo,
+convivencia y apoyo familiar en la medicación, que sí varían y se relacionan
+con las causas que él mismo identificó —el olvido y la falta de comprensión—.
+Las comorbilidades pasaron de un número a una lista de enfermedades concretas.
+
+Sobre la bandeja de alertas, pidió expresamente que un mismo paciente no
+generara avisos repetidos: «si me llega veinte veces lo mismo, dejo de
+mirarla». De ahí el cierre automático y el plazo de silencio tras atender.
+
+## Retrospectiva
+
+| Qué funcionó | Qué no funcionó | Acción correctiva |
+| :--- | :--- | :--- |
+| Separar el modelo en un microservicio permitió reentrenarlo y medirlo sin tocar la parte clínica | La predicción no funcionaba en el servicio publicado: faltaba una librería y la versión de otra no era la del entrenamiento (I-14) | Fijar las versiones exactas y añadir pruebas que cargan el artefacto realmente desplegado |
+| Probar sobre el teléfono y el servicio publicado, y no solo en local | Tres defectos (I-14, I-15, I-22) solo se manifestaban en el entorno publicado | Incorporar al procedimiento la verificación sobre el artefacto que se entrega |
+| Escribir primero la regla de alerta y después su prueba evitó una bandeja inservible | El protocolo declaraba un desempate por sensibilidad que el código no aplicaba (I-18) | Contrastar con McNemar antes de seleccionar, y probarlo |
+
+**Defectos del sprint:** 15 detectados, 15 corregidos, 0 abiertos.
+
+## Compromisos para el Sprint 4
+
+1. Medir el rendimiento con usuarios simultáneos (RNF02, RNF06).
+2. Verificar los atributos de calidad ISO/IEC 25010.
+3. Preparar la demostración del producto y el despertar de los servicios.
+4. Aplicar la escala SUS con el médico y una muestra de pacientes (OE5).
+5. Ejecutar la comparación de algoritmos cuando concluya la extracción.
+
+---
+
+# Sprint 4 — Cierre, rendimiento y validación
+
+**Semanas 7–8 · CRISP-DM: *Deployment* y monitoreo · Hitos 90 % y 100 %**
+
+## Objetivo del sprint
+
+Verificar el producto contra sus requisitos no funcionales, dejarlo listo para
+demostrarse sin sobresaltos y consolidar las evidencias de la investigación.
+
+## Sprint Review
+
+**Incrementos presentados**
+
+| Entregable | Resultado |
+| :--- | :--- |
+| Prueba de rendimiento y carga con usuarios simultáneos (RNF02, RNF06) | Aceptado |
+| Verificación de los atributos ISO/IEC 25010 | Aceptado: 7 de 8; la usabilidad depende de la escala SUS |
+| Guion de demostración del producto y despertador de servicios | Aceptado |
+| Arranque tolerante a cortes de la base de datos | Aceptado |
+| Consolidación del repositorio, backlog, trazabilidad y actas | Aceptado |
+| Evaluación de usabilidad con la escala SUS (OE5) | **Pendiente**: requiere la participación del médico y de los pacientes |
+| Comparación de algoritmos sobre historias clínicas reales (OE3) | **Pendiente**: depende de la extracción documental |
+
+**Observaciones del Product Owner**
+
+La medición de rendimiento se revisó con el médico en términos de su consulta:
+la ficha y el listado responden por debajo de un décimo de segundo, y la
+predicción con explicación, en menos de un segundo. Su comentario fue que el
+tiempo que percibe no es el del sistema sino el del servicio gratuito cuando
+lleva horas sin usarse; de ahí que el guion de demostración empiece por
+despertarlo.
+
+## Retrospectiva
+
+| Qué funcionó | Qué no funcionó | Acción correctiva |
+| :--- | :--- | :--- |
+| Medir antes de optimizar: la prueba de carga señaló dos costes que nadie habría adivinado leyendo el código | El cliente hacia el microservicio abría una conexión por consulta | Reutilizar la conexión |
+| Descontar de la medición lo que no es tiempo del sistema —conexión y arranque en frío— evitó conclusiones falsas | Las vistas que recorren a todos los pacientes pedían la predicción de cada uno en cada apertura | Guardar la predicción sesenta segundos, con invalidación al editar la ficha |
+| La evaluación externa del 50 % sirvió como retrospectiva real del producto | La demostración anterior se hizo sobre servicios suspendidos, y el componente de IA no llegó a mostrarse | Guion de demostración con despertar previo y recorrido paso a paso |
+
+**Defectos del sprint:** 1 detectado (I-22), 1 corregido, 0 abiertos.
+
+## Cierre del proyecto de desarrollo
+
+El producto cubre los diez requisitos funcionales y los seis no funcionales
+comprometidos. Lo que queda abierto no pertenece al desarrollo, sino al trabajo
+de campo: la extracción documental del Anexo n.° 04, el test de Morisky-Green
+que da la etiqueta y la evaluación de usabilidad con usuarios reales. Los tres
+tienen su instrumento formalizado y su procedimiento automatizado, de modo que
+al disponer de los datos el resultado se obtiene ejecutando el pipeline y la
+hoja de cálculo del SUS.

@@ -64,11 +64,16 @@ del repositorio.
 | RNF01 | Ni el acceso ni la recuperación permiten enumerar cuentas | `app/api/auth.py` | Respuesta idéntica, verificada |
 | RNF01 | Host confiable: se rechazan cabeceras `Host` falsificadas | `app/main.py` | `403` con `Host` falso |
 | RNF02 | Latencia medida y expuesta por petición | `TrazaPeticionMiddleware` | Cabecera `X-Tiempo-Respuesta-ms` |
-| RNF03 | Tipografía de 18 pt y áreas táctiles de 56 pt en la app | `app-movil/lib/utils/tema.dart` | Pendiente de medición SUS (semana 7) |
+| RNF02 | Prueba de carga del recorrido del médico | `backend-api/scripts/prueba_carga.py` | Con 10 usuarios simultáneos, todo ≤ 1,4 s (meta 2 s) |
+| RNF03 | Tipografía de 18 pt y áreas táctiles de 56 pt en la app | `app-movil/lib/utils/tema.dart` | Pendiente de medición con la escala SUS |
+| RNF03 | Barra inferior rotulada y confirmación de cada acción en el panel | `app-movil/lib/main.dart`, `frontend-web/src/pages/` | Verificado en navegador y en dispositivo |
 | RNF04 | Manejo global de excepciones; ningún fallo tumba el servicio | `core/exceptions.py` | Fallo de BD devuelve `503`, no `500` |
 | RNF04 | Sonda de disponibilidad para el balanceador | `/health` | `200` en producción |
+| RNF04 | El arranque reintenta la conexión a la base antes de rendirse | `backend-api/scripts/migrar.py` | 8 pruebas (incidencia I-22) |
+| RNF04 | La app reintenta las lecturas ante el arranque en frío | `app-movil/lib/services/api_service.dart` | 3 pruebas (incidencia I-15) |
 | RNF05 | Separación en capas `api / core / db / schemas / services` | Estructura del proyecto | Revisión estructural |
-| RNF06 | Microservicio de ML desacoplado del backend transaccional | `render.yaml`, arquitectura | Diseño verificado |
+| RNF06 | Microservicio de ML desacoplado del backend transaccional | `ml-service/`, `render.yaml` | Desplegado por separado; 13 pruebas propias |
+| RNF06 | Comportamiento medido al crecer la concurrencia | `scripts/prueba_carga.py` | 1, 10 y 20 usuarios: el límite lo marca la explicación SHAP |
 
 ---
 
@@ -79,19 +84,19 @@ del repositorio.
 | OE1 | Pacientes con adherencia deficiente (línea base) | Medida en diagnóstico | Pendiente de la aplicación del test de Morisky |
 | OE1 | Factores clasificados según modelo OMS | 5 dimensiones | **5 de 5 cubiertas** |
 | OE1 | Procesos de seguimiento no digitalizados | Medida | **100 %** |
-| OE2 | Requisitos especificados / identificados | 100 % | **100 %** (8 RF + 6 RNF) |
+| OE2 | Requisitos especificados / identificados | 100 % | **100 %** (10 RF + 6 RNF) |
 | OE2 | Alineación con estándares de arquitectura | Juicio de 3 expertos (1–5) | Pendiente |
 | OE3 | Algoritmos comparados | ≥ 4 | **4 configurados y ejecutables** |
-| OE3 | AUCROC en validación cruzada | ≥ 0,80 | Protocolo implementado; pendiente del dataset real |
-| OE3 | Sensibilidad y especificidad | Reportadas | Calculadas por el script |
-| OE3 | F1-score en prueba independiente | Reportado | Calculado por el script |
-| OE4 | Historias de usuario completadas | 100 % por sprint | **3 de 3** del escenario principal |
-| OE4 | Módulos construidos / requeridos | Todos | **3 de 8** requisitos funcionales |
-| OE4 | Densidad de errores por módulo | Decreciente | 3 defectos detectados y corregidos; 0 abiertos |
-| OE4 | Cumplimiento ISO/IEC 25010 | Funcionalidad, eficiencia, usabilidad | Verificación formal en Sprint 4 |
-| OE5 | Nivel de usabilidad (SUS) | ≥ 80 | Pendiente (semana 7) |
-| OE5 | Tasa de éxito en tareas | Medida | Pendiente (semana 7) |
-| OE5 | Tiempo de aprendizaje de uso | Medido | Pendiente (semana 7) |
+| OE3 | AUCROC en validación cruzada | ≥ 0,80 | **0,856** en la corrida de verificación; pendiente sobre el dataset real |
+| OE3 | Sensibilidad y especificidad | Reportadas | **0,794 y 0,757** en la corrida de verificación |
+| OE3 | F1-score en prueba independiente | Reportado | **0,471** sobre el conjunto apartado |
+| OE4 | Historias de usuario completadas | 100 % por sprint | **5 de 5** (HU01–HU05) |
+| OE4 | Módulos construidos / requeridos | Todos | **10 de 10** requisitos funcionales |
+| OE4 | Densidad de errores por módulo | Decreciente | 22 incidencias cerradas, 0 abiertas; 195 pruebas en verde |
+| OE4 | Cumplimiento ISO/IEC 25010 | Funcionalidad, eficiencia, usabilidad | **7 de 8 atributos verificados**; usabilidad pendiente del SUS |
+| OE5 | Nivel de usabilidad (SUS) | ≥ 80 | Pendiente: requiere usuarios |
+| OE5 | Tasa de éxito en tareas | Medida | Pendiente: requiere usuarios |
+| OE5 | Tiempo de aprendizaje de uso | Medido | Pendiente: requiere usuarios |
 
 ---
 

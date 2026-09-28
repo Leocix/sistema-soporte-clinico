@@ -25,7 +25,7 @@ antes de la cita.
 | [`frontend-web/`](frontend-web/) | Panel médico (React + Vite) | Ficha, riesgo con SHAP, alertas tempranas y reportes |
 | [`app-movil/`](app-movil/) | App del paciente y su familia (Flutter) | Acceso, registro de tomas sin conexión, alertas y grupo familiar |
 | [`ml-pipeline/`](ml-pipeline/) | Pipeline CRISP-DM | Preparación, comparación de algoritmos y modelo en servicio |
-| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe de tesis (avance al 90 %) y guion de demostración |
+| [`documentacion/`](documentacion/) | Evidencias académicas USAT | Pre informe de tesis (100 % del desarrollo) y guion de demostración |
 
 ## Estructura del repositorio
 

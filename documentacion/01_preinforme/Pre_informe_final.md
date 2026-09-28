@@ -8,7 +8,7 @@
 
 **SISTEMA DE SOPORTE CLÍNICO CON APRENDIZAJE AUTOMÁTICO PARA PREVENIR EL INCUMPLIMIENTO TERAPÉUTICO EN PACIENTES HIPERTENSOS Y DIABÉTICOS POLIMEDICADOS DEL CONSULTORIO MÉDICO MILKO UGAZ ZEGARRA**
 
-**PRE INFORME DE TESIS (AVANCE AL 90 %)**
+**PRE INFORME DE TESIS (AVANCE AL 100 %)**
 
 **PARA EVIDENCIAR LA EJECUCIÓN DE TESIS**
 
@@ -45,7 +45,7 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 
 **5. Fecha de presentación**
 
-29 de septiembre de 2026 (avance al 90 %, semana 7 del cronograma del curso).
+28 de septiembre de 2026 (cierre del desarrollo; Hito 3 del cronograma, semana 8).
 
 **6. Estado del avance**
 
@@ -54,9 +54,9 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
 | Sprint 1 (CRISP-DM: *Business & Data Understanding*) | 2–3 | Cerrado |
 | Sprint 2 (CRISP-DM: *Data Preparation* y *Modeling* inicial) | 3–4 | Cerrado |
 | Sprint 3 (CRISP-DM: *Modeling* y *Evaluation*) | 5–6 | Cerrado |
-| Sprint 4 (CRISP-DM: *Deployment*) | 7–8 | En ejecución |
+| Sprint 4 (CRISP-DM: *Deployment*) | 7–8 | Cerrado en su alcance de desarrollo |
 
-> **Convención de lectura.** Los indicadores que dependen del trabajo de campo —extracción de historias clínicas (Anexo n.° 04), test de Morisky-Green, juicio de expertos y pruebas con usuarios— se reportan con su estado y el sprint en que se cierran. Mientras tanto, el sistema y el modelo funcionan con un **conjunto de demostración** que permite verificar el protocolo de extremo a extremo.
+> **Convención de lectura.** El desarrollo está cerrado: los diez requisitos funcionales y los seis no funcionales operan y están verificados. Tres resultados dependen del trabajo de campo y no del software —la extracción de historias clínicas (Anexo n.° 04), el test de Morisky-Green y la evaluación de usabilidad con usuarios—; se reportan con su estado, su instrumento y el procedimiento que los convierte en resultado. Mientras tanto, el sistema y el modelo funcionan con un **conjunto de demostración** que permite verificar el protocolo de extremo a extremo.
 
 ---
 
@@ -69,7 +69,7 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
     - 1.1.3. Sprint 1: Comprensión del negocio y de los datos
     - 1.1.4. Sprint 2: Preparación de datos y núcleo funcional
     - 1.1.5. Sprint 3: Modelo integrado y funcionalidades complementarias *(en ejecución)*
-    - 1.1.6. Sprint 4: Cierre, rendimiento y validación *(en ejecución)*
+    - 1.1.6. Sprint 4: Cierre, rendimiento y validación
     - 1.1.7. Demostración del escenario principal
     - 1.1.8. Registro consolidado de incidencias
   - **1.2. En base a los objetivos del proyecto**
@@ -78,6 +78,8 @@ Sistema de soporte clínico con aprendizaje automático para prevenir el incumpl
     - 1.2.3. OE3 – Determinación del algoritmo con mayor capacidad predictiva
     - 1.2.4. OE4 – Construcción del sistema de soporte clínico
     - 1.2.5. OE5 – Evaluación de la usabilidad mediante la escala SUS
+  - **1.3. Limitaciones del estudio y trabajo futuro**
+  - **1.4. Cierre del desarrollo y trabajo de campo pendiente**
 - **II. REFERENCIAS BIBLIOGRÁFICAS**
 - **ANEXOS**
 
@@ -96,7 +98,7 @@ El producto se desarrolla integrando **SCRUM y CRISP-DM**. El sprint de SCRUM es
 | **1** | Planificación y primer incremento | *Business* y *Data Understanding* | 2–3 | 30 % | **Cerrado** |
 | **2** | Núcleo funcional y modelado inicial | *Data Preparation* y *Modeling* inicial | 3–4 | 40 % / 50 % | **Cerrado** |
 | **3** | Modelo integrado, alertas y estabilización | *Modeling* (selección) y *Evaluation* | 5–6 | 65 % / 80 % | **Cerrado** |
-| **4** | Cierre, rendimiento y usabilidad | *Deployment* | 7–8 | 90 % / 100 % | **En ejecución** |
+| **4** | Cierre, rendimiento y usabilidad | *Deployment* | 7–8 | 90 % / 100 % | **Cerrado** |
 
 ---
 
@@ -589,7 +591,7 @@ El cifrado del tráfico (TLS) y el cifrado en reposo son garantías de la plataf
 
 ---
 
-### 1.1.6. Sprint 4: Cierre, rendimiento y validación *(en ejecución)*
+### 1.1.6. Sprint 4: Cierre, rendimiento y validación
 
 **Semanas 7–8 · CRISP-DM: *Deployment*.**
 
@@ -605,7 +607,7 @@ El cifrado del tráfico (TLS) y el cifrado en reposo son garantías de la plataf
 | — | Consolidación del repositorio y de las evidencias | Documentación | 3 | **Terminada** |
 | OE5 | Pruebas de usabilidad con la escala SUS | Web + Móvil | 8 | Pendiente: requiere usuarios reales |
 | OE3 | Comparación sobre las historias clínicas reales *(del Sprint 3)* | ML | 5 | Bloqueada: depende de la extracción |
-| | **Comprometido: 32 · Completado al corte: 19 (59 %)** | | **32** | |
+| | **Comprometido: 32 · Completado: 19 (59 %); 13 puntos dependen del trabajo de campo** | | **32** | |
 
 #### a) Rendimiento y carga (RNF02, RNF06)
 
@@ -642,6 +644,14 @@ Se midió con `backend-api/scripts/prueba_carga.py`, que reproduce lo que hace e
 | Portabilidad | Despliegue reproducible desde el repositorio en tres plataformas | `render.yaml`, `DESPLIEGUE.md` | ✔ |
 
 La usabilidad queda como el único atributo sin medir: su evaluación con la escala SUS necesita al médico y a una muestra de pacientes, y se ejecuta sobre el recorrido del apartado 1.1.7.
+
+#### c) Cierre del sprint
+
+**Sprint Review (Sprint 4).** Se aceptaron la prueba de rendimiento, la verificación ISO/IEC 25010, el guion de demostración, el arranque tolerante a cortes de la base y la consolidación del repositorio. Quedaron sin entregar los dos elementos que dependen de personas: la evaluación SUS y la comparación sobre historias clínicas reales.
+
+**Retrospectiva.** Medir antes de optimizar resultó decisivo: la prueba de carga señaló dos costes —una conexión nueva por consulta y la predicción de todos los pacientes en cada apertura— que ninguna lectura del código habría revelado. Descontar de la medición lo que no es tiempo del sistema evitó además una conclusión falsa: el primer intento atribuía al listado de pacientes una demora que era el establecimiento de la conexión del cliente.
+
+Las actas completas de las cuatro ceremonias constan en el Anexo n.° 11.
 
 ---
 
@@ -700,7 +710,7 @@ El grupo que más pesa sigue siendo el de las diferencias entre desarrollo y pub
 | OE1 | Diagnóstico con línea base y factores de incumplimiento | **Cumplido** (línea base propia en ejecución) | Tablas 8 y 9 |
 | OE2 | Requisitos y arquitectura | **Cumplido** (juicio de expertos en curso) | Tablas 2, 6 y 13 |
 | OE3 | Algoritmo seleccionado y reporte comparativo | **En ejecución** (~80 %) | Tablas 15, 19 y 20 |
-| OE4 | Sistema de soporte clínico funcional | **En ejecución** (~95 %) | Tablas 6, 18, 23, 26 y 28 |
+| OE4 | Sistema de soporte clínico funcional | **Cumplido** | Tablas 6, 18, 23, 26, 27 y 28 |
 | OE5 | Validación de usabilidad | **Pendiente**: requiere usuarios reales | Anexo n.° 05; recorrido preparado (Tabla 28) |
 
 ### 1.2.1. OE1 – Caracterizar el proceso actual de seguimiento terapéutico y los factores de incumplimiento
@@ -737,11 +747,11 @@ El protocolo está implementado, verificado y en servicio a través del microser
 
 ### 1.2.4. OE4 – Construir el sistema de soporte clínico
 
-**Estado: en ejecución.**
+**Estado: cumplido.**
 
 | Indicador | Meta | Resultado |
 | :--- | :--- | :--- |
-| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 95 % al corte |
+| Historias de usuario cumplidas | 100 % por sprint | Sprint 1: 100 %; Sprint 2: 92 %; Sprint 3: 95 %; Sprint 4: 100 % de lo que no depende del trabajo de campo |
 | Módulos construidos frente a requeridos | Todos | **10 de 10** RF operativos (RF01–RF10) |
 | Densidad de errores por sprint | Decreciente | 22 incidencias registradas y cerradas (Tabla 29); 195 pruebas en verde |
 | Atributos ISO/IEC 25010 | Funcionalidad, eficiencia y usabilidad | **7 de 8 atributos verificados** (Tabla 27); la usabilidad queda pendiente de la escala SUS |
@@ -759,6 +769,44 @@ El protocolo está implementado, verificado y en servicio a través del microser
 | Tiempo promedio de aprendizaje | Medido con usuarios | Pendiente |
 
 El instrumento SUS (Anexo n.° 05) y la ficha de observación (Anexo n.° 06) están preparados, y el guion de la sesión —qué hace el usuario, en qué orden y qué se observa— es el del apartado 1.1.7. Participarán el médico, sobre el panel web, y una muestra de pacientes polimedicados, sobre la aplicación móvil. **Es el único resultado del proyecto que no depende del desarrollo, sino de la disponibilidad de los participantes.**
+
+---
+
+## 1.3. Limitaciones del estudio y trabajo futuro
+
+Declarar los límites del trabajo forma parte del resultado: sin ellos, cualquier lectura del sistema sería más optimista de lo que la evidencia permite.
+
+**Tabla 31.** Limitaciones reconocidas y su alcance.
+
+| Limitación | Por qué existe | Qué implica para la interpretación |
+| :--- | :--- | :--- |
+| El modelo desplegado se entrenó con un conjunto de demostración | La extracción documental del Anexo n.° 04 no ha concluido | Las métricas publicadas verifican el protocolo y el sistema, **no** la capacidad predictiva sobre pacientes reales. El sistema lo declara en pantalla y en la ficha del modelo |
+| Un solo consultorio y una muestra prevista de unos 50 pacientes | Es el universo del estudio y el alcance de una tesis de pregrado | Los resultados no son extrapolables a otras poblaciones; describen a los pacientes polimedicados de este consultorio |
+| La adherencia observada procede del autorreporte del paciente | Solo un método directo —recuento de comprimidos, medición en sangre— eliminaría el sesgo, y está fuera del alcance [3] | La corroboración familiar (RF09) añade un segundo testigo, pero no convierte el dato en una medida objetiva |
+| Variables limitadas a las del instrumento | El Anexo n.° 04 se fijó a partir de lo disponible en la historia clínica | Factores como la creencia sobre la enfermedad o el costo del tratamiento no están representados |
+| La explicación SHAP se calcula frente a un paciente de referencia | El modelo seleccionado no tiene coeficientes interpretables | Las contribuciones indican asociación dentro del modelo, no causalidad clínica |
+| Infraestructura en planes gratuitos | El proyecto no dispone de servidores propios | Los servicios se suspenden sin tráfico; la latencia de arranque no es del sistema y debe descontarse al medir |
+| Usabilidad sin medir al cierre del desarrollo | La escala SUS requiere usuarios reales | El RNF03 queda verificado por diseño, no por evidencia empírica, hasta aplicar el instrumento |
+
+**Trabajo futuro.** Más allá del alcance de esta tesis quedan: la atribución de causalidad mediante un diseño experimental —el sistema predice, no demuestra que la intervención mejore la adherencia—; el reentrenamiento periódico del modelo con los datos que el propio sistema genera; la integración con la historia clínica institucional; y la extensión del acompañamiento a mensajería con el paciente.
+
+---
+
+## 1.4. Cierre del desarrollo y trabajo de campo pendiente
+
+El desarrollo está cerrado. Lo que resta son tres mediciones con personas, cada una con su instrumento formalizado y su cálculo automatizado, de modo que obtener el resultado no requiere programar nada más.
+
+**Tabla 32.** Qué falta, qué lo produce y qué resultado cierra.
+
+| Pendiente | Instrumento | Cómo se obtiene el resultado | Objetivo que cierra |
+| :--- | :--- | :--- | :---: |
+| Extracción de historias clínicas | Anexo n.° 04 y su plantilla CSV | `python src/preprocess.py --entrada <csv>` valida el esquema y reporta faltantes | OE1, OE3 |
+| Test de Morisky-Green | Anexo n.° 05 (parte A) | Aporta la etiqueta de cada paciente y la línea base del consultorio | OE1 |
+| Comparación de algoritmos sobre datos reales | `train_evaluate.py` | Un comando produce la tabla comparativa, el contraste de McNemar y el modelo listo para desplegar | OE3 |
+| Evaluación de usabilidad | Anexo n.° 05 (parte B) y ficha de observación | `python documentacion/herramientas/calcular_sus.py <respuestas.csv>` devuelve el puntaje por participante y el promedio frente a la meta de 80 | OE5 |
+| Juicio de expertos | Anexo n.° 07 | Tres evaluadores completan el expediente | OE2 |
+
+El recorrido que se somete a la evaluación de usabilidad es el del apartado 1.1.7, y la sesión se conduce con el guion del Anexo n.° 14.
 
 ---
 
@@ -806,7 +854,8 @@ El instrumento SUS (Anexo n.° 05) y la ficha de observación (Anexo n.° 06) es
 | N.° 08 | Repositorio de código del producto | `backend-api/`, `frontend-web/`, `app-movil/`, `ml-pipeline/` | Adjunto |
 | N.° 09 | Product Backlog e historias de usuario | `documentacion/03_gestion_scrum/Anexo_09_Product_Backlog.docx` | Adjunto |
 | N.° 10 | Matriz de trazabilidad | `documentacion/03_gestion_scrum/Anexo_10_Matriz_Trazabilidad.docx` | Adjunto |
-| N.° 11 | Actas de Sprint Review y retrospectiva | `documentacion/03_gestion_scrum/Anexo_11_Actas_Sprint.docx` | Adjunto |
+| N.° 11 | Actas de Sprint Review y retrospectiva (Sprints 1 a 4) | `documentacion/03_gestion_scrum/Anexo_11_Actas_Sprint.docx` | Adjunto |
 | N.° 12 | Plantilla de captura de la ficha de extracción | `documentacion/02_instrumentos/Plantilla_Extraccion_Anexo_04.csv` | En uso |
 | N.° 13 | Guía de despliegue del sistema | `DESPLIEGUE.md` | Adjunto |
 | N.° 14 | Guion de demostración del producto | `documentacion/04_demostracion/Guion_demostracion.md` | Adjunto |
+| N.° 15 | Plantilla de captura y cálculo de la escala SUS | `documentacion/02_instrumentos/Plantilla_Respuestas_SUS.csv` · `herramientas/calcular_sus.py` | En uso |
