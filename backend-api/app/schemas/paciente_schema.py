@@ -8,9 +8,12 @@ aunque el dato llegue por otra via (carga masiva, migracion, consola).
 """
 from __future__ import annotations
 
+import re
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import (
+    BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator,
+)
 
 from ..db.models import (
     Comorbilidad,
@@ -22,6 +25,23 @@ from ..db.models import (
 
 # Criterio de elegibilidad del estudio (Anexo n.o 04): polimedicacion.
 MIN_FARMACOS = 5
+
+# Letras del castellano, apostrofo, guion y espacio: el mismo criterio que el
+# formulario del panel. Antes solo lo aplicaba el panel, y la prueba de caja
+# negra CN-18 mostro que el API aceptaba «Ana3» enviado por otro cliente.
+SOLO_LETRAS = re.compile(r"^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ' -]+$")
+
+
+def validar_nombre(valor: str | None) -> str | None:
+    if valor is not None and not SOLO_LETRAS.match(valor):
+        raise ValueError("Solo se admiten letras, espacios, apóstrofos y guiones.")
+    return valor
+
+
+def tiempo_coherente(edad: int | None, anios: float | None) -> None:
+    """Nadie lleva enfermo mas tiempo del que ha vivido (caja negra CN-19)."""
+    if edad is not None and anios is not None and anios > edad:
+        raise ValueError("El tiempo de enfermedad no puede superar la edad del paciente.")
 
 
 class PacienteBase(BaseModel):
@@ -108,6 +128,15 @@ class PacienteCreate(PacienteBase):
     # Cuenta de la app movil, cuando el paciente ya fue dado de alta como usuario.
     id_usuario: str | None = None
 
+    # Solo en la entrada: PacienteOut tambien hereda de PacienteBase y no debe
+    # dejar de leer una ficha antigua por una regla nueva.
+    _nombres_validos = field_validator("nombres", "apellidos")(validar_nombre)
+
+    @model_validator(mode="after")
+    def _tiempo_dentro_de_la_edad(self) -> PacienteCreate:
+        tiempo_coherente(self.edad, self.tiempo_enfermedad_anios)
+        return self
+
 
 class PacienteUpdate(BaseModel):
     """Actualizacion parcial: solo se modifican los campos enviados."""
@@ -136,6 +165,8 @@ class PacienteUpdate(BaseModel):
     fecha_evaluacion_morisky: date | None = None
     id_usuario: str | None = None
     activo: bool | None = None
+
+    _nombres_validos = field_validator("nombres", "apellidos")(validar_nombre)
 
     def campos_enviados(self) -> dict:
         """Solo los campos presentes en el cuerpo de la peticion.

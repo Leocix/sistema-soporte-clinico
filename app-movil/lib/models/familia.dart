@@ -127,8 +127,11 @@ class TomaPorConfirmar {
   final DateTime programada;
   final DateTime? registrada;
 
-  String get descripcion =>
-      dosis.isEmpty ? medicamento : '$medicamento · $dosis';
+  /// La aplicacion del paciente envia el medicamento con su dosis ya pegada
+  /// («Metformina 850 mg»); en ese caso no se repite detras.
+  String get descripcion => dosis.isEmpty || medicamento.endsWith(dosis)
+      ? medicamento
+      : '$medicamento · $dosis';
 
   /// Hora en que el paciente dijo haberla tomado, o la programada si no consta.
   String get horaReportada => formatoHora(registrada ?? programada);

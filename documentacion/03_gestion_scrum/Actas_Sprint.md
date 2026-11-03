@@ -47,16 +47,20 @@ clínica, no alfabéticamente.
 
 ---
 
-# Sprint 2 — Núcleo funcional y modelado inicial
+# Sprint 2 — Registro clínico y modelado inicial
 
 **Semanas 3–4 · CRISP-DM: *Data Preparation* y *Modeling* inicial
 · Hitos 40 % y 50 %**
 
 ## Objetivo del sprint
 
-Especificar los requisitos y la arquitectura restantes, completar el núcleo
-funcional RF01–RF03, dejar el dataset depurado y balanceado, y montar la
-comparación de los cuatro algoritmos candidatos.
+Especificar los requisitos y la arquitectura restantes, entregar el registro
+clínico que alimenta al modelo (RF02 y RF03), dejar el dataset depurado y
+balanceado, y montar la comparación de los cuatro algoritmos candidatos.
+
+El núcleo funcional —registro de la toma, riesgo predicho y alerta— no puede
+cerrarse en este sprint: RF04 consume como entrada la traza de tomas que este
+sprint entrega, de modo que su cierre corresponde al Sprint 3.
 
 ## Sprint Review
 
@@ -95,7 +99,7 @@ clasificación de riesgo se rotula explícitamente como observada, no predicha.
 | Verificar en el navegador y no solo con pruebas unitarias reveló un desbordamiento de maquetación | El cliente móvil capturaba un tipo de excepción de red que nunca llega | Capturar `ClientException`, que es el tipo que `package:http` propaga |
 | — | El pipeline de datos se detenía con los nulos de las columnas de texto de pandas | Normalizar las categóricas antes de imputar |
 
-**Defectos del sprint:** 4 detectados, 4 corregidos, 0 abiertos.
+**Defectos del sprint:** 6 detectados (I-02 a I-07), 6 corregidos, 0 abiertos.
 
 ## Compromisos para el Sprint 3
 
@@ -103,3 +107,133 @@ clasificación de riesgo se rotula explícitamente como observada, no predicha.
 2. Ejecutar la comparación de algoritmos y seleccionar el modelo.
 3. Desarrollar el microservicio de inferencia y la explicabilidad SHAP.
 4. Implementar las alertas tempranas y la exportación de reportes.
+
+---
+
+# Sprint 3 — Modelo integrado, alertas y estabilización
+
+**Semanas 5–6 · CRISP-DM: *Modeling* (selección) y *Evaluation*
+· Hitos 65 % y 80 %**
+
+## Objetivo del sprint
+
+Llevar el modelo del cuaderno de análisis al sistema en producción, explicar
+cada predicción al médico, completar la aplicación del paciente con el
+acompañamiento familiar y avisar al médico antes de que el paciente se
+descompense.
+
+## Sprint Review
+
+**Incrementos presentados**
+
+| Entregable | Resultado |
+| :--- | :--- |
+| Microservicio de inferencia independiente (RF04) | Aceptado |
+| Explicación individual de cada predicción con SHAP (RF06) | Aceptado |
+| Grupo familiar de acompañamiento y corroboración (RF09) | Aceptado |
+| Recordatorios de toma en el dispositivo (RF08) | Aceptado |
+| Restablecimiento de contraseña por correo (RF10) | Aceptado |
+| Acceso móvil del paciente generado desde el panel | Aceptado |
+| Alertas tempranas al médico (RF05) | Aceptado |
+| Reportes generales con exportación (RF07) | Aceptado |
+| Verificación de seguridad del API (RNF01) | Aceptado |
+| Comparación de algoritmos sobre historias clínicas reales | **No entregado**: depende de la extracción documental |
+
+**Observaciones del Product Owner**
+
+Al revisar la ficha, el médico señaló que el nivel socioeconómico, el tipo de
+seguro y la zona de residencia no distinguen a sus pacientes, porque en una
+clínica privada apenas varían. Se refinaron las variables: nivel educativo,
+convivencia y apoyo familiar en la medicación, que sí varían y se relacionan
+con las causas que él mismo identificó —el olvido y la falta de comprensión—.
+Las comorbilidades pasaron de un número a una lista de enfermedades concretas.
+
+Sobre la bandeja de alertas, pidió expresamente que un mismo paciente no
+generara avisos repetidos: «si me llega veinte veces lo mismo, dejo de
+mirarla». De ahí el cierre automático y el plazo de silencio tras atender.
+
+## Retrospectiva
+
+| Qué funcionó | Qué no funcionó | Acción correctiva |
+| :--- | :--- | :--- |
+| Separar el modelo en un microservicio permitió reentrenarlo y medirlo sin tocar la parte clínica | La predicción no funcionaba en el servicio publicado: faltaba una librería y la versión de otra no era la del entrenamiento (I-14) | Fijar las versiones exactas y añadir pruebas que cargan el artefacto realmente desplegado |
+| Probar sobre el teléfono y el servicio publicado, y no solo en local | Tres defectos (I-14, I-15, I-22) solo se manifestaban en el entorno publicado | Añadir a la **Definición de Terminado** la condición 4: un elemento no está terminado hasta estar desplegado en el entorno publicado, no solo en local |
+| Escribir primero la regla de alerta y después su prueba evitó una bandeja inservible | El protocolo declaraba un desempate por sensibilidad que el código no aplicaba (I-18) | Contrastar con McNemar antes de seleccionar, y probarlo |
+
+**Defectos del sprint:** 15 detectados (I-08 a I-22), 15 corregidos, 0 abiertos.
+
+## Compromisos para el Sprint 4
+
+1. Medir el rendimiento con usuarios simultáneos (RNF02, RNF06).
+2. Verificar los atributos de calidad ISO/IEC 25010.
+3. Preparar la demostración del producto y el despertar de los servicios.
+4. Aplicar la escala SUS con el médico y una muestra de pacientes (OE5).
+5. Ejecutar la comparación de algoritmos cuando concluya la extracción.
+
+---
+
+# Sprint 4 — Cierre, rendimiento y validación
+
+**Semanas 7–8 · CRISP-DM: *Deployment* y monitoreo · Hitos 90 % y 100 %**
+
+## Objetivo del sprint
+
+Verificar el producto contra sus requisitos no funcionales, dejarlo listo para
+demostrarse sin sobresaltos y consolidar las evidencias de la investigación.
+
+## Sprint Review
+
+**Incrementos presentados**
+
+| Entregable | Resultado |
+| :--- | :--- |
+| Prueba de rendimiento y carga con usuarios simultáneos (RNF02, RNF06) | Aceptado |
+| Verificación de los atributos ISO/IEC 25010 | Aceptado: 7 de 8; la usabilidad depende de la escala SUS. *Nota posterior: la verificación se hizo con las ocho características de la edición de 2011; al alinearla con la edición de 2023, que añade la protección, quedan 8 de 9.* |
+| Guion de demostración del producto y despertador de servicios | Aceptado |
+| Arranque tolerante a cortes de la base de datos | Aceptado |
+| Consolidación del repositorio, backlog, trazabilidad y actas | Aceptado |
+| Evaluación de usabilidad con la escala SUS (OE5) | **Pendiente**: requiere la participación del médico y de los pacientes |
+| Comparación de algoritmos sobre historias clínicas reales (OE3) | **Pendiente**: depende de la extracción documental |
+
+**Observaciones del Product Owner**
+
+La medición de rendimiento se revisó con el médico en términos de su consulta:
+la ficha y el listado responden por debajo de un décimo de segundo, y la
+predicción con explicación, en menos de un segundo. Su comentario fue que el
+tiempo que percibe no es el del sistema sino el del servicio gratuito cuando
+lleva horas sin usarse; de ahí que el guion de demostración empiece por
+despertarlo.
+
+## Retrospectiva
+
+| Qué funcionó | Qué no funcionó | Acción correctiva |
+| :--- | :--- | :--- |
+| Medir antes de optimizar: la prueba de carga señaló dos costes que nadie habría adivinado leyendo el código | El cliente hacia el microservicio abría una conexión por consulta | Reutilizar la conexión |
+| Descontar de la medición lo que no es tiempo del sistema —conexión y arranque en frío— evitó conclusiones falsas | Las vistas que recorren a todos los pacientes pedían la predicción de cada uno en cada apertura | Guardar la predicción sesenta segundos, con invalidación al editar la ficha |
+| La evaluación externa del 50 % sirvió como retrospectiva real del producto | La demostración anterior se hizo sobre servicios suspendidos, y el componente de IA no llegó a mostrarse | Guion de demostración con despertar previo y recorrido paso a paso |
+
+| El protocolo de comparación quedó verificado de extremo a extremo | El OE3 solo tenía resultados del conjunto de demostración, y su cierre dependía de una extracción documental sin fecha | Incorporar a la pila **PBI-11**: comparar los algoritmos sobre una fuente real de acceso público, con prioridad *Must* |
+
+**Defectos del sprint:** 0 detectados. El sprint se dedicó a medir y verificar lo ya construido; el último defecto del proyecto (I-22) se cerró dentro del Sprint 3.
+
+## Compromisos posteriores al Sprint 4
+
+| # | Compromiso | Elemento | Estado |
+| :---: | :--- | :---: | :--- |
+| 1 | Ejecutar el protocolo de comparación sobre pacientes reales y reportar el resultado aunque no alcance la meta | PBI-11 | **Cumplido**: 8 422 pacientes de la ENDES; AUCROC 0,591, por debajo de la meta, reportado con su diagnóstico |
+| 2 | Mantener separados los artefactos del conjunto externo y los del modelo en servicio | PBI-11 | **Cumplido**: sufijo propio `risk_model_endes_v1` |
+
+## Cierre del proyecto de desarrollo
+
+El producto cubre los diez requisitos funcionales y los seis no funcionales
+comprometidos. Lo que queda abierto no pertenece al desarrollo, sino al trabajo
+de campo: la extracción documental del Anexo n.° 04, el test de Morisky-Green
+que da la etiqueta, el juicio de expertos y la evaluación de usabilidad con
+usuarios reales. Los cuatro tienen su instrumento formalizado y su
+procedimiento automatizado, de modo que al disponer de los datos el resultado
+se obtiene ejecutando el pipeline y la hoja de cálculo del SUS.
+
+La comparación de algoritmos, en cambio, dejó de estar pendiente: se ejecutó
+sobre datos reales de la ENDES como incremento de PBI-11, y su resultado
+—AUCROC 0,591, por debajo de la meta de 0,80— se reporta con el análisis de
+errores que lo explica.

@@ -26,17 +26,23 @@ const VALOR_LEGIBLE = {
   hta: 'HTA', dm2: 'DM2', ambas: 'HTA + DM2', M: 'Masculino', F: 'Femenino',
 }
 
+const textoValor = (valor) =>
+  valor === null || valor === undefined ? 'sin dato' : (VALOR_LEGIBLE[valor] ?? valor)
+
 /**
- * Predicción del modelo para un paciente (RF04).
+ * Predicción del modelo para un paciente (RF04) y su explicación con SHAP (RF06).
  *
  * Se distingue de forma deliberada del bloque de riesgo observado: aquella
  * resume lo que el paciente hizo, esta anticipa lo que hará. Mezclarlas
  * confundiría al médico sobre qué está mirando.
  */
 export default function PrediccionRiesgo({ prediccion }) {
-  const { probabilidad, nivel, factores, modelo, variables_imputadas: imputadas } = prediccion
+  const { probabilidad, nivel, modelo, variables_imputadas: imputadas } = prediccion
   const porcentaje = Math.round(probabilidad * 100)
-  const mayorImportancia = Math.max(...factores.map((f) => f.importancia), 0.0001)
+  const contribuciones = prediccion.contribuciones ?? []
+  const valorBase = prediccion.valor_base ?? 0
+  const principales = contribuciones.slice(0, 6)
+  const mayorAporte = Math.max(...principales.map((c) => Math.abs(c.contribucion)), 0.0001)
 
   return (
     <section className={`alerta alerta--${nivel}`} aria-live="polite">
@@ -52,38 +58,49 @@ export default function PrediccionRiesgo({ prediccion }) {
         </span>
       </div>
 
-      {!modelo.datos_reales && (
-        <p className="prediccion__procedencia">
-          Modelo entrenado con un conjunto de demostración simulado. El resultado
-          ilustra el funcionamiento del componente; no es un hallazgo del estudio.
-        </p>
-      )}
+      {/* La procedencia del modelo (datos reales o de demostración) sigue
+          viajando en cada respuesta del API y queda en la ficha del modelo;
+          por decisión del usuario ya no se muestra como aviso en la tarjeta. */}
 
-      <div className="prediccion__factores">
-        <h4>Factores que más pesan en el modelo</h4>
-        <ul className="factores">
-          {factores.map((factor) => (
-            <li className="factor" key={factor.variable}>
-              <span className="factor__nombre">
-                {NOMBRE_VARIABLE[factor.variable] ?? factor.variable}
-              </span>
-              <span className="factor__barra" aria-hidden="true">
-                <span
-                  className="factor__relleno"
-                  style={{ width: `${Math.round((factor.importancia / mayorImportancia) * 100)}%` }}
-                />
-              </span>
-              <span className="factor__valor">
-                {factor.valor_paciente === null ? 'sin dato' : (VALOR_LEGIBLE[factor.valor_paciente] ?? factor.valor_paciente)}
-              </span>
-            </li>
-          ))}
-        </ul>
-        <p className="alerta__pie">
-          {prediccion.alcance_factores} La atribución individual con SHAP (RF06)
-          se incorpora en el Sprint&nbsp;3.
-        </p>
-      </div>
+      {contribuciones.length > 0 && (
+        <div className="prediccion__factores">
+          <h4>Por qué este paciente tiene este riesgo</h4>
+          <p className="shap__lectura">
+            Un paciente de referencia tendría {Math.round(valorBase * 100)} %. Cada variable
+            de la ficha sube o baja esa cifra hasta llegar a {porcentaje} %.
+          </p>
+          <ul className="shap" aria-label="Contribución de cada variable al riesgo">
+            {principales.map((c) => {
+              const ancho = Math.round((Math.abs(c.contribucion) / mayorAporte) * 100)
+              const sube = c.contribucion > 0
+              return (
+                <li className="shap__fila" key={c.variable}>
+                  <span className="shap__nombre">
+                    {NOMBRE_VARIABLE[c.variable] ?? c.variable}
+                    <small>{textoValor(c.valor_paciente)}</small>
+                  </span>
+                  <span className="shap__eje" aria-hidden="true">
+                    <span className="shap__mitad shap__mitad--baja">
+                      {!sube && <span className="shap__barra shap__barra--baja" style={{ width: `${ancho}%` }} />}
+                    </span>
+                    <span className="shap__mitad">
+                      {sube && <span className="shap__barra shap__barra--sube" style={{ width: `${ancho}%` }} />}
+                    </span>
+                  </span>
+                  <span className={`shap__valor ${sube ? 'shap__valor--sube' : 'shap__valor--baja'}`}>
+                    {sube ? '+' : '−'}{Math.abs(c.contribucion * 100).toFixed(1)} pp
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="alerta__pie">
+            Explicación individual con SHAP: <strong>+</strong> aumenta el riesgo, <strong>−</strong> lo
+            reduce, en puntos porcentuales (pp). Se muestran las {principales.length} variables con
+            más peso de {contribuciones.length}.
+          </p>
+        </div>
+      )}
 
       {imputadas.length > 0 && (
         <p className="alerta__pie">

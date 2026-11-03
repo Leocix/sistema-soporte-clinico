@@ -48,7 +48,7 @@ def decode_access_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.secret_key, algorithms=[settings.algorithm])
     except JWTError as exc:
-        raise NoAutenticadoError("Token invalido o expirado.") from exc
+        raise NoAutenticadoError("Token inválido o expirado.") from exc
 
 
 # ---------------------------------------------------------------------------
@@ -60,7 +60,7 @@ def get_current_user(
 ) -> Usuario:
     """Resuelve el usuario autenticado a partir del JWT del encabezado."""
     if credenciales is None:
-        raise NoAutenticadoError("No se envio el token de acceso.")
+        raise NoAutenticadoError("No se envió el token de acceso.")
 
     datos = decode_access_token(credenciales.credentials)
     usuario = db.query(Usuario).filter(Usuario.id_usuario == datos.get("sub")).first()

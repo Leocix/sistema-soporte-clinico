@@ -157,6 +157,29 @@ class EstadoAcompanante(str, enum.Enum):
     REVOCADO = "revocado"
 
 
+class TipoAlerta(str, enum.Enum):
+    """Motivo por el que el sistema avisa al medico (RF05)."""
+
+    # El modelo predice incumplimiento antes de la proxima cita.
+    RIESGO_PREDICHO = "riesgo_predicho"
+    # Racha de omisiones: abandono en curso, no un olvido puntual.
+    OMISIONES_SEGUIDAS = "omisiones_seguidas"
+    # Cumplimiento observado por debajo del umbral clinico.
+    ADHERENCIA_BAJA = "adherencia_baja"
+
+
+class EstadoAlerta(str, enum.Enum):
+    """Ciclo de vida de una alerta en la bandeja del medico."""
+
+    ABIERTA = "abierta"
+    # El medico registro que actuo (llamada, ajuste de tratamiento, cita).
+    ATENDIDA = "atendida"
+    # El medico la considera no pertinente para ese paciente.
+    DESCARTADA = "descartada"
+    # La condicion dejo de cumplirse sola: el paciente volvio a cumplir.
+    RESUELTA = "resuelta"
+
+
 class EstadoToma(str, enum.Enum):
     """Resultado del evento de toma reportado por el paciente (RF03)."""
 
@@ -554,6 +577,70 @@ class Acompanante(Base):
 # ---------------------------------------------------------------------------
 # RF10 - Restablecimiento de la contrasena
 # ---------------------------------------------------------------------------
+class Alerta(Base):
+    """Aviso temprano al medico sobre un paciente en riesgo (RF05).
+
+    Cierra la brecha B4 del diagnostico: hoy el consultorio se entera del
+    incumplimiento cuando el paciente ya se descompenso. La alerta es el unico
+    componente del sistema que **interrumpe** al medico, asi que su diseno
+    responde a dos exigencias opuestas:
+
+    * **No perder un caso.** Las reglas se evaluan sobre la traza de tomas y
+      sobre la prediccion del modelo, no sobre lo que el medico recuerde mirar.
+    * **No inundar la bandeja.** Un paciente no acumula dos alertas abiertas
+      del mismo tipo: mientras la anterior siga abierta, la nueva evidencia
+      actualiza su detalle en lugar de crear otra fila. Una bandeja con veinte
+      avisos repetidos del mismo paciente se deja de leer, que es exactamente
+      el fallo que la alerta pretende evitar.
+
+    El desenlace se conserva —atendida o descartada, con la nota del medico—
+    porque forma parte de la evidencia de que el sistema sirvio para intervenir
+    a tiempo.
+    """
+
+    __tablename__ = "alertas"
+    __table_args__ = (
+        Index("ix_alerta_paciente_estado", "id_paciente", "estado"),
+    )
+
+    id_alerta: Mapped[str] = mapped_column(String(36), primary_key=True, default=_uuid)
+    id_paciente: Mapped[str] = mapped_column(
+        String(36), ForeignKey("pacientes.id_paciente", ondelete="CASCADE"),
+        nullable=False, index=True,
+    )
+
+    tipo: Mapped[TipoAlerta] = mapped_column(_enum(TipoAlerta, "tipo_alerta"), nullable=False)
+    estado: Mapped[EstadoAlerta] = mapped_column(
+        _enum(EstadoAlerta, "estado_alerta"), nullable=False, default=EstadoAlerta.ABIERTA
+    )
+    # Motivo redactado para el medico, con la cifra que lo sustenta.
+    motivo: Mapped[str] = mapped_column(String(300), nullable=False)
+    # Valor que disparo la regla: probabilidad, racha o tasa de cumplimiento.
+    valor: Mapped[float | None] = mapped_column(Numeric(6, 2))
+
+    fecha_creacion: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_ahora
+    )
+    fecha_actualizacion: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, default=_ahora, onupdate=_ahora
+    )
+    fecha_cierre: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Que hizo el medico. Es la evidencia de la intervencion temprana.
+    nota_cierre: Mapped[str | None] = mapped_column(Text)
+    id_medico_cierre: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("usuarios.id_usuario", ondelete="SET NULL")
+    )
+
+    paciente: Mapped[Paciente] = relationship()
+
+    @property
+    def abierta(self) -> bool:
+        return self.estado is EstadoAlerta.ABIERTA
+
+    def __repr__(self) -> str:  # pragma: no cover - ayuda de depuracion
+        return f"<Alerta {self.tipo.value} paciente={self.id_paciente} estado={self.estado.value}>"
+
+
 class Restablecimiento(Base):
     """Permiso de un solo uso para fijar una contrasena nueva (RF10).
 

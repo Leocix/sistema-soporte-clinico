@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import AccesoMovil from '../components/AccesoMovil'
 import AlertaRiesgo from '../components/AlertaRiesgo'
 import FormularioPaciente from '../components/FormularioPaciente'
@@ -21,6 +21,19 @@ import {
 } from '../services/etiquetas'
 
 /** Ficha clinica individual: variables del Anexo n.o 04 y traza de tomas. */
+
+// Cómo se nombra a cada persona en la columna «Testigo».
+const RELACION = {
+  paciente: 'paciente',
+  medico: 'médico',
+  importacion: 'importación',
+  conyuge: 'cónyuge',
+  hijo: 'hijo/a',
+  hermano: 'hermano/a',
+  cuidador: 'cuidador/a',
+  otro: 'familiar',
+  familiar: 'familiar',
+}
 
 const ESTADOS = {
   tomada: { texto: 'Tomada', clase: 'bajo' },
@@ -99,9 +112,33 @@ export default function DetallePaciente() {
   const [resumen, setResumen] = useState(null)
   const [registros, setRegistros] = useState([])
   const [prediccion, setPrediccion] = useState(null)
+  const [modeloCaido, setModeloCaido] = useState(false)
   const [editando, setEditando] = useState(false)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState(null)
+  const [confirmacion, setConfirmacion] = useState(null)
+  const [confirmandoBaja, setConfirmandoBaja] = useState(false)
+  const [dandoDeBaja, setDandoDeBaja] = useState(false)
+  const navegar = useNavigate()
+
+  /**
+   * Baja logica: el paciente sale del seguimiento y del panel, pero su
+   * historial de tomas se conserva, porque es evidencia del estudio.
+   */
+  const darDeBaja = async () => {
+    setDandoDeBaja(true)
+    try {
+      await servicioPacientes.darDeBaja(id)
+      navegar('/panel', {
+        state: { confirmacion: `${paciente.codigo_anonimizado} fue dado de baja. Su historial se conserva.` },
+      })
+    } catch (fallo) {
+      setError(mensajeDeError(fallo))
+      setConfirmandoBaja(false)
+    } finally {
+      setDandoDeBaja(false)
+    }
+  }
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -125,6 +162,11 @@ export default function DetallePaciente() {
       // de la consulta clínica no depende del componente inteligente.
       setPrediccion(
         prediccionRes.status === 'fulfilled' ? prediccionRes.value.data : null,
+      )
+      // El API responde 503 cuando el microservicio no atiende; se avisa en
+      // lugar de ocultar el recuadro sin explicación.
+      setModeloCaido(
+        prediccionRes.status === 'rejected' && prediccionRes.reason?.response?.status === 503,
       )
     } catch (fallo) {
       setError(mensajeDeError(fallo))
@@ -157,6 +199,10 @@ export default function DetallePaciente() {
 
   return (
     <>
+      {confirmacion && (
+        <p className="mensaje mensaje--exito" role="status">{confirmacion}</p>
+      )}
+
       <div className="seccion__cabecera">
         <div>
           <Link className="enlace enlace--volver" to="/panel">← Panel de auditoría</Link>
@@ -170,18 +216,53 @@ export default function DetallePaciente() {
             {!paciente.activo && <span className="distintivo distintivo--sin_datos"> Dado de baja</span>}
           </p>
         </div>
-        <button
-          type="button"
-          className="boton boton--primario"
-          onClick={() => setEditando(true)}
-        >
-          Editar ficha
-        </button>
+        <div className="cabecera__acciones">
+          <button
+            type="button"
+            className="boton boton--primario"
+            onClick={() => setEditando(true)}
+          >
+            Editar ficha
+          </button>
+          {paciente.activo && (
+            <button
+              type="button"
+              className="boton boton--peligro"
+              onClick={() => setConfirmandoBaja(true)}
+            >
+              Dar de baja
+            </button>
+          )}
+        </div>
       </div>
+
+      {confirmandoBaja && (
+        <div className="mensaje mensaje--aviso confirmar-baja" role="alertdialog" aria-label="Confirmar baja">
+          <p>
+            <strong>¿Dar de baja a {paciente.codigo_anonimizado}?</strong> Dejará de aparecer en el
+            panel y en las alertas. Su historial de tomas no se borra: se conserva como
+            evidencia del estudio.
+          </p>
+          <div className="confirmar-baja__acciones">
+            <button type="button" className="boton boton--peligro" onClick={darDeBaja} disabled={dandoDeBaja}>
+              {dandoDeBaja ? 'Dando de baja…' : 'Sí, dar de baja'}
+            </button>
+            <button type="button" className="boton boton--sutil" onClick={() => setConfirmandoBaja(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="detalle">
         <div className="detalle__principal">
           {prediccion && <PrediccionRiesgo prediccion={prediccion} />}
+          {!prediccion && modeloCaido && (
+            <p className="mensaje mensaje--aviso" role="status">
+              El modelo predictivo no está disponible en este momento. La ficha, el
+              historial y las alertas basadas en las tomas siguen operativos.
+            </p>
+          )}
           <AlertaRiesgo resumen={resumen} />
 
           {resumen && resumen.total_eventos > 0 && (
@@ -211,7 +292,7 @@ export default function DetallePaciente() {
             <h3>Historial de tomas registradas</h3>
             <p className="seccion__descripcion">
               Traza digital enviada desde la aplicación móvil del paciente (RF03).
-              La columna «Testigo» indica si un familiar corroboró la toma (RF09).
+              La columna «Testigo» muestra quién registró cada toma y qué familiar la corroboró (RF09).
             </p>
 
             {registros.length === 0 ? (
@@ -258,10 +339,22 @@ export default function DetallePaciente() {
                               palabra del paciente (RF09). Es una diferencia de
                               calidad de la evidencia, no un adorno. */}
                           <td>
-                            {registro.corroborada ? (
-                              <span className="distintivo distintivo--bajo">
-                                Familiar
-                              </span>
+                            {(registro.testigos ?? []).length > 0 ? (
+                              <div className="testigos">
+                                {registro.testigos.map((t) => (
+                                  <span
+                                    key={`${t.papel}-${t.nombre}`}
+                                    className={t.papel === 'corroboro'
+                                      ? 'distintivo distintivo--bajo'
+                                      : 'nota nota--inline'}
+                                    title={t.papel === 'corroboro' ? 'Corroboró la toma' : 'Registró la toma'}
+                                  >
+                                    {t.nombre} · {RELACION[t.relacion] ?? t.relacion}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : registro.corroborada ? (
+                              <span className="distintivo distintivo--bajo">Familiar</span>
                             ) : (
                               <span className="nota nota--inline">Autorreporte</span>
                             )}
@@ -309,6 +402,7 @@ export default function DetallePaciente() {
           alGuardar={(actualizado) => {
             setEditando(false)
             setPaciente(actualizado)
+            setConfirmacion('Ficha actualizada. El riesgo se recalcula con los datos nuevos.')
             // La predicción depende de las variables que se acaban de editar,
             // así que se recalcula en lugar de mostrar la anterior.
             cargar()

@@ -196,3 +196,48 @@ def test_las_rutas_propias_exigen_perfil_paciente(client, cab_medico):
     """El médico no tiene ficha propia: sus rutas son las de por identificador."""
     assert client.get("/api/adherencia/mi-resumen", headers=cab_medico).status_code == 404
     assert client.get("/api/adherencia/mis-registros", headers=cab_medico).status_code == 404
+
+
+# --- Ventana de registro -------------------------------------------------------
+
+
+def test_una_toma_marcada_dentro_de_la_ventana_se_acepta(client, cab_paciente):
+    """Dos horas despues de su hora sigue dentro de la ventana (hasta 3 h)."""
+    respuesta = client.post(
+        "/api/adherencia/registros", json=toma(0, "tomada_tarde", retraso_min=120), headers=cab_paciente
+    )
+    assert respuesta.status_code == 201, respuesta.text
+
+
+def test_no_se_marca_como_tomada_horas_despues_de_su_hora(client, cab_paciente):
+    """Marcar por la noche las dosis de la manana es lo que la ventana impide."""
+    respuesta = client.post(
+        "/api/adherencia/registros", json=toma(0, "tomada_tarde", retraso_min=240), headers=cab_paciente
+    )
+    assert respuesta.status_code == 422
+    assert "ventana de registro" in respuesta.text
+
+
+def test_no_se_marca_como_tomada_mucho_antes_de_su_hora(client, cab_paciente):
+    respuesta = client.post(
+        "/api/adherencia/registros", json=toma(0, "tomada", retraso_min=-90), headers=cab_paciente
+    )
+    assert respuesta.status_code == 422
+
+
+def test_una_hora_de_toma_futura_delata_un_reloj_adelantado(client, cab_paciente):
+    futura = datetime.now(timezone.utc) + timedelta(hours=1)
+    respuesta = client.post(
+        "/api/adherencia/registros",
+        json={"medicamento": "Losartan 50 mg", "fecha_hora_programada": futura.isoformat(),
+              "fecha_hora_registro": futura.isoformat(), "estado": "tomada"},
+        headers=cab_paciente,
+    )
+    assert respuesta.status_code == 422
+    assert "hora del teléfono" in respuesta.json()["detalles"][0]["motivo"]
+
+
+def test_la_omision_no_depende_de_la_ventana(client, cab_paciente):
+    """Declarar que no se tomo una dosis puede hacerse en cualquier momento."""
+    respuesta = client.post("/api/adherencia/registros", json=toma(0, "omitida"), headers=cab_paciente)
+    assert respuesta.status_code == 201, respuesta.text

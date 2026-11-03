@@ -7,7 +7,7 @@ el incumplimiento terapéutico en pacientes hipertensos y diabéticos polimedica
 **Product Owner:** Dr. Milko Ugaz Zegarra (médico internista)
 **Equipo de desarrollo:** Leonardo Guzmán Salazar
 **Técnica de priorización:** MoSCoW
-**Última actualización:** semana 5 del ciclo 2026-II
+**Última actualización:** semana 7 del ciclo 2026-II (avance al 90 %)
 
 ---
 
@@ -36,23 +36,20 @@ incumplimiento.
 | RF02 | Registrar y gestionar pacientes polimedicados y su esquema farmacológico | Must | B2 | OE4 | 2 | **Terminado** |
 | RF03 | Registrar la toma de medicamentos desde la app móvil del paciente | Must | B1, B2 | OE4 | 2 | **Terminado** |
 | RF04 | Calcular y mostrar la predicción de riesgo de incumplimiento por paciente | Must | B3 | OE3/OE5 | 3 | **Terminado** |
-| RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | Pendiente |
-| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Parcial** |
+| RF05 | Generar alertas tempranas al médico ante riesgo alto | Must | B4 | OE4 | 3 | **Terminado** |
+| RF06 | Explicar la predicción mediante factores influyentes (SHAP) | Should | B3 | OE3 | 3 | **Terminado** |
 | RF07 | Auditar la adherencia mediante panel clínico con reportes exportables | Should | B1 | OE2/OE4 | 2–3 | **Terminado** |
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 3 | **Terminado** |
 | RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | B1 | OE4 | 3 | **Terminado** |
 | RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | B4 | OE4 | 3 | **Terminado** |
+| PBI-11 | Comparar los algoritmos sobre una fuente de datos real y de acceso público | Must | B3 | OE3 | Posterior al 4 | **Terminado** |
+| PBI-12 | Verificar el producto con pruebas de caja negra y caja blanca, y ajustes de cierre (ventana de registro, baja, descarga de la app y textos legales) | Must | B1–B4 | OE4 | Posterior al 4 | **Terminado** |
 
 **Brechas del diagnóstico (OE1):** B1 ausencia de registro estructurado ·
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
 B4 ausencia de alertas y recordatorios.
 
-RF06 figura como **parcial**: la ficha muestra los factores que más pesan en el
-modelo, medidos por importancia de permutación, que es agnóstica al algoritmo.
-Es una importancia **global**, no la contribución de cada variable a la
-predicción de ese paciente concreto; la atribución individual con SHAP se
-incorpora en el Sprint 3 y la interfaz declara esa diferencia de forma
-explícita.
+RF06 quedó **terminado** al 65 %: el microservicio de inferencia calcula con SHAP cuánto aporta cada variable al riesgo de cada paciente, y la ficha lo muestra con barras que suben o bajan la probabilidad.
 
 RF07 quedó **terminado** en el Sprint 3: al panel de auditoría del Sprint 2 se
 sumó la sección de reportes generales, con indicadores de todos los pacientes,
@@ -64,6 +61,17 @@ residencia casi no varían entre pacientes y no ayudan a distinguir quién
 incumple. Se reemplazaron por nivel educativo, convivencia y apoyo familiar en
 la medicación. Las comorbilidades pasaron de un número a una lista de
 enfermedades; el modelo usa su total.
+
+PBI-11 es el único elemento que no nació de una necesidad del Product Owner,
+sino de un impedimento de la retrospectiva del Sprint 4: con el único
+resultado proveniente del conjunto de demostración, el OE3 quedaría «en
+ejecución» mientras durase la extracción documental, y el informe no podría
+reportar ninguna comparación de algoritmos defendible. Se priorizó como
+**Must** porque sin él un objetivo específico del proyecto se quedaba sin
+resultado, lo que pesa más que cualquier funcionalidad adicional. Su
+incremento es el apartado 1.1.8 del pre informe: cuatro algoritmos comparados
+sobre 8 422 pacientes reales de la ENDES, con el resultado reportado aunque
+no alcance la meta de AUCROC.
 
 RF10 tampoco figuraba en la pila inicial, y su origen es una observación de
 usabilidad: la pantalla de acceso remitía al consultorio a quien olvidara su
@@ -200,14 +208,17 @@ posteriores.
 **Sprint 3 (semanas 5–6)**
 
 - Ejecutar `train_evaluate.py` sobre las historias clínicas reales y confirmar el algoritmo.
-- Atribución individual con SHAP, en sustitución de la importancia global (RF06).
-- Alertas tempranas al médico (RF05).
 
 **Sprint 4 (semanas 7–8)**
 
-- Pruebas de rendimiento y carga (RNF02, RNF06).
-- Pruebas de usabilidad con escala SUS (OE5).
-- Verificación de atributos ISO/IEC 25010.
+- Pruebas de usabilidad con la escala SUS (OE5): requiere al médico y a una
+  muestra de pacientes.
+- Ejecución de la comparación de algoritmos sobre las historias clínicas
+  reales, cuando concluya la extracción del Anexo n.° 04.
+
+Ya ejecutados en este sprint: prueba de rendimiento y carga (RNF02, RNF06),
+verificación de los atributos ISO/IEC 25010, guion de demostración y
+consolidación del repositorio.
 
 ---
 

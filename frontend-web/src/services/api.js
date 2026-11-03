@@ -107,6 +107,12 @@ export const servicioPrediccion = {
   riesgo: (idPaciente) => api.get(`/api/prediccion/pacientes/${idPaciente}`),
 }
 
+export const servicioAlertas = {
+  listar: (estado) => api.get('/api/alertas', { params: { estado } }),
+  atender: (id, nota) => api.post(`/api/alertas/${id}/atender`, { nota }),
+  descartar: (id, nota) => api.post(`/api/alertas/${id}/descartar`, { nota }),
+}
+
 export const servicioReportes = {
   general: (dias) => api.get('/api/reportes/general', { params: { dias } }),
   exportar: (dias) =>

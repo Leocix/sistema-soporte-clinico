@@ -13,8 +13,10 @@ services:
     buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     # Las migraciones se aplican al arrancar, de modo que un despliegue nuevo
     # deje el esquema al dia sin intervencion manual. Alembic es idempotente:
-    # si no hay migraciones pendientes, no hace nada.
-    startCommand: alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    # si no hay migraciones pendientes, no hace nada. El script reintenta la
+    # conexion antes de rendirse: un corte de segundos en la base gestionada no
+    # debe tumbar el despliegue entero.
+    startCommand: python scripts/migrar.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeploy: true
     envVars:
@@ -53,6 +55,18 @@ services:
       - key: FRONTEND_URL
         sync: false
 
+      # --- Microservicio de inferencia (RF04, RF06) -----------------------
+      # URL publica del servicio cdss-adherencia-ml (sin barra final). Se
+      # copia del panel de Render tras su primer despliegue.
+      - key: ML_SERVICE_URL
+        sync: false
+      # Misma clave que genera Render para el microservicio.
+      - key: ML_SERVICE_CLAVE
+        fromService:
+          type: web
+          name: cdss-adherencia-ml
+          envVarKey: CLAVE_SERVICIO
+
       - key: MINUTOS_VIGENCIA_RESTABLECIMIENTO
         value: "30"
 
@@ -69,3 +83,23 @@ services:
         sync: false
       - key: SMTP_REMITENTE
         sync: false
+
+  # Microservicio de inferencia: carga el modelo y calcula prediccion y SHAP.
+  # Solo lo consume el API central, que envia la clave en cada peticion.
+  - type: web
+    name: cdss-adherencia-ml
+    runtime: python
+    plan: free
+    region: oregon
+    rootDir: ml-service
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.6"
+      - key: ENVIRONMENT
+        value: produccion
+      - key: CLAVE_SERVICIO
+        generateValue: true

@@ -127,7 +127,13 @@ export default function LoginMedico() {
           </p>
 
           <p className="acceso__pie">
-            Los pacientes acceden desde la aplicación móvil.
+            Los pacientes acceden desde la aplicación móvil:{' '}
+            <Link to="/descargar">descárguela aquí</Link>.
+          </p>
+
+          <p className="acceso__pie acceso__legal">
+            Al ingresar acepta los <Link to="/terminos">Términos y condiciones</Link> y
+            la <Link to="/privacidad">Política de privacidad</Link>.
           </p>
         </form>
       </section>

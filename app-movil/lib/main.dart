@@ -14,7 +14,7 @@ void main() async {
   // No se pide el permiso aqui; eso ocurre cuando el paciente configura su
   // plan y entiende para que sirve.
   await ServicioNotificaciones.instancia.iniciar();
-  runApp(const AplicacionPaciente());
+  runApp(AplicacionPaciente(api: ServicioApi()));
 }
 
 /// Aplicacion movil del sistema de soporte clinico.
@@ -23,7 +23,16 @@ void main() async {
 /// medicamentos), RF08 (recordatorios en el dispositivo) y RF09 (grupo
 /// familiar de acompanamiento).
 class AplicacionPaciente extends StatelessWidget {
-  const AplicacionPaciente({super.key});
+  const AplicacionPaciente({super.key, required this.api});
+
+  /// Cliente unico para toda la vida de la aplicacion.
+  ///
+  /// Antes lo creaba (y lo cerraba en su `dispose`) la pantalla de arranque.
+  /// Al iniciar sesion, el ingreso reemplaza esa pantalla, de modo que el
+  /// cliente quedaba cerrado y cada peticion fallaba con «Client is already
+  /// closed»: el paciente veia «sin conexion» hasta reabrir la aplicacion,
+  /// que entonces arrancaba con la sesion guardada y sin reemplazo alguno.
+  final ServicioApi api;
 
   @override
   Widget build(BuildContext context) {
@@ -31,21 +40,23 @@ class AplicacionPaciente extends StatelessWidget {
       title: 'Mi tratamiento',
       debugShowCheckedModeBanner: false,
       theme: Tema.construir(),
-      home: const _Arranque(),
+      home: _Arranque(api: api),
     );
   }
 }
 
 /// Decide la primera pantalla segun haya o no una sesion guardada.
 class _Arranque extends StatefulWidget {
-  const _Arranque();
+  const _Arranque({required this.api});
+
+  final ServicioApi api;
 
   @override
   State<_Arranque> createState() => _ArranqueState();
 }
 
 class _ArranqueState extends State<_Arranque> {
-  final ServicioApi _api = ServicioApi();
+  ServicioApi get _api => widget.api;
 
   bool _comprobando = true;
   Usuario? _usuario;
@@ -54,12 +65,6 @@ class _ArranqueState extends State<_Arranque> {
   void initState() {
     super.initState();
     _restaurarSesion();
-  }
-
-  @override
-  void dispose() {
-    _api.cerrar();
-    super.dispose();
   }
 
   /// Rehidrata la sesion guardada y la valida contra el servidor.

@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../services/notification_service.dart';
 import '../utils/tema.dart';
 import '../widgets/mensaje_estado.dart';
+import 'legal_screen.dart';
 
 /// Pestana de cuenta: quien esta dentro, estado de las alertas y salida.
 ///
@@ -224,7 +225,7 @@ class _CuentaScreenState extends State<CuentaScreen> {
               const MensajeEstado(
                 texto: 'Las alertas están permitidas, pero todavía no hay '
                     'ninguna programada. Agregue sus medicamentos con su hora '
-                    'en la pestaña «Medicinas».',
+                    'en la opción «Medicinas».',
               )
             else
               MensajeEstado(
@@ -250,6 +251,14 @@ class _CuentaScreenState extends State<CuentaScreen> {
           ],
 
           const SizedBox(height: 28),
+          OutlinedButton.icon(
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const LegalScreen()),
+            ),
+            icon: const Icon(Icons.privacy_tip_outlined, size: 24),
+            label: const Text('Privacidad y términos'),
+          ),
+          const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: _confirmarSalida,
             icon: const Icon(Icons.logout, size: 24),

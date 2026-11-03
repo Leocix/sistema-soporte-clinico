@@ -8,6 +8,9 @@ import RestablecerClave from './pages/RestablecerClave'
 import Dashboard from './pages/Dashboard'
 import DetallePaciente from './pages/DetallePaciente'
 import Reportes from './pages/Reportes'
+import Alertas from './pages/Alertas'
+import DescargarApp from './pages/DescargarApp'
+import { Privacidad, Terminos } from './pages/Legales'
 
 /** Enrutador del panel medico. */
 export default function App() {
@@ -21,6 +24,10 @@ export default function App() {
               iniciar sesion. El enlace del correo lleva a /restablecer. */}
           <Route path="/recuperar" element={<RecuperarClave />} />
           <Route path="/restablecer" element={<RestablecerClave />} />
+          {/* Para pacientes y familiares: descarga de la app y textos legales. */}
+          <Route path="/descargar" element={<DescargarApp />} />
+          <Route path="/privacidad" element={<Privacidad />} />
+          <Route path="/terminos" element={<Terminos />} />
 
           <Route
             path="/panel"
@@ -33,6 +40,7 @@ export default function App() {
             <Route index element={<Dashboard />} />
             <Route path="pacientes/:id" element={<DetallePaciente />} />
             <Route path="reportes" element={<Reportes />} />
+            <Route path="alertas" element={<Alertas />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

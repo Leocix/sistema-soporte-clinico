@@ -111,7 +111,7 @@ void main() {
         (_) => _json({
           'exito': false,
           'codigo': 'NO_AUTENTICADO',
-          'mensaje': 'Usuario o contrasena incorrectos.',
+          'mensaje': 'Usuario o contraseña incorrectos.',
           'id_traza': 't-1',
         }, 401),
       );
@@ -394,6 +394,13 @@ void main() {
       });
 
       expect(toma.descripcion, 'Losartán · 50 mg');
+      expect(
+        TomaPorConfirmar(
+          idRegistro: 'r', paciente: 'p', medicamento: 'Metformina 850 mg',
+          dosis: '850 mg', programada: DateTime(2026, 11, 2, 8),
+        ).descripcion,
+        'Metformina 850 mg',
+      );
       // No la programada: el acompañante corrobora lo que el paciente declaró.
       expect(toma.horaReportada, '08:25');
     });

@@ -4,6 +4,7 @@ import '../services/almacenamiento.dart';
 import '../services/api_service.dart';
 import '../utils/tema.dart';
 import '../widgets/mensaje_estado.dart';
+import 'legal_screen.dart';
 import 'login_screen.dart';
 
 /// Alta de la cuenta del acompanante familiar mediante codigo (RF09).
@@ -31,6 +32,7 @@ class _RegistroFamiliarScreenState extends State<RegistroFamiliarScreen> {
 
   bool _enviando = false;
   bool _ocultarContrasena = true;
+  bool _acepta = false;
   String? _error;
 
   @override
@@ -45,6 +47,13 @@ class _RegistroFamiliarScreenState extends State<RegistroFamiliarScreen> {
 
   Future<void> _crear() async {
     if (!_formulario.currentState!.validate()) return;
+    // Crear la cuenta es el momento del consentimiento del familiar: se pide
+    // de forma expresa, no se presume por seguir adelante.
+    if (!_acepta) {
+      setState(() => _error =
+          'Para crear su cuenta debe aceptar los Términos y la Política de privacidad.');
+      return;
+    }
 
     setState(() {
       _enviando = true;
@@ -188,7 +197,20 @@ class _RegistroFamiliarScreenState extends State<RegistroFamiliarScreen> {
                       ? 'Use al menos 8 caracteres.'
                       : null,
                 ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 12),
+                CheckboxListTile(
+                  value: _acepta,
+                  onChanged: (v) => setState(() => _acepta = v ?? false),
+                  controlAffinity: ListTileControlAffinity.leading,
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text(
+                    'He leído y acepto los Términos y condiciones y la '
+                    'Política de privacidad.',
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+                const EnlaceLegal(prefijo: 'Leer los'),
+                const SizedBox(height: 16),
                 FilledButton(
                   onPressed: _enviando ? null : _crear,
                   child: _enviando

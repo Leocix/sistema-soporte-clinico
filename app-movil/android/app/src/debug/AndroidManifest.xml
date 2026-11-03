@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Modo local: el emulador alcanza el API del equipo por HTTP en
+         10.0.2.2. La politica solo existe en la compilacion de depuracion;
+         la APK de publicacion no la incluye y sigue exigiendo HTTPS (RNF01). -->
+    <application android:networkSecurityConfig="@xml/red_modo_local"/>
 </manifest>

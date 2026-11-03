@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 
-from app.api.reportes import clasificar_riesgo_observado
+from app.services.riesgo import clasificar as clasificar_riesgo_observado
 from app.db.models import EstadoToma, OrigenRegistro, RegistroAdherencia
 
 

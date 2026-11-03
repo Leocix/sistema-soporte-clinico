@@ -397,6 +397,30 @@ p { margin: 0; }
   .factor__barra { display: none; }
 }
 
+/* Explicación SHAP: barras divergentes desde un eje central. */
+.shap__lectura { font-size: 0.86rem; color: var(--texto-suave); margin: 0 0 0.6rem; }
+.shap { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.45rem; }
+.shap__fila {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 34%) 70px;
+  align-items: center; gap: 0.6rem; font-size: 0.86rem;
+}
+.shap__nombre { display: flex; flex-direction: column; min-width: 0; }
+.shap__nombre small { color: var(--texto-suave); font-size: 0.76rem; }
+.shap__eje { display: grid; grid-template-columns: 1fr 1fr; height: 10px; }
+.shap__mitad { display: flex; background: rgba(23, 32, 51, 0.07); }
+.shap__mitad--baja { justify-content: flex-end; border-right: 2px solid var(--texto-tenue); }
+.shap__barra { display: block; height: 100%; }
+.shap__barra--sube { background: var(--alto); border-radius: 0 4px 4px 0; }
+.shap__barra--baja { background: var(--bajo); border-radius: 4px 0 0 4px; }
+.shap__valor { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+.shap__valor--sube { color: var(--alto); }
+.shap__valor--baja { color: var(--bajo); }
+
+@media (max-width: 560px) {
+  .shap__fila { grid-template-columns: minmax(0, 1fr) 70px; }
+  .shap__eje { display: none; }
+}
+
 /* --- Detalle del paciente --------------------------------------------------- */
 
 .detalle { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr); gap: 1.5rem; align-items: start; }
@@ -509,10 +533,6 @@ p { margin: 0; }
 .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1rem; }
 
 .formulario { display: flex; flex-direction: column; gap: 1.25rem; }
-.formulario__ayuda {
-  font-size: 0.85rem; color: var(--texto-suave);
-  background: var(--primario-claro); padding: 0.7rem 0.9rem; border-radius: var(--radio-chico);
-}
 .formulario__grupo { border: none; padding: 0; margin: 0; }
 .formulario__grupo legend {
   font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em;
@@ -688,3 +708,85 @@ p { margin: 0; }
 .barras__relleno--bajo { background: var(--bajo); }
 .barras__relleno--sin_datos { background: var(--neutro); }
 .barras__valor { text-align: right; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+/* --- Alertas tempranas (RF05) ---------------------------------------------- */
+
+.navegacion__enlace { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.navegacion__contador {
+  background: var(--alto); color: #fff; font-size: 0.72rem; font-weight: 700;
+  min-width: 1.35rem; height: 1.35rem; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0 0.35rem;
+}
+
+.alertas { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.9rem; }
+.alerta-tarjeta { display: grid; gap: 0.6rem; border-left: 4px solid var(--neutro); }
+.alerta-tarjeta--alto { border-left-color: var(--alto); }
+.alerta-tarjeta--medio { border-left-color: var(--medio); }
+.alerta-tarjeta__cabecera {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;
+}
+.alerta-tarjeta__fecha { margin-left: auto; font-size: 0.78rem; color: var(--texto-tenue); }
+.alerta-tarjeta__motivo { margin: 0; font-weight: 550; }
+.alerta-tarjeta__nota { margin: 0; font-size: 0.85rem; color: var(--texto-suave); }
+.alerta-tarjeta__acciones { display: flex; gap: 0.6rem; justify-content: flex-end; flex-wrap: wrap; }
+.alerta-tarjeta__cierre { display: grid; gap: 0.6rem; }
+.alerta-tarjeta__cierre textarea {
+  font: inherit; padding: 0.55rem 0.7rem; border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-chico); background: var(--superficie); color: var(--texto);
+  resize: vertical; width: 100%;
+}
+.alerta-tarjeta__cierre textarea:focus {
+  outline: 2px solid var(--primario); outline-offset: 1px; border-color: var(--primario);
+}
+
+/* Columna «Testigo»: una persona por línea, quien registró y quien corroboró. */
+.testigos { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem; }
+.testigos .nota--inline { margin-left: 0; }
+
+/* Dar de baja: accion destructiva, se distingue del resto y pide confirmacion. */
+.boton--peligro { background: #b42318; color: #fff; border-color: #b42318; }
+.boton--peligro:hover:not(:disabled) { background: #912018; }
+.cabecera__acciones { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+.confirmar-baja { margin: 1rem 0; }
+.confirmar-baja__acciones { display: flex; gap: 0.6rem; margin-top: 0.6rem; }
+
+/* --- Páginas públicas: descarga de la app y textos legales ------------------ */
+.publica { min-height: 100vh; display: flex; flex-direction: column; background: var(--fondo); }
+.publica__cabecera {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  padding: 0.9rem 1.5rem; background: linear-gradient(160deg, var(--primario-oscuro), var(--primario));
+}
+.publica__marca { display: flex; align-items: center; gap: 0.6rem; color: #fff; font-weight: 700; font-size: 1.15rem; text-decoration: none; }
+.publica__marca img { border-radius: 10px; }
+.publica__nav { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+.publica__nav a { color: #d8e7f2; text-decoration: none; padding: 0.4rem 0.7rem; border-radius: var(--radio-chico); font-size: 0.92rem; }
+.publica__nav a:hover, .publica__nav a.active { background: rgba(255, 255, 255, 0.14); color: #fff; }
+.publica__contenido { width: 100%; max-width: 820px; margin: 0 auto; padding: 2rem 1.25rem 3rem; flex: 1; }
+.publica__contenido h1 { font-size: 1.9rem; margin-bottom: 0.6rem; }
+.publica__entrada { color: var(--texto-suave); font-size: 1.05rem; }
+.publica__seccion {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+  box-shadow: var(--sombra); padding: 1.1rem 1.4rem; margin-top: 1rem;
+}
+.publica__seccion h2 { font-size: 1.1rem; margin-bottom: 0.5rem; color: var(--primario-oscuro); }
+.publica__seccion p, .publica__seccion li { line-height: 1.6; }
+.publica__seccion ul, .publica__seccion ol { padding-left: 1.3rem; display: grid; gap: 0.35rem; }
+.publica__pie { text-align: center; color: var(--texto-tenue); font-size: 0.85rem; padding: 1.2rem; border-top: 1px solid var(--borde); }
+
+.descarga {
+  display: flex; gap: 1.5rem; align-items: center; justify-content: space-between; flex-wrap: wrap;
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+  box-shadow: var(--sombra); padding: 1.4rem; margin-top: 1rem;
+}
+.descarga__principal { display: flex; gap: 1.2rem; align-items: flex-start; flex: 1 1 320px; }
+.descarga__icono { border-radius: 22px; flex-shrink: 0; }
+.descarga__boton { display: inline-block; margin: 0.8rem 0 0.4rem; text-decoration: none; }
+.descarga__qr { text-align: center; margin: 0 auto; max-width: 240px; }
+.descarga__qr figcaption { color: var(--texto-suave); font-size: 0.85rem; margin-top: 0.4rem; }
+.acceso__legal { font-size: 0.8rem; }
+
+@media (max-width: 600px) {
+  .publica__cabecera { padding: 0.8rem 1rem; }
+  .descarga__principal { flex-direction: column; }
+  .descarga__qr { display: none; }
+}

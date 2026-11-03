@@ -61,6 +61,8 @@ class TarjetaToma extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // La etiqueta ya trae la dosis («Losartán 50 mg»):
+                      // repetirla debajo la mostraba dos veces.
                       Text(
                         dosis.medicamento,
                         style: const TextStyle(
@@ -68,20 +70,12 @@ class TarjetaToma extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      if (dosis.dosis.isNotEmpty)
-                        Text(
-                          dosis.dosis,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Tema.neutro,
-                          ),
-                        ),
                     ],
                   ),
                 ),
                 if (dosis.pendienteDeEnvio)
                   const Tooltip(
-                    message: 'Guardado en el telefono, pendiente de enviar',
+                    message: 'Guardado en el teléfono, pendiente de enviar',
                     child: Icon(Icons.cloud_off, color: Tema.aviso, size: 26),
                   ),
               ],
@@ -90,9 +84,14 @@ class TarjetaToma extends StatelessWidget {
             if (registro != null)
               _Respuesta(registro: registro)
             else if (dosis.esFutura)
-              const _Espera()
+              _Espera(abre: dosis.abreVentana)
             else
-              _Acciones(alConfirmar: alConfirmar, alOmitir: alOmitir),
+              _Acciones(
+                alConfirmar: alConfirmar,
+                alOmitir: alOmitir,
+                cerrada: dosis.ventanaCerrada,
+                cierre: dosis.cierraVentana,
+              ),
           ],
         ),
       ),
@@ -101,20 +100,46 @@ class TarjetaToma extends StatelessWidget {
 }
 
 class _Acciones extends StatelessWidget {
-  const _Acciones({required this.alConfirmar, required this.alOmitir});
+  const _Acciones({
+    required this.alConfirmar,
+    required this.alOmitir,
+    required this.cerrada,
+    required this.cierre,
+  });
 
   final VoidCallback alConfirmar;
   final VoidCallback alOmitir;
+
+  /// Paso el plazo para marcarla como tomada (ventana de registro).
+  final bool cerrada;
+  final DateTime cierre;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        FilledButton.icon(
-          onPressed: alConfirmar,
-          icon: const Icon(Icons.check_circle_outline, size: 26),
-          label: const Text('Ya la tomé'),
-        ),
+        if (cerrada) ...[
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.lock_clock, color: Tema.neutro, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'El plazo para marcarla como tomada terminó a las '
+                  '${formatoHora(cierre)}. Si no la tomó, regístrelo abajo.',
+                  style: const TextStyle(fontSize: 16, color: Tema.neutro),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ] else
+          FilledButton.icon(
+            onPressed: alConfirmar,
+            icon: const Icon(Icons.check_circle_outline, size: 26),
+            label: const Text('Ya la tomé'),
+          ),
         const SizedBox(height: 10),
         OutlinedButton.icon(
           onPressed: alOmitir,
@@ -128,18 +153,21 @@ class _Acciones extends StatelessWidget {
 }
 
 class _Espera extends StatelessWidget {
-  const _Espera();
+  const _Espera({required this.abre});
+
+  /// Hora desde la que se podra registrar la dosis.
+  final DateTime abre;
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    return Row(
       children: [
-        Icon(Icons.schedule, color: Tema.neutro, size: 22),
-        SizedBox(width: 8),
+        const Icon(Icons.schedule, color: Tema.neutro, size: 22),
+        const SizedBox(width: 8),
         Expanded(
           child: Text(
-            'Aún no es la hora de esta dosis.',
-            style: TextStyle(fontSize: 16, color: Tema.neutro),
+            'Podrá registrarla desde las ${formatoHora(abre)}.',
+            style: const TextStyle(fontSize: 16, color: Tema.neutro),
           ),
         ),
       ],

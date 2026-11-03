@@ -7,10 +7,11 @@ la app movil sin esperar a la extraccion documental.
     python scripts/seed.py                 # solo la cuenta del medico
     python scripts/seed.py --demo          # ademas, 5 pacientes y un familiar
 
-Los pacientes de demostracion son ficticios y llevan codigos de la serie
-D-0NN para distinguirlos a simple vista de los pacientes reales (P-0NN): no
-deben incluirse en el dataset de entrenamiento ni en los resultados de la
-investigacion.
+Los pacientes de demostracion son ficticios y usan la misma serie de codigos
+que los reales (P-001 a P-005), para que el panel se vea como se vera en
+uso. Viven solo en la base local de demostracion: el conjunto de
+entrenamiento se construye con la ficha del Anexo n.o 04, no con esta base,
+de modo que no pueden mezclarse con los datos del estudio.
 """
 from __future__ import annotations
 
@@ -46,30 +47,30 @@ CORREO_MEDICO = "milko.ugaz@consultorio.pe"
 # Acompanante de demostracion, vinculado al primer paciente ficticio. Permite
 # recorrer el grupo familiar (RF09) con un solo dispositivo, sin necesidad de
 # un segundo telefono para el familiar.
-CORREO_ACOMPANANTE = "rosa.d-001@ejemplo.pe"
+CORREO_ACOMPANANTE = "rosa.p-001@ejemplo.pe"
 
 # Marca que deja la migracion de identidad en las fichas anteriores a ella.
 # Una ficha con este valor esta a medio completar, no completa.
 RELLENO_MIGRACION = "(por registrar)"
 
-# Nombres ficticios, coherentes con el codigo D- de demostracion.
+# Nombres ficticios de demostracion.
 PACIENTES_DEMO = [
     # codigo, nombres, apellidos, edad, sexo, diagnostico, nivel educativo,
     # convivencia, apoyo familiar, anios, comorbilidades, farm, tomas, prog,
     # perd, morisky
-    ("D-001", "Jose Luis", "Vasquez Rios", 68, Sexo.MASCULINO, Diagnostico.AMBAS,
+    ("P-001", "Jose Luis", "Vasquez Rios", 68, Sexo.MASCULINO, Diagnostico.AMBAS,
      NivelEducativo.SECUNDARIA, Convivencia.ACOMPANADO, True, 12.0,
      ["dislipidemia", "obesidad"], 7, 5, 6, 3, 1),
-    ("D-002", "Maria Elena", "Rios Chavez", 72, Sexo.FEMENINO, Diagnostico.HTA,
+    ("P-002", "Maria Elena", "Rios Chavez", 72, Sexo.FEMENINO, Diagnostico.HTA,
      NivelEducativo.PRIMARIA, Convivencia.SOLO, False, 15.5,
      ["dislipidemia", "artrosis", "hipotiroidismo"], 9, 6, 6, 4, 0),
-    ("D-003", "Carlos Alberto", "Diaz Mendoza", 65, Sexo.MASCULINO, Diagnostico.DM2,
+    ("P-003", "Carlos Alberto", "Diaz Mendoza", 65, Sexo.MASCULINO, Diagnostico.DM2,
      NivelEducativo.SUPERIOR, Convivencia.ACOMPANADO, True, 8.0,
      ["obesidad"], 5, 3, 6, 1, 3),
-    ("D-004", "Lucia", "Fernandez Paz", 59, Sexo.FEMENINO, Diagnostico.AMBAS,
+    ("P-004", "Lucia", "Fernandez Paz", 59, Sexo.FEMENINO, Diagnostico.AMBAS,
      NivelEducativo.SUPERIOR, Convivencia.ACOMPANADO, False, 6.5,
      [], 6, 4, 6, 0, 4),
-    ("D-005", "Ricardo", "Campos Leon", 70, Sexo.MASCULINO, Diagnostico.HTA,
+    ("P-005", "Ricardo", "Campos Leon", 70, Sexo.MASCULINO, Diagnostico.HTA,
      NivelEducativo.SECUNDARIA, Convivencia.SOLO, False, 20.0,
      ["cardiopatia_isquemica", "enfermedad_renal_cronica", "dislipidemia", "depresion"], 8, 6, 6, 2, 2),
 ]
@@ -148,7 +149,7 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
                 nombres=nombres, apellidos=apellidos,
                 # `.local` es un dominio reservado que el validador rechaza.
                 correo=f"{codigo.lower()}@ejemplo.pe",
-                telefono="9" + codigo.replace("D-", "").rjust(8, "0"),
+                telefono="9" + codigo.replace("P-", "").rjust(8, "0"),
                 id_medico_tratante=medico.id_usuario,
                 edad=edad, sexo=sexo, diagnostico=dx,
                 nivel_educativo=educacion, convivencia=convivencia, apoyo_familiar=apoyo,
@@ -172,7 +173,7 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
                 reparada = True
             if not paciente.correo:
                 paciente.correo = f"{codigo.lower()}@ejemplo.pe"
-                paciente.telefono = "9" + codigo.replace("D-", "").rjust(8, "0")
+                paciente.telefono = "9" + codigo.replace("P-", "").rjust(8, "0")
                 reparada = True
             # Fichas anteriores al cambio de variables: sin contexto social ni
             # lista de comorbilidades.
@@ -231,14 +232,14 @@ def crear_demo(db, medico: Usuario, clave: str) -> None:
 
 
 def crear_acompanante_demo(db, clave: str) -> None:
-    """Vincula un familiar ficticio al paciente D-001 y corrobora sus tomas.
+    """Vincula un familiar ficticio al paciente P-001 y corrobora sus tomas.
 
     Sin esto, mostrar el acompanamiento exigiria dos telefonos: uno que invite
     y otro que canjee el codigo. Aqui el vinculo nace ya establecido, de modo
     que baste con entrar como familiar para ver las tomas por confirmar.
     """
     paciente = (
-        db.query(Paciente).filter(Paciente.codigo_anonimizado == "D-001").first()
+        db.query(Paciente).filter(Paciente.codigo_anonimizado == "P-001").first()
     )
     if paciente is None:
         return
@@ -299,7 +300,7 @@ def crear_acompanante_demo(db, clave: str) -> None:
         registro.fecha_confirmacion = registro.fecha_hora_programada
 
     db.commit()
-    print(f"Cuenta de acompanante familiar: {CORREO_ACOMPANANTE}  (paciente D-001)")
+    print(f"Cuenta de acompanante familiar: {CORREO_ACOMPANANTE}  (paciente P-001)")
 
 
 def crear_cuentas_pendientes(db, clave: str) -> None:

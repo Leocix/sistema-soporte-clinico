@@ -1,0 +1,15 @@
+=== API central (pytest) ===
+........................................................................ [ 51%]
+....................................................................     [100%]
+140 passed, 1 skipped in 138.49s (0:02:18)
+
+=== Microservicio de inferencia (pytest) ===
+.............                                                            [100%]
+13 passed in 11.56s
+
+=== Aplicacion movil (flutter test) ===
+00:22 +36: C:/Users/Leona/OneDrive/Desktop/Sistema-Soporte-Clinico/app-movil/test/api_service_test.dart: reintento cuando el servicio está arrancando una lectura sobrevive a que el servicio corte las dos primeras
+00:22 +37: C:/Users/Leona/OneDrive/Desktop/Sistema-Soporte-Clinico/app-movil/test/api_service_test.dart: reintento cuando el servicio está arrancando si el fallo persiste, se rinde y lo informa
+00:22 +38: C:/Users/Leona/OneDrive/Desktop/Sistema-Soporte-Clinico/app-movil/test/api_service_test.dart: reintento cuando el servicio está arrancando el mensaje del fallo no culpa a la conexión del paciente
+00:22 +39: C:/Users/Leona/OneDrive/Desktop/Sistema-Soporte-Clinico/app-movil/test/api_service_test.dart: reintento cuando el servicio está arrancando una escritura NO se reintenta sola
+00:22 +40: All tests passed!

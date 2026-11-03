@@ -8,13 +8,22 @@ la sincronizacion idempotente.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from ..db.models import EstadoToma, OrigenRegistro
 
 ESTADOS_CUMPLIDOS = (EstadoToma.TOMADA, EstadoToma.TOMADA_TARDE)
+
+# Ventana de registro de una toma cumplida, alrededor de su hora programada.
+# La aplicacion movil replica estos valores (Constantes.ventanaAntes y
+# Constantes.ventanaDespues) para deshabilitar el boton fuera de la ventana; el
+# API es quien la hace cumplir.
+VENTANA_ANTES = timedelta(minutes=60)
+VENTANA_DESPUES = timedelta(hours=3)
+# Margen para relojes de telefono ligeramente desajustados.
+TOLERANCIA_RELOJ = timedelta(minutes=5)
 
 
 def _asegurar_utc(valor: datetime | None) -> datetime | None:
@@ -63,11 +72,39 @@ class RegistroTomaCreate(BaseModel):
             raise ValueError(
                 "Una toma marcada como cumplida requiere la hora real de la toma."
             )
+        if self.estado in ESTADOS_CUMPLIDOS and self.fecha_hora_registro is not None:
+            # Ventana de registro: una toma solo se da por cumplida si se marca
+            # cerca de su hora. Impide marcar de golpe, por la noche, todas las
+            # dosis del dia. Se mide contra la hora PROGRAMADA y no contra la del
+            # servidor, para que una toma marcada a tiempo sin conexion siga
+            # siendo valida aunque la cola la envie horas despues.
+            desfase = self.fecha_hora_registro - self.fecha_hora_programada
+            if desfase < -VENTANA_ANTES or desfase > VENTANA_DESPUES:
+                raise ValueError(
+                    "Fuera de la ventana de registro: una toma se puede marcar como "
+                    f"cumplida desde {int(VENTANA_ANTES.total_seconds() // 60)} minutos antes "
+                    f"hasta {int(VENTANA_DESPUES.total_seconds() // 3600)} horas después de su hora."
+                )
+            # Un registro con hora futura delata un reloj del telefono adelantado.
+            if self.fecha_hora_registro > datetime.now(timezone.utc) + TOLERANCIA_RELOJ:
+                raise ValueError(
+                    "La hora de la toma es posterior a la hora actual. Revise la hora del teléfono."
+                )
         if self.estado is EstadoToma.OMITIDA and self.fecha_hora_registro is not None:
             raise ValueError(
                 "Una toma omitida no puede llevar hora de toma; use 'tomada_tarde'."
             )
         return self
+
+
+class TestigoOut(BaseModel):
+    """Una persona que respalda el evento: quien lo registro o quien lo corroboro."""
+
+    nombre: str
+    # «registro» o «corroboro»: el papel de la persona en esta toma.
+    papel: str
+    # Relacion con el paciente: «paciente», «medico» o el parentesco del familiar.
+    relacion: str
 
 
 class RegistroTomaOut(BaseModel):
@@ -91,6 +128,9 @@ class RegistroTomaOut(BaseModel):
     # del paciente.
     corroborada: bool
     fecha_confirmacion: datetime | None
+    # Todas las personas que respaldan la toma, con su nombre: el panel deja de
+    # decir solo «Familiar» y muestra quien registro y quien corroboro.
+    testigos: list[TestigoOut] = []
 
     # Propiedades calculadas en el modelo; insumo de las caracteristicas
     # conductuales del modelo predictivo (RF04).

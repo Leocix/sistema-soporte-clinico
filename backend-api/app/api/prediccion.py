@@ -37,7 +37,7 @@ def estado_del_modelo(
         return EstadoModelo(
             disponible=False,
             mensaje=(
-                "El modelo predictivo no esta disponible. El resto del sistema "
+                "El modelo predictivo no está disponible. El resto del sistema "
                 "sigue operativo."
             ),
         )
@@ -83,4 +83,6 @@ def predecir_riesgo(
         factores=resultado.factores,
         variables_imputadas=resultado.variables_imputadas,
         modelo=resultado.ficha_modelo,
+        valor_base=resultado.valor_base,
+        contribuciones=resultado.contribuciones,
     )

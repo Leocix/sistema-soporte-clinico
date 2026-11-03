@@ -22,7 +22,15 @@ from sqlalchemy.orm import Session
 from ..core.exceptions import AppError, ConflictoError, PermisoDenegadoError
 from ..core.security import get_current_user
 from ..db.database import get_db
-from ..db.models import EstadoToma, Paciente, RegistroAdherencia, Rol, Usuario
+from ..db.models import (
+    Acompanante,
+    EstadoToma,
+    OrigenRegistro,
+    Paciente,
+    RegistroAdherencia,
+    Rol,
+    Usuario,
+)
 from ..schemas.adherencia_schema import (
     ESTADOS_CUMPLIDOS,
     RegistroTomaCreate,
@@ -30,6 +38,7 @@ from ..schemas.adherencia_schema import (
     ResultadoSincronizacion,
     ResumenAdherencia,
 )
+from ..services import alertas as servicio_alertas
 from ..services.acceso import ficha_del_paciente_autenticado, obtener_paciente_autorizado
 
 router = APIRouter(prefix="/api/adherencia", tags=["Adherencia"])
@@ -59,7 +68,7 @@ def _paciente_destino(
 
     if not paciente.activo:
         raise ConflictoError(
-            "El paciente esta dado de baja del seguimiento; no admite nuevos registros."
+            "El paciente está dado de baja del seguimiento; no admite nuevos registros."
         )
     return paciente
 
@@ -122,6 +131,7 @@ def registrar_toma(
     registro, fue_creado = _registrar_evento(db, paciente, payload)
     db.commit()
     db.refresh(registro)
+    _revisar_alertas(db, paciente)
 
     # 201 cuando el evento es nuevo; 200 cuando el envio es un reintento que
     # actualizo el evento ya sincronizado.
@@ -173,6 +183,8 @@ def sincronizar_lote(
     db.commit()
     for registro in registros:
         db.refresh(registro)
+    for paciente in {r.id_paciente: r for r in registros}.values():
+        _revisar_alertas(db, paciente.paciente)
 
     return ResultadoSincronizacion(
         creados=creados,
@@ -210,6 +222,19 @@ def _consultar_registros(
     if limite is not None:
         consulta = consulta.limit(limite)
     return consulta.all()
+
+
+def _revisar_alertas(db: Session, paciente: Paciente) -> None:
+    """Reevalua las reglas de alerta del paciente tras registrar una toma.
+
+    Es el momento en que la evidencia cambia: una omision mas puede completar
+    la racha que el medico necesita conocer hoy, no en su proxima consulta. No
+    se pide la prediccion al microservicio —encarecerian cada sincronizacion de
+    la app— porque esa regla se evalua al abrir la bandeja.
+    """
+    eventos = _consultar_registros(db, paciente, None, None, ascendente=True)
+    servicio_alertas.evaluar_paciente(db, paciente, eventos)
+    db.commit()
 
 
 def _construir_resumen(
@@ -317,7 +342,51 @@ def listar_registros(
     limite: int = Query(default=100, ge=1, le=500),
 ) -> list[RegistroAdherencia]:
     paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
-    return _consultar_registros(db, paciente, desde, hasta, limite=limite)
+    registros = _consultar_registros(db, paciente, desde, hasta, limite=limite)
+    _anotar_testigos(db, paciente, registros)
+    return registros
+
+
+# Quien registra la toma, segun el canal por el que entro el dato.
+_REGISTRA = {
+    OrigenRegistro.APP_MOVIL: "paciente",
+    OrigenRegistro.PANEL_WEB: "medico",
+    OrigenRegistro.IMPORTACION: "importacion",
+}
+
+
+def _anotar_testigos(db: Session, paciente: Paciente, registros: list[RegistroAdherencia]) -> None:
+    """Agrega a cada toma la lista de personas que la respaldan.
+
+    Una sola consulta trae a los familiares del paciente; el resto se resuelve
+    en memoria, de modo que el historial no hace una consulta por fila.
+    """
+    familiares = {
+        a.id_usuario: a
+        for a in db.query(Acompanante).filter(
+            Acompanante.id_paciente == paciente.id_paciente,
+            Acompanante.id_usuario.isnot(None),
+        )
+    }
+    nombre_paciente = (paciente.nombres or "").split(" ")[0] or paciente.codigo_anonimizado
+    for registro in registros:
+        testigos = []
+        relacion = _REGISTRA.get(registro.origen, "paciente")
+        if relacion == "paciente":
+            testigos.append({"nombre": nombre_paciente, "papel": "registro", "relacion": "paciente"})
+        elif relacion == "medico":
+            testigos.append({"nombre": "Médico tratante", "papel": "registro", "relacion": "medico"})
+        else:
+            testigos.append({"nombre": "Carga de datos", "papel": "registro", "relacion": "importacion"})
+        if registro.id_confirmante:
+            familiar = familiares.get(registro.id_confirmante)
+            testigos.append({
+                "nombre": familiar.nombre_invitado if familiar else "Familiar",
+                "papel": "corroboro",
+                "relacion": familiar.parentesco.value if familiar else "familiar",
+            })
+        # Atributo transitorio: no es columna, solo viaja en la respuesta.
+        registro.testigos = testigos
 
 
 @router.get(

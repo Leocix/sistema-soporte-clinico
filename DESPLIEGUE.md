@@ -79,10 +79,10 @@ python scripts/seed.py
 ```
 
 Añade `--demo` si quieres además cinco pacientes ficticios con historial para
-recorrer el panel. Se distinguen por el prefijo `D-` frente a los reales `P-`.
+recorrer el panel (P-001 a P-005). Se reconocen por sus correos `@ejemplo.pe`.
 
 Ese mismo `--demo` deja preparado el grupo familiar (RF09): crea la cuenta
-`rosa.d-001@ejemplo.pe`, acompañante del paciente D-001, con parte de su
+`rosa.p-001@ejemplo.pe`, acompañante del paciente P-001, con parte de su
 historial ya corroborado y alguna toma pendiente de confirmar. Sirve para
 mostrar el acompañamiento desde un solo teléfono, sin necesitar un segundo
 dispositivo que canjee el código. El script puede ejecutarse las veces que
@@ -115,19 +115,26 @@ En Render: **New → Blueprint**, conectar el repositorio. Render detecta
 - `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`
 - Sonda de salud en `/health`
 
-Las migraciones se aplican en cada arranque. Alembic es idempotente: si no hay
-nada pendiente, no hace nada. Si `DATABASE_URL` está mal, el servicio no
-arranca y el fallo aparece en los *logs* de Render: es deliberado, preferible a
-un API en pie que no puede leer datos.
+Las migraciones se aplican en cada arranque con `python scripts/migrar.py`.
+Alembic es idempotente: si no hay nada pendiente, no hace nada. El script
+**reintenta la conexión** (5 s, 15 s y 30 s) antes de rendirse, para que un
+corte de segundos en la base gestionada no tumbe el despliegue. Si tras los
+reintentos sigue sin conectar, el servicio no arranca y el motivo aparece en
+los *logs*: es deliberado, preferible a un API en pie que no puede leer datos.
 
-> `requirements.txt` incluye scikit-learn, imbalanced-learn, numpy, pandas
-> y joblib **con las versiones exactas del entorno de entrenamiento**: el
-> artefacto serializado es un pipeline de imbalanced-learn y solo se puede
-> abrir con esas librerías y esas versiones. XGBoost no está: pesa cientos de
-> megabytes y solo hace falta para entrenar, de modo que el modelo desplegado
-> se produce con `--sin-xgboost`. Si la comparación sobre el dataset real
-> seleccionara XGBoost, habría que añadirlo a `requirements.txt` con la versión
-> de `ml-pipeline/requirements.txt`.
+El blueprint crea además el **microservicio de inferencia**
+`cdss-adherencia-ml` (directorio `ml-service/`), que carga el modelo y calcula
+la predicción y SHAP. Sus librerías (scikit-learn, imbalanced-learn, numpy,
+pandas, joblib, shap) tienen las versiones exactas del entrenamiento; el API ya
+no las instala. XGBoost no está: el modelo desplegado se produce con
+`--sin-xgboost`.
+
+> Si el API se creó a mano y no con el blueprint, cree también a mano un
+> segundo *Web Service*: directorio raíz `ml-service`, construcción
+> `pip install -r requirements.txt`, arranque
+> `uvicorn app.main:app --host 0.0.0.0 --port $PORT`, sonda `/health`, y las
+> variables `PYTHON_VERSION=3.12.6`, `ENVIRONMENT=produccion` y
+> `CLAVE_SERVICIO` (una clave larga generada como la `SECRET_KEY`).
 
 ### 2.2. Completar las variables de entorno
 
@@ -140,6 +147,8 @@ mano en **Environment** del panel de Render:
 | `SECRET_KEY` | `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
 | `CORS_ORIGINS` | La URL del panel en Vercel (paso 3). Déjala vacía en el primer despliegue y complétala después |
 | `ALLOWED_HOSTS` | El host que asigna Render, p. ej. `cdss-adherencia-api.onrender.com` |
+| `ML_SERVICE_URL` | La URL pública del microservicio, p. ej. `https://cdss-adherencia-ml.onrender.com` |
+| `ML_SERVICE_CLAVE` | La misma clave que `CLAVE_SERVICIO` del microservicio (el blueprint la enlaza sola) |
 
 ### 2.2.1. Correo saliente para el restablecimiento (opcional)
 
@@ -175,7 +184,14 @@ queda expuesta en un servicio público.
 curl https://cdss-adherencia-api.onrender.com/health
 ```
 
-Debe responder `{"estado":"ok","version":"0.2.0"}`.
+Debe responder `{"estado":"ok","version":"0.2.0"}`. Y el microservicio:
+
+```bash
+curl https://cdss-adherencia-ml.onrender.com/health
+```
+
+Si la ficha del paciente no muestra la tarjeta de riesgo, revise que
+`ML_SERVICE_URL` y `ML_SERVICE_CLAVE` estén completas en el API.
 
 > **Plan gratuito de Render:** el servicio se suspende tras 15 minutos sin
 > tráfico y la primera petición posterior tarda unos 50 segundos en responder.
@@ -219,6 +235,13 @@ contraseña que definiste en `SEED_PASSWORD`.
    sin barra final: `https://cdss-adherencia-api.onrender.com`.
 4. Tras el primer despliegue, copiar el dominio asignado y ponerlo en
    `CORS_ORIGINS` en Render.
+5. **Descarga de la app.** El APK no se versiona (pesa unos 55 MB). Súbalo
+   como archivo `mi-tratamiento.apk` de una *release* de GitHub y ponga su URL
+   en **`VITE_APK_URL`**, por ejemplo
+   `https://github.com/<usuario>/<repositorio>/releases/latest/download/mi-tratamiento.apk`.
+   La página `/descargar` del panel ofrece ese archivo con un código QR.
+6. **Textos legales.** `VITE_CORREO_CONTACTO` fija el correo que citan
+   `/privacidad` y `/terminos`; sin él, remiten al consultorio.
 
 > `VITE_API_URL` se incrusta en el paquete durante la construcción, no se lee
 > en tiempo de ejecución: si la cambias, hay que volver a desplegar para que
@@ -243,6 +266,41 @@ el Sprint 3.
 
 ---
 
+## Si el despliegue falla
+
+| Lo que dice el *log* | Qué revisar |
+| :--- | :--- |
+| `could not translate host name ... Name or service not known` | El nombre de la base no se resolvió. Casi siempre es pasajero: vuelva a desplegar (**Manual Deploy → Deploy latest commit**). Si se repite, compruebe en Aiven que el servicio esté **Running** —los servicios inactivos pueden apagarse— y que `DATABASE_URL` en Render no tenga espacios ni saltos de línea al copiarla |
+| `password authentication failed` | Usuario o contraseña de `DATABASE_URL`. Vuelva a copiar el *Service URI* desde Aiven |
+| `database ... does not exist` | El nombre de la base en `DATABASE_URL` (en Aiven suele ser `defaultdb`) |
+| `MODELO_NO_DISPONIBLE` en la ficha | Falta `ML_SERVICE_URL` o `ML_SERVICE_CLAVE` en el API, o el microservicio está dormido |
+| El panel dice «sin conexión» y el API responde | El servicio estaba suspendido por inactividad: la primera petición tarda unos 50 s |
+
+Una comprobación rápida desde su equipo, para saber si el problema es de la
+base o del servicio:
+
+```bash
+curl https://cdss-adherencia-api.onrender.com/health
+```
+
+Si responde `{"estado":"ok"}`, el API está en pie y conectado.
+
+---
+
+## Antes de una demostración
+
+Los servicios gratuitos se suspenden tras quince minutos sin tráfico. Despiértelos
+cinco minutos antes, no durante la sustentación:
+
+```bash
+python backend-api/scripts/despertar.py --api https://cdss-adherencia-api.onrender.com --panel <URL del panel>
+```
+
+El guion completo de la demostración, paso a paso, está en
+`documentacion/04_demostracion/Guion_demostracion.md`.
+
+---
+
 ## Lista de verificación antes de la sustentación
 
 - [ ] `SECRET_KEY` de producción distinta de la de desarrollo
@@ -250,7 +308,7 @@ el Sprint 3.
 - [ ] `ENVIRONMENT=produccion` en Render (oculta `/docs`)
 - [ ] `sslmode=require` en la cadena de conexión
 - [ ] `CORS_ORIGINS` apuntando al dominio real del panel
-- [ ] Servicio de Render despierto
-- [ ] Pacientes de demostración (`D-`) retirados si se muestran datos reales
+- [ ] API y microservicio despiertos (`python backend-api/scripts/despertar.py`)
+- [ ] Pacientes de demostración (correos `@ejemplo.pe`) retirados si se muestran datos reales
 - [ ] APK reconstruido tras el último cambio: `flutter build apk --release`
 - [ ] `FRONTEND_URL` apuntando al dominio real del panel, si se activó el correo

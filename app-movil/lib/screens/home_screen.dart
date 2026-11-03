@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import '../models/medicamento.dart';
@@ -40,7 +42,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => HomeScreenState();
 }
 
-class HomeScreenState extends State<HomeScreen> {
+class HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   late final ServicioSincronizacion _sync = ServicioSincronizacion(widget.api);
 
   List<Medicamento> _plan = const [];
@@ -52,6 +54,16 @@ class HomeScreenState extends State<HomeScreen> {
   bool _sincronizando = false;
   String? _error;
 
+  /// Recuperacion automatica de la conexion. Al abrir la aplicacion, la red
+  /// del telefono (o del emulador recien encendido) puede tardar mas que los
+  /// reintentos del servicio en estar lista. Antes, la pantalla se quedaba
+  /// con el aviso de «sin conexion» hasta cerrar y volver a abrir la
+  /// aplicacion; ahora reintenta sola en segundo plano y quita el aviso en
+  /// cuanto el servidor responde.
+  static const _esperasSinRed = [5, 10, 20, 30];
+  Timer? _reintento;
+  int _reintentosSinRed = 0;
+
   DateTime get _inicioDelDia {
     final ahora = DateTime.now();
     return DateTime(ahora.year, ahora.month, ahora.day);
@@ -60,7 +72,32 @@ class HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _cargar();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _reintento?.cancel();
+    super.dispose();
+  }
+
+  /// Al volver la aplicacion al frente se recarga en silencio: es el momento
+  /// en que el paciente espera ver su informacion al dia.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState estado) {
+    if (estado == AppLifecycleState.resumed) _cargar(silencioso: true);
+  }
+
+  /// Programa el siguiente reintento mientras dure la falta de conexion.
+  void _programarReintento() {
+    _reintento?.cancel();
+    final indice = _reintentosSinRed.clamp(0, _esperasSinRed.length - 1);
+    _reintentosSinRed++;
+    _reintento = Timer(Duration(seconds: _esperasSinRed[indice]), () {
+      if (mounted) _cargar(silencioso: true);
+    });
   }
 
   /// Vuelve a leer el plan y el historial. La invoca el contenedor cuando el
@@ -72,13 +109,16 @@ class HomeScreenState extends State<HomeScreen> {
   /// La falta de red no vacia la pantalla: el plan y la cola son locales, de
   /// modo que el paciente sigue viendo sus tomas de hoy y puede responderlas
   /// aunque el API no conteste.
-  Future<void> _cargar() async {
-    setState(() => _cargando = true);
+  Future<void> _cargar({bool silencioso = false}) async {
+    // En los reintentos automaticos no se muestra el indicador de carga:
+    // la pantalla seguiria parpadeando cada pocos segundos.
+    if (!silencioso) setState(() => _cargando = true);
 
     final plan = await Almacenamiento.instancia.leerPlan();
     final cola = await Almacenamiento.instancia.leerCola();
 
     var registros = const <Toma>[];
+    var sinConexion = false;
     ResumenAdherencia? resumen;
     String? error;
 
@@ -86,6 +126,7 @@ class HomeScreenState extends State<HomeScreen> {
       registros = await widget.api.misRegistros(desde: _inicioDelDia);
       resumen = await widget.api.miResumen();
     } on ErrorDeConexion {
+      sinConexion = true;
       // No se afirma que el paciente no tenga internet: la causa mas frecuente
       // es que el servicio este arrancando, y decirle que revise su conexion
       // cuando su conexion esta bien es mandarlo a buscar donde no hay nada.
@@ -108,6 +149,13 @@ class HomeScreenState extends State<HomeScreen> {
       _error = error;
       _cargando = false;
     });
+
+    if (sinConexion) {
+      _programarReintento();
+    } else {
+      _reintentosSinRed = 0;
+      _reintento?.cancel();
+    }
 
     if (cola.isNotEmpty && error == null) {
       await _sincronizar(silencioso: true);

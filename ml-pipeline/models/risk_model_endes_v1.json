@@ -1,0 +1,225 @@
+{
+  "algoritmo": "Random Forest",
+  "hiperparametros": {
+    "max_depth": 8,
+    "min_samples_leaf": 5,
+    "n_estimators": 200
+  },
+  "entrenado_el": "2026-10-31",
+  "origen_datos": "ENDES (INEI), microdatos publicos",
+  "datos_reales": true,
+  "filas_entrenamiento": 6737,
+  "aucroc_validacion_cruzada": 0.5913,
+  "sensibilidad_validacion_cruzada": 0.4502,
+  "metricas_prueba": {
+    "exactitud": 0.6255,
+    "sensibilidad": 0.4545,
+    "especificidad": 0.6527,
+    "f1": 0.2497,
+    "aucroc": 0.571
+  },
+  "cumple_meta_aucroc": false,
+  "semilla": 42,
+  "factores_influyentes": [
+    {
+      "variable": "edad",
+      "importancia": 0.0348,
+      "desviacion": 0.0141
+    },
+    {
+      "variable": "tiempo_enfermedad_anios",
+      "importancia": 0.0257,
+      "desviacion": 0.0116
+    },
+    {
+      "variable": "nivel_educativo",
+      "importancia": 0.0093,
+      "desviacion": 0.0063
+    },
+    {
+      "variable": "diagnostico",
+      "importancia": 0.0061,
+      "desviacion": 0.0079
+    },
+    {
+      "variable": "cronicidad_relativa",
+      "importancia": 0.005,
+      "desviacion": 0.0065
+    },
+    {
+      "variable": "comorbilidades",
+      "importancia": -0.0001,
+      "desviacion": 0.0016
+    },
+    {
+      "variable": "convivencia",
+      "importancia": -0.0015,
+      "desviacion": 0.0053
+    },
+    {
+      "variable": "sexo",
+      "importancia": -0.002,
+      "desviacion": 0.0034
+    }
+  ],
+  "fondo_shap": {
+    "columnas_preparadas": [
+      "edad",
+      "tiempo_enfermedad_anios",
+      "comorbilidades",
+      "cronicidad_relativa",
+      "nivel_educativo",
+      "sexo_M",
+      "convivencia_solo",
+      "diagnostico_ambas",
+      "diagnostico_dm2",
+      "diagnostico_hta"
+    ],
+    "centroides": [
+      [
+        -0.818511,
+        -0.350795,
+        -0.881918,
+        -0.252314,
+        1.162037,
+        0.217593,
+        0.043981,
+        0.224537,
+        0.775463,
+        0.0
+      ],
+      [
+        0.745852,
+        1.557504,
+        0.534345,
+        1.317782,
+        1.332613,
+        0.293737,
+        0.159827,
+        0.326134,
+        0.110151,
+        0.563715
+      ],
+      [
+        0.553816,
+        -0.285071,
+        2.131378,
+        -0.353519,
+        1.075901,
+        0.216319,
+        0.227704,
+        0.184061,
+        0.089184,
+        0.726755
+      ],
+      [
+        -1.296827,
+        -0.546792,
+        -0.863134,
+        -0.451571,
+        0.998536,
+        0.086384,
+        0.032211,
+        0.010249,
+        -0.0,
+        0.989751
+      ],
+      [
+        -0.599519,
+        -0.474667,
+        0.553279,
+        -0.436799,
+        1.204082,
+        0.202381,
+        0.085034,
+        0.120748,
+        0.209184,
+        0.670068
+      ],
+      [
+        0.521774,
+        3.545602,
+        0.282136,
+        3.349361,
+        1.755459,
+        0.310044,
+        0.161572,
+        0.344978,
+        0.091703,
+        0.563319
+      ],
+      [
+        0.935567,
+        -0.382391,
+        0.543582,
+        -0.4735,
+        0.688776,
+        0.290816,
+        0.269133,
+        0.076531,
+        0.07398,
+        0.84949
+      ],
+      [
+        0.146278,
+        -0.24134,
+        -0.881918,
+        -0.268197,
+        2.523952,
+        0.57485,
+        0.16018,
+        0.113772,
+        0.140719,
+        0.745509
+      ],
+      [
+        0.200861,
+        -0.161258,
+        0.694417,
+        -0.183608,
+        2.57377,
+        0.52608,
+        0.174367,
+        0.166915,
+        0.128167,
+        0.704918
+      ],
+      [
+        -0.316942,
+        1.264348,
+        -0.590339,
+        1.625027,
+        2.175,
+        0.45,
+        0.102273,
+        0.254545,
+        0.272727,
+        0.472727
+      ],
+      [
+        0.775528,
+        -0.438901,
+        -0.881918,
+        -0.511462,
+        0.717918,
+        0.369249,
+        0.303874,
+        0.065375,
+        0.046005,
+        0.88862
+      ],
+      [
+        -1.483421,
+        -0.477221,
+        -0.246132,
+        -0.318158,
+        2.558685,
+        0.920188,
+        0.08216,
+        0.084507,
+        0.295775,
+        0.619718
+      ]
+    ]
+  }
+}

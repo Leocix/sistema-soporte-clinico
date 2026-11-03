@@ -1,0 +1,26 @@
+=== Comparacion de algoritmos sobre el conjunto externo ENDES 2014-2017 ===
+(salida de: python src/train_evaluate.py --perfil endes --entrada data/raw/endes_adherencia.csv)
+
+# Comparacion de algoritmos (validacion cruzada estratificada de 5 pliegues)
+
+| Algoritmo | Exactitud | Sensibilidad | Especificidad | F1-score | AUCROC |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| Random Forest **(seleccionado)** | 0.635 ± 0.011 | 0.450 ± 0.054 | 0.664 ± 0.021 | 0.252 ± 0.018 | 0.591 ± 0.018 |
+| XGBoost | 0.825 ± 0.009 | 0.097 ± 0.017 | 0.941 ± 0.012 | 0.132 ± 0.018 | 0.589 ± 0.024 |
+| Regresion Logistica | 0.545 ± 0.007 | 0.590 ± 0.030 | 0.538 ± 0.012 | 0.262 ± 0.008 | 0.588 ± 0.017 |
+| SVM (RBF) | 0.519 ± 0.025 | 0.622 ± 0.049 | 0.503 ± 0.036 | 0.262 ± 0.009 | 0.586 ± 0.021 |
+
+Origen de los datos ....... ENDES (INEI), microdatos publicos
+Filas analizadas .......... 8422 | entrenamiento / prueba: 6737 / 1685
+Distribucion de clases .... {'0': 7267, '1': 1155}
+Modelo seleccionado ....... Random Forest | cumple la meta de AUCROC: False
+
+Contraste que decide la seleccion: DeLong (AUCROC correlacionadas)
+  Random Forest vs XGBoost (predicciones fuera de pliegue del conjunto de entrenamiento)
+  AUCROC 0.5904 vs 0.5885 | diferencia +0.0019 | IC95 [-0.0093, 0.0131] | p = 0.7419
+  Sin evidencia de diferencia entre las AUCROC (p >= 0,05); la eleccion entre ambos se decide por la sensibilidad.
+
+Contraste complementario de decisiones: McNemar con umbral 0.5
+  discordantes 2034 (solo A 375, solo B 1659) | chi2 809.2866 | p = 0.0
+
+AUCROC del elegido en la prueba reservada: 0.571 | IC95 [0.5316, 0.6104] | p frente al azar = 0.000208

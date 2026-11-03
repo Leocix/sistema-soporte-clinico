@@ -1,6 +1,7 @@
 __pycache__/
 *.pyc
 .env
+local.env
 *.db
 .venv/
 venv/
@@ -9,6 +10,9 @@ ml-pipeline/data/raw/*
 !ml-pipeline/data/raw/.gitkeep
 ml-pipeline/data/processed/*
 !ml-pipeline/data/processed/.gitkeep
+# Microdatos descargados del INEI: son publicos y `src/endes.py` los vuelve a
+# traer cuando hacen falta, no tiene sentido versionar decenas de megabytes.
+ml-pipeline/data/externo/
 ml-pipeline/models/*.pkl
 # El modelo en servicio y su ficha si se versionan: Render los necesita para
 # poder responder predicciones, y la ficha declara con que datos se entreno.
@@ -20,7 +24,13 @@ dist/
 
 # El APK se regenera con `flutter build apk --release`; no se versiona.
 app-movil/entregable/
+# Copia local del APK que sirve la página /descargar del panel.
+frontend-web/public/descargas/
 
 # Archivos de bloqueo que Word crea mientras un documento esta abierto.
 ~$*
 
+
+# Salidas generadas al medir: cobertura de pruebas y prueba de carga.
+.coverage
+prueba_carga.json

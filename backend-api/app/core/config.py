@@ -62,8 +62,12 @@ class Settings(BaseSettings):
     smtp_remitente: str = ""
 
     # --- Microservicio de inferencia (RF04, RF06) -------------------------
-    model_path: str = "../ml-pipeline/models/risk_model_v1.pkl"
-    umbral_riesgo_alto: float = 0.70
+    # El modelo vive en `ml-service`. En local se lanza en el puerto 8001.
+    ml_service_url: str = "http://127.0.0.1:8001"
+    # Clave compartida con el microservicio (CLAVE_SERVICIO alli).
+    ml_service_clave: str = ""
+    # Generoso: en el plan gratuito el microservicio tambien despierta lento.
+    ml_service_timeout: float = 45.0
 
     model_config = SettingsConfigDict(
         env_file=".env",
