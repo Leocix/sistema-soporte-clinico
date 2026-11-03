@@ -101,6 +101,16 @@ class TrazaPeticionMiddleware(BaseHTTPMiddleware):
         return respuesta
 
 
+CSP_API = "default-src 'none'; frame-ancestors 'none'"
+CSP_DOCUMENTACION = (
+    "default-src 'self'; "
+    "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+    "img-src 'self' data: https://fastapi.tiangolo.com https://cdn.jsdelivr.net; "
+    "frame-ancestors 'none'"
+)
+
+
 class CabecerasSeguridadMiddleware(BaseHTTPMiddleware):
     """Endurece las cabeceras de toda respuesta (RNF01).
 
@@ -120,8 +130,11 @@ class CabecerasSeguridadMiddleware(BaseHTTPMiddleware):
             "Permissions-Policy", "geolocation=(), microphone=(), camera=()"
         )
         # El API solo devuelve JSON: se prohibe cualquier recurso incrustado.
+        # La excepcion es la documentacion interactiva, que no existe en
+        # produccion y necesita cargar Swagger UI desde su CDN.
         respuesta.headers.setdefault(
-            "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
+            "Content-Security-Policy",
+            CSP_DOCUMENTACION if request.url.path.startswith("/docs") else CSP_API,
         )
         # Los datos de salud no deben quedar en caches intermedias.
         respuesta.headers.setdefault("Cache-Control", "no-store")

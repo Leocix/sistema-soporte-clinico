@@ -30,15 +30,15 @@ class ResumenAdherencia {
   /// "riesgo alto" en su propio telefono desalienta mas de lo que ayuda.
   String get mensaje {
     if (sinDatos) {
-      return 'Aun no hay tomas registradas. Comience confirmando la primera '
+      return 'Aún no hay tomas registradas. Comience confirmando la primera '
           'dosis del dia.';
     }
     if (omisionesConsecutivas >= 3) {
       return 'Lleva $omisionesConsecutivas dosis seguidas sin tomar. '
-          'Converselo con su medico en el proximo control.';
+          'Convérselo con su médico en el próximo control.';
     }
     if (tasaAdherencia >= 90) {
-      return 'Muy bien: esta cumpliendo el ${tasaAdherencia.toStringAsFixed(0)} % '
+      return 'Muy bien: está cumpliendo el ${tasaAdherencia.toStringAsFixed(0)} % '
           'de sus tomas.';
     }
     if (tasaAdherencia >= 70) {

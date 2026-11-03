@@ -79,10 +79,10 @@ python scripts/seed.py
 ```
 
 Añade `--demo` si quieres además cinco pacientes ficticios con historial para
-recorrer el panel. Se distinguen por el prefijo `D-` frente a los reales `P-`.
+recorrer el panel (P-001 a P-005). Se reconocen por sus correos `@ejemplo.pe`.
 
 Ese mismo `--demo` deja preparado el grupo familiar (RF09): crea la cuenta
-`rosa.d-001@ejemplo.pe`, acompañante del paciente D-001, con parte de su
+`rosa.p-001@ejemplo.pe`, acompañante del paciente P-001, con parte de su
 historial ya corroborado y alguna toma pendiente de confirmar. Sirve para
 mostrar el acompañamiento desde un solo teléfono, sin necesitar un segundo
 dispositivo que canjee el código. El script puede ejecutarse las veces que
@@ -235,6 +235,13 @@ contraseña que definiste en `SEED_PASSWORD`.
    sin barra final: `https://cdss-adherencia-api.onrender.com`.
 4. Tras el primer despliegue, copiar el dominio asignado y ponerlo en
    `CORS_ORIGINS` en Render.
+5. **Descarga de la app.** El APK no se versiona (pesa unos 55 MB). Súbalo
+   como archivo `mi-tratamiento.apk` de una *release* de GitHub y ponga su URL
+   en **`VITE_APK_URL`**, por ejemplo
+   `https://github.com/<usuario>/<repositorio>/releases/latest/download/mi-tratamiento.apk`.
+   La página `/descargar` del panel ofrece ese archivo con un código QR.
+6. **Textos legales.** `VITE_CORREO_CONTACTO` fija el correo que citan
+   `/privacidad` y `/terminos`; sin él, remiten al consultorio.
 
 > `VITE_API_URL` se incrusta en el paquete durante la construcción, no se lee
 > en tiempo de ejecución: si la cambias, hay que volver a desplegar para que
@@ -302,6 +309,6 @@ El guion completo de la demostración, paso a paso, está en
 - [ ] `sslmode=require` en la cadena de conexión
 - [ ] `CORS_ORIGINS` apuntando al dominio real del panel
 - [ ] API y microservicio despiertos (`python backend-api/scripts/despertar.py`)
-- [ ] Pacientes de demostración (`D-`) retirados si se muestran datos reales
+- [ ] Pacientes de demostración (correos `@ejemplo.pe`) retirados si se muestran datos reales
 - [ ] APK reconstruido tras el último cambio: `flutter build apk --release`
 - [ ] `FRONTEND_URL` apuntando al dominio real del panel, si se activó el correo

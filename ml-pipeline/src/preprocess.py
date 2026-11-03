@@ -105,6 +105,59 @@ MIN_FARMACOS_POLIMEDICADO = 5
 SEMILLA = 42
 
 
+# ---------------------------------------------------------------------------
+# Perfiles de datos
+# ---------------------------------------------------------------------------
+# El esquema anterior es el del consultorio. Mientras se completa la extraccion
+# documental, el OE3 puede ejecutarse sobre los microdatos publicos de la ENDES
+# (`src/endes.py`), que cubren una parte de esas variables y ninguna de las que
+# dependen de la receta o de la agenda de controles. El perfil "endes" recorta
+# el esquema a lo que esa fuente sí registra, en lugar de rellenar con ceros
+# columnas que nadie midio.
+_NUMERICAS_COMPLETAS = tuple(NUMERICAS)
+_NOMINALES_COMPLETAS = tuple(NOMINALES)
+
+PERFILES: dict[str, dict] = {
+    "clinico": {
+        "descripcion": "ficha completa del Anexo n.o 04 (consultorio)",
+        "excluye": (),
+    },
+    "endes": {
+        "descripcion": "microdatos de la ENDES (INEI); esquema reducido",
+        "excluye": ("numero_farmacos", "tomas_dia", "controles_programados_6m",
+                    "controles_perdidos_6m", "apoyo_familiar"),
+    },
+}
+PERFIL_ACTUAL = "clinico"
+
+
+def aplicar_perfil(nombre: str) -> None:
+    """Ajusta el esquema del modulo a la fuente de datos que se va a procesar.
+
+    Con el perfil reducido desaparecen tanto los predictores ausentes como el
+    criterio de elegibilidad por polimedicacion, que se apoya en uno de ellos.
+    El modelo que salga de ahi describe a la poblacion de la encuesta, no a la
+    del consultorio, y asi debe reportarse.
+    """
+    global NUMERICAS, NOMINALES, COLUMNAS_REQUERIDAS, PERFIL_ACTUAL
+
+    if nombre not in PERFILES:
+        raise ValueError(
+            f"Perfil desconocido '{nombre}'. Disponibles: {', '.join(PERFILES)}."
+        )
+    fuera = set(PERFILES[nombre]["excluye"])
+    NUMERICAS = [c for c in _NUMERICAS_COMPLETAS if c not in fuera]
+    NOMINALES = [c for c in _NOMINALES_COMPLETAS if c not in fuera]
+    COLUMNAS_REQUERIDAS = [COL_ID, *NUMERICAS, *ORDINALES, *NOMINALES, COL_OBJETIVO]
+    PERFIL_ACTUAL = nombre
+
+    if fuera:
+        log.warning(
+            "Perfil '%s' (%s). Quedan fuera del modelo: %s.",
+            nombre, PERFILES[nombre]["descripcion"], ", ".join(sorted(fuera)),
+        )
+
+
 @dataclass
 class ReporteDePreparacion:
     """Trazabilidad de cada transformacion, adjuntable como evidencia."""
@@ -180,6 +233,8 @@ def limpiar(df: pd.DataFrame, reporte: ReporteDePreparacion) -> pd.DataFrame:
 
     # 2.3 Categorias no previstas -> nulo (se imputan mas adelante).
     for col, validas in CATEGORIAS_VALIDAS.items():
+        if col not in df.columns:  # variable ausente en el perfil en uso
+            continue
         invalidas = ~df[col].isin(validas) & df[col].notna()
         if invalidas.any():
             reporte.valores_fuera_de_rango[col] = int(invalidas.sum())
@@ -187,6 +242,8 @@ def limpiar(df: pd.DataFrame, reporte: ReporteDePreparacion) -> pd.DataFrame:
 
     # 2.4 Valores numericos fuera del rango plausible -> nulo.
     for col, (minimo, maximo) in RANGOS_VALIDOS.items():
+        if col not in df.columns:
+            continue
         df[col] = pd.to_numeric(df[col], errors="coerce")
         fuera = ((df[col] < minimo) | (df[col] > maximo)) & df[col].notna()
         if fuera.any():
@@ -203,17 +260,26 @@ def limpiar(df: pd.DataFrame, reporte: ReporteDePreparacion) -> pd.DataFrame:
 
     # 2.6 Incoherencia clinica: no se puede faltar a mas controles de los
     #     programados. Se anula el dato erroneo, no el paciente.
-    incoherentes = df["controles_perdidos_6m"] > df["controles_programados_6m"]
-    if incoherentes.any():
-        reporte.valores_fuera_de_rango["controles_perdidos_6m_incoherentes"] = int(
-            incoherentes.sum()
-        )
-        df.loc[incoherentes, "controles_perdidos_6m"] = np.nan
+    if {"controles_perdidos_6m", "controles_programados_6m"} <= set(df.columns):
+        incoherentes = df["controles_perdidos_6m"] > df["controles_programados_6m"]
+        if incoherentes.any():
+            reporte.valores_fuera_de_rango["controles_perdidos_6m_incoherentes"] = int(
+                incoherentes.sum()
+            )
+            df.loc[incoherentes, "controles_perdidos_6m"] = np.nan
 
-    # 2.7 Criterio de elegibilidad del Anexo n.o 04: polimedicacion.
-    antes = len(df)
-    df = df[df["numero_farmacos"].fillna(0) >= MIN_FARMACOS_POLIMEDICADO]
-    reporte.excluidos_por_elegibilidad = antes - len(df)
+    # 2.7 Criterio de elegibilidad del Anexo n.o 04: polimedicacion. Solo puede
+    #     aplicarse si la fuente registra cuantos farmacos toma el paciente; la
+    #     ENDES no lo pregunta, de modo que su poblacion queda sin filtrar.
+    if "numero_farmacos" in df.columns:
+        antes = len(df)
+        df = df[df["numero_farmacos"].fillna(0) >= MIN_FARMACOS_POLIMEDICADO]
+        reporte.excluidos_por_elegibilidad = antes - len(df)
+    else:
+        log.warning(
+            "Sin la variable numero_farmacos no se aplica el criterio de "
+            "polimedicacion: la muestra incluye pacientes no polimedicados."
+        )
 
     # 2.8 Sin etiqueta no hay aprendizaje supervisado posible.
     antes = len(df)
@@ -266,19 +332,29 @@ def derivar_variables(df: pd.DataFrame, reporte: ReporteDePreparacion) -> pd.Dat
     priorizados en el diagnostico del consultorio (OE1).
     """
     df = df.copy()
+    derivadas: list[str] = []
 
-    # Complejidad del regimen: dosis diarias totales que el paciente maneja.
-    df["carga_terapeutica"] = df["numero_farmacos"] * df["tomas_dia"]
-    # Fraccion de controles a los que el paciente no asistio.
-    df["tasa_inasistencia"] = np.where(
-        df["controles_programados_6m"] > 0,
-        df["controles_perdidos_6m"] / df["controles_programados_6m"],
-        np.nan,
-    )
+    # Cada derivada se calcula solo si el perfil en uso trae sus insumos: con
+    # el esquema reducido de la ENDES, las dos primeras no tienen de donde
+    # salir y forzarlas produciria una columna constante.
+    if {"numero_farmacos", "tomas_dia"} <= set(df.columns):
+        # Complejidad del regimen: dosis diarias totales que el paciente maneja.
+        df["carga_terapeutica"] = df["numero_farmacos"] * df["tomas_dia"]
+        derivadas.append("carga_terapeutica")
+
+    if {"controles_programados_6m", "controles_perdidos_6m"} <= set(df.columns):
+        # Fraccion de controles a los que el paciente no asistio.
+        df["tasa_inasistencia"] = np.where(
+            df["controles_programados_6m"] > 0,
+            df["controles_perdidos_6m"] / df["controles_programados_6m"],
+            np.nan,
+        )
+        derivadas.append("tasa_inasistencia")
+
     # Anios de enfermedad por decada de vida: cronicidad relativa a la edad.
     df["cronicidad_relativa"] = df["tiempo_enfermedad_anios"] / (df["edad"] / 10)
+    derivadas.append("cronicidad_relativa")
 
-    derivadas = ["carga_terapeutica", "tasa_inasistencia", "cronicidad_relativa"]
     reporte.caracteristicas_derivadas = derivadas
     log.info("Caracteristicas derivadas: %s", ", ".join(derivadas))
     return df
@@ -464,10 +540,14 @@ def ejecutar_pipeline(
     test_out = pd.DataFrame(X_test_t, columns=nombres)
     test_out[COL_OBJETIVO] = np.asarray(y_test)
 
-    train_out.to_csv(DIR_PROCESSED / "train_balanceado.csv", index=False)
-    test_out.to_csv(DIR_PROCESSED / "test.csv", index=False)
-    joblib.dump(preprocesador, DIR_MODELOS / "preprocesador_v1.pkl")
-    reporte.a_json(DIR_PROCESSED / "reporte_preparacion.json")
+    # Los artefactos del perfil reducido no pisan a los del consultorio: son
+    # dos conjuntos de variables distintos y confundirlos rompe la inferencia.
+    sufijo = "" if PERFIL_ACTUAL == "clinico" else f"_{PERFIL_ACTUAL}"
+
+    train_out.to_csv(DIR_PROCESSED / f"train_balanceado{sufijo}.csv", index=False)
+    test_out.to_csv(DIR_PROCESSED / f"test{sufijo}.csv", index=False)
+    joblib.dump(preprocesador, DIR_MODELOS / f"preprocesador{sufijo}_v1.pkl")
+    reporte.a_json(DIR_PROCESSED / f"reporte_preparacion{sufijo}.json")
 
     log.info("Artefactos escritos en %s y %s", DIR_PROCESSED, DIR_MODELOS)
     return reporte
@@ -563,7 +643,14 @@ def main(argv: list[str] | None = None) -> int:
         "--generar-muestra", type=int, metavar="N",
         help="Genera N filas sinteticas y ejecuta el flujo sobre ellas (solo prueba tecnica).",
     )
+    parser.add_argument(
+        "--perfil", choices=list(PERFILES), default="clinico",
+        help="Esquema de variables segun la fuente: 'clinico' para la ficha del "
+             "Anexo n.o 04, 'endes' para los microdatos del INEI.",
+    )
     args = parser.parse_args(argv)
+
+    aplicar_perfil(args.perfil)
 
     entrada = args.entrada
     if args.generar_muestra:

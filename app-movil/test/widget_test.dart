@@ -6,8 +6,11 @@
 
 import 'package:cdss_adherencia/main.dart';
 import 'package:cdss_adherencia/models/sesion.dart';
+import 'package:cdss_adherencia/services/api_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -19,7 +22,7 @@ void main() {
 
   testWidgets('sin sesion guardada se muestra la pantalla de acceso',
       (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     expect(find.text('Mi tratamiento'), findsOneWidget);
@@ -29,7 +32,7 @@ void main() {
 
   testWidgets('el formulario de acceso rechaza los campos vacios',
       (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('Ingresar'));
@@ -40,7 +43,7 @@ void main() {
   });
 
   testWidgets('un correo sin arroba no supera la validacion', (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     await tester.enterText(find.byType(TextFormField).first, 'correo-invalido');
@@ -52,7 +55,7 @@ void main() {
 
   testWidgets('el acceso deja elegir entre paciente y familiar',
       (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     final selector = find.byType(SegmentedButton<PerfilUsuario>);
@@ -72,7 +75,7 @@ void main() {
   });
 
   testWidgets('desde el acceso se llega al alta con código', (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     // El enlace queda al pie de un formulario que puede desbordar la
@@ -87,7 +90,12 @@ void main() {
   });
 
   testWidgets('el alta con código exige el código completo', (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    // Pantalla de un celular real: el formulario, con la casilla de
+    // aceptación, ya no cabe en la superficie de prueba por defecto.
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.75;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     // El enlace queda al pie de un formulario que puede desbordar la
@@ -108,8 +116,45 @@ void main() {
     expect(find.text('Escriba el código completo.'), findsOneWidget);
   });
 
+  testWidgets('la cuenta del familiar exige aceptar los términos',
+      (tester) async {
+    tester.view.physicalSize = const Size(1080, 2400);
+    tester.view.devicePixelRatio = 2.75;
+    addTearDown(tester.view.reset);
+    final cliente = _ClienteQueRecuerdaCierre();
+    await tester.pumpWidget(
+        AplicacionPaciente(api: ServicioApi(cliente: cliente)));
+    await tester.pumpAndSettle();
+
+    await tester.ensureVisible(find.text('Crear mi cuenta con el código'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Crear mi cuenta con el código'));
+    await tester.pumpAndSettle();
+
+    final campos = find.byType(TextFormField);
+    await tester.enterText(campos.at(0), 'ABCD2345');
+    await tester.enterText(campos.at(1), 'Rosa');
+    await tester.enterText(campos.at(2), 'Vásquez Díaz');
+    await tester.enterText(campos.at(3), 'rosa@correo.pe');
+    await tester.enterText(campos.at(4), 'clave-segura-1');
+
+    final boton = find.widgetWithText(FilledButton, 'Crear mi cuenta');
+    await tester.ensureVisible(boton);
+    await tester.pumpAndSettle();
+    await tester.tap(boton);
+    await tester.pumpAndSettle();
+
+    // Sin la casilla marcada no se envía nada al servidor.
+    expect(
+      find.text('Para crear su cuenta debe aceptar los Términos y la '
+          'Política de privacidad.'),
+      findsOneWidget,
+    );
+    expect(cliente.peticiones, 0);
+  });
+
   testWidgets('el acceso separa entrar de crear la cuenta', (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     // Arriba se entra con una cuenta que ya existe; abajo se crea la del
@@ -121,7 +166,7 @@ void main() {
   });
 
   testWidgets('el acceso ofrece recuperar la contraseña', (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     final enlace = find.text('¿Olvidó su contraseña?');
@@ -141,7 +186,7 @@ void main() {
 
   testWidgets('el correo escrito se arrastra al diálogo de recuperación',
       (tester) async {
-    await tester.pumpWidget(const AplicacionPaciente());
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi()));
     await tester.pumpAndSettle();
 
     // Quien pulsa «olvidé mi contraseña» suele haberlo intentado ya: repetir
@@ -154,4 +199,45 @@ void main() {
     final campo = tester.widget<TextField>(find.byType(TextField).last);
     expect(campo.controller?.text, 'jose@correo.pe');
   });
+
+  testWidgets('retirar la pantalla de arranque no cierra el cliente HTTP',
+      (tester) async {
+    // Regresion: al iniciar sesion, el ingreso reemplaza la pantalla de
+    // arranque. Si esta cerraba el cliente en su dispose, todas las
+    // peticiones siguientes fallaban con «Client is already closed» y el
+    // paciente veia «sin conexion» hasta reabrir la aplicación.
+    final cliente = _ClienteQueRecuerdaCierre();
+    await tester.pumpWidget(AplicacionPaciente(api: ServicioApi(cliente: cliente)));
+    await tester.pumpAndSettle();
+
+    await tester.pumpWidget(const SizedBox());
+    await tester.pumpAndSettle();
+
+    expect(cliente.cerrado, isFalse);
+  });
+}
+
+class _ClienteQueRecuerdaCierre extends MockClient {
+  _ClienteQueRecuerdaCierre() : this._(_Contador());
+
+  _ClienteQueRecuerdaCierre._(this._contador)
+      : super((_) async {
+          _contador.valor++;
+          return http.Response('{}', 200);
+        });
+
+  final _Contador _contador;
+  bool cerrado = false;
+
+  int get peticiones => _contador.valor;
+
+  @override
+  void close() {
+    cerrado = true;
+    super.close();
+  }
+}
+
+class _Contador {
+  int valor = 0;
 }

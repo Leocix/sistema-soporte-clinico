@@ -1,0 +1,15 @@
+# Matriz de consistencia del proyecto
+
+Elaborada a partir del proyecto de tesis aprobado. La última columna de la segunda tabla indica dónde reporta el pre informe el resultado de cada objetivo.
+
+| Problema | Objetivo general | Hipótesis | Variables | Metodología |
+| :--- | :--- | :--- | :--- | :--- |
+| ¿En qué medida un sistema de soporte clínico con aprendizaje automático permite prevenir el incumplimiento terapéutico y apoyar la toma de decisiones clínicas en pacientes polimedicados con hipertensión y diabetes tipo 2 del consultorio médico Milko Ugaz Zegarra de Chiclayo? | Desarrollar un sistema de soporte clínico con aprendizaje automático para prevenir el incumplimiento terapéutico en pacientes hipertensos y diabéticos polimedicados del consultorio médico Milko Ugaz Zegarra | El sistema de soporte clínico con aprendizaje automático permite prevenir el incumplimiento terapéutico en esos pacientes mediante la predicción temprana del riesgo de incumplimiento con un desempeño predictivo aceptable (AUCROC ≥ 0,80), constituyéndose en una herramienta válida de soporte a la decisión clínica | **Independiente:** sistema de soporte clínico con aprendizaje automático. **Dependiente:** incumplimiento terapéutico del paciente polimedicado | Enfoque cuantitativo; diseño preexperimental de una sola medición (G → X → O); población de unos 50 pacientes polimedicados, estudiada por censo; desarrollo con SCRUM y CRISP-DM |
+
+| Objetivo específico | Indicadores | Técnica e instrumento | Resultado en el pre informe |
+| :--- | :--- | :--- | :--- |
+| OE1. Caracterizar el proceso actual de seguimiento terapéutico y los factores de incumplimiento | Porcentaje de pacientes con adherencia deficiente (línea base); factores clasificados según la OMS; porcentaje de procesos no digitalizados | Entrevista (Anexo n.° 02); análisis documental (Anexo n.° 03); encuesta Morisky-Green (Anexo n.° 04) | Apartado 1.2.1: parcial, 2 de 3 indicadores |
+| OE2. Determinar los requisitos funcionales y no funcionales del sistema | Porcentaje de requisitos especificados; alineación con estándares de arquitectura (juicio de expertos, 1 a 5) | Análisis de requisitos; juicio de expertos (Anexo n.° 19) | Apartado 1.2.2: parcial, 1 de 2 indicadores |
+| OE3. Determinar el algoritmo de aprendizaje automático con mayor capacidad predictiva | Algoritmos comparados; AUCROC en validación cruzada; sensibilidad y especificidad; F1-score en prueba | Comparación experimental de algoritmos con validación cruzada y prueba de DeLong | Apartado 1.2.3: ejecutado sobre datos reales; meta de AUCROC no alcanzada |
+| OE4. Construir el sistema de soporte clínico | Historias de usuario cumplidas; densidad de errores por módulo; atributos ISO/IEC 25010; módulos construidos | SCRUM; pruebas automatizadas, de caja negra y de caja blanca (Anexos n.° 24 y 25) | Apartado 1.2.4: cumplido |
+| OE5. Evaluar la usabilidad del sistema mediante la escala SUS | Puntaje SUS; tasa de éxito en tareas; tiempo de aprendizaje | Encuesta SUS (Anexo n.° 04); ficha de observación (Anexo n.° 05) | Apartado 1.2.5: pendiente de aplicar con usuarios |

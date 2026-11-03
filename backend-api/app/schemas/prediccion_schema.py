@@ -72,8 +72,8 @@ class PrediccionRiesgo(BaseModel):
     modelo: FichaModelo
 
     aviso: str = (
-        "Estimacion de apoyo a la decision clinica. No constituye un diagnostico: "
-        "la decision corresponde al medico tratante."
+        "Estimación de apoyo a la decisión clínica. No constituye un diagnóstico: "
+        "la decisión corresponde al médico tratante."
     )
 
 

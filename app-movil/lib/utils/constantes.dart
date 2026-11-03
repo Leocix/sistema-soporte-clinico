@@ -38,6 +38,12 @@ class Constantes {
 
   /// Margen tras el cual una toma cumplida se considera realizada con retraso.
   static const Duration margenPuntualidad = Duration(minutes: 30);
+
+  /// Ventana de registro de una toma cumplida, alrededor de su hora.
+  /// Replica la regla del API (VENTANA_ANTES y VENTANA_DESPUES): aqui solo
+  /// sirve para no ofrecer un boton que el servidor rechazaria.
+  static const Duration ventanaAntes = Duration(minutes: 60);
+  static const Duration ventanaDespues = Duration(hours: 3);
 }
 
 /// Formatea una hora como `08:05`, sin depender de paquetes de localizacion.

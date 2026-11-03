@@ -1,0 +1,74 @@
+=== Estructura del repositorio ===
+(git ls-files: 192 archivos versionados)
+
+backend-api/  (59 archivos) - API central (FastAPI): autenticacion, reglas del negocio, alertas
+    .env.example
+    README.md
+    alembic
+    alembic.ini
+    app
+    pytest.ini
+    requirements.txt
+    run.py
+    scripts
+    tests
+
+ml-service/  (9 archivos) - Microservicio de inferencia (FastAPI + scikit-learn + SHAP)
+    README.md
+    app
+    pytest.ini
+    requirements.txt
+    tests
+
+ml-pipeline/  (8 archivos) - Pipeline CRISP-DM: preparacion, comparacion y entrenamiento
+    README.md
+    data
+    models
+    requirements.txt
+    src
+
+frontend-web/  (33 archivos) - Panel del medico (React + Vite)
+    .env.example
+    .gitignore
+    .oxlintrc.json
+    README.md
+    index.html
+    package-lock.json
+    package.json
+    public
+    src
+    vercel.json
+    vite.config.js
+
+app-movil/  (52 archivos) - Aplicacion del paciente y del familiar (Flutter)
+    .gitignore
+    .metadata
+    README.md
+    analysis_options.yaml
+    android
+    lib
+    pubspec.lock
+    pubspec.yaml
+    test
+
+documentacion/  (27 archivos) - Evidencias academicas
+    00_documentacion_base
+    01_preinforme
+    02_instrumentos
+    03_gestion_scrum
+    04_demostracion
+    herramientas
+
+Raiz:
+    .gitignore
+    DESPLIEGUE.md
+    README.md
+    render.yaml
+
+=== Pruebas por componente ===
+  backend-api      141 (140 aprobadas, 1 omitida)
+  ml-service       13
+  app-movil        40
+  frontend-web     compilacion y analisis estatico
+
+  Total ejecutadas y aprobadas: 193

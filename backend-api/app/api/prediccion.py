@@ -37,7 +37,7 @@ def estado_del_modelo(
         return EstadoModelo(
             disponible=False,
             mensaje=(
-                "El modelo predictivo no esta disponible. El resto del sistema "
+                "El modelo predictivo no está disponible. El resto del sistema "
                 "sigue operativo."
             ),
         )

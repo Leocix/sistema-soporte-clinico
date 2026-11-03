@@ -166,6 +166,16 @@ def test_las_respuestas_llevan_las_cabeceras_de_seguridad(client):
     assert cabeceras["Cache-Control"] == "no-store"
 
 
+def test_la_documentacion_puede_cargar_swagger_y_el_api_sigue_cerrado(client):
+    # Con `default-src 'none'` el navegador bloquea Swagger UI y /docs queda en blanco.
+    docs = client.get("/docs").headers["Content-Security-Policy"]
+    assert "https://cdn.jsdelivr.net" in docs
+    assert "frame-ancestors 'none'" in docs
+
+    api = client.get("/api/pacientes").headers["Content-Security-Policy"]
+    assert api.startswith("default-src 'none'")
+
+
 def test_la_ficha_del_paciente_no_viaja_con_su_contrasena(client, cab_medico, datos):
     cuerpo = client.get(f"/api/pacientes/{datos['ficha'].id_paciente}", headers=cab_medico).text
 
@@ -190,3 +200,15 @@ def test_el_esquema_rechaza_campos_no_previstos(client, cab_medico, datos):
     respuesta = client.patch(f"/api/pacientes/{datos['ficha'].id_paciente}",
                              json={"id_medico_tratante": "otro-medico"}, headers=cab_medico)
     assert respuesta.status_code == 422
+
+
+def test_los_errores_de_validacion_llegan_en_castellano(client, cab_medico):
+    """Observación de la caja negra: Pydantic responde en inglés por defecto."""
+    r = client.post("/api/pacientes", headers=cab_medico, json={
+        "nombres": "Ana", "apellidos": "Reyes", "edad": 17, "sexo": "X",
+        "diagnostico": "hta", "numero_farmacos": 7, "tomas_dia": 3})
+    assert r.status_code == 422
+    motivos = {d["campo"]: d["motivo"] for d in r.json()["detalles"]}
+    assert motivos["edad"] == "Debe ser mayor o igual a 18."
+    assert motivos["sexo"].startswith("Valor no permitido. Use:")
+    assert " or " not in motivos["sexo"]

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { mensajeDeError, servicioPacientes } from '../services/api'
 import { COMORBILIDADES } from '../services/etiquetas'
-import { normalizarFicha, validarFicha } from '../services/validacionPaciente'
+import { limpiarAlEscribir, normalizarFicha, validarFicha } from '../services/validacionPaciente'
 
 /**
  * Alta y edicion de la ficha de un paciente polimedicado (HU02).
@@ -140,7 +140,8 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
 
   const cambiar = (evento) => {
     const { name, value } = evento.target
-    setValores((previos) => ({ ...previos, [name]: value }))
+    // Lo que no puede ser válido no llega a escribirse (ver limpiarAlEscribir).
+    setValores((previos) => ({ ...previos, [name]: limpiarAlEscribir(name, value) }))
   }
 
   /** Marca o desmarca una comorbilidad conservando el orden del catálogo. */
@@ -240,10 +241,6 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
             flechas de los campos numéricos y el estado a los lectores de
             pantalla. */}
         <form className="formulario" onSubmit={enviar} noValidate>
-          <p className="formulario__ayuda">
-            Variables del Anexo n.°&nbsp;04. Solo se admiten pacientes con
-            cinco o más fármacos prescritos (criterio de polimedicación).
-          </p>
 
           <fieldset className="formulario__grupo">
             <legend>Identificación del paciente</legend>
@@ -286,11 +283,11 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
               </label>
 
               <label className={claseCampo('codigo_anonimizado')}>
-                <span>Código anonimizado</span>
+                <span>Código</span>
                 <input
                   name="codigo_anonimizado" value={valores.codigo_anonimizado}
                   onChange={cambiar} onBlur={marcarTocado} placeholder="Se asigna solo (P-002)"
-                  pattern="[A-Z]-\d{3,6}" disabled={edicion} readOnly={edicion}
+                  pattern="P-\d{3,6}" disabled={edicion} readOnly={edicion}
                 />
                 <small>
                   {edicion
@@ -308,7 +305,7 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
             <div className="rejilla">
               <label className={claseCampo('edad')}>
                 <span>Edad *</span>
-                <input name="edad" type="number" min="18" max="120" required
+                <input name="edad" inputMode="numeric" maxLength={3} required placeholder="18 a 120"
                   value={valores.edad} onChange={cambiar} onBlur={marcarTocado} />
                 {notaCampo('edad')}
               </label>
@@ -339,7 +336,7 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
 
               <label className={claseCampo('tiempo_enfermedad_anios')}>
                 <span>Tiempo de enfermedad (años)</span>
-                <input name="tiempo_enfermedad_anios" type="number" step="0.5" min="0" max="80"
+                <input name="tiempo_enfermedad_anios" inputMode="decimal" maxLength={4} placeholder="0 a 80"
                   value={valores.tiempo_enfermedad_anios} onChange={cambiar} onBlur={marcarTocado} />
                 {notaCampo('tiempo_enfermedad_anios')}
               </label>
@@ -372,7 +369,7 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
             <div className="rejilla">
               <label className={claseCampo('numero_farmacos')}>
                 <span>N.° de fármacos prescritos *</span>
-                <input name="numero_farmacos" type="number" min="5" max="30" required
+                <input name="numero_farmacos" inputMode="numeric" maxLength={2} required placeholder="5 a 30"
                   value={valores.numero_farmacos} onChange={cambiar} onBlur={marcarTocado} />
                 <small>Mínimo 5 (criterio de elegibilidad).</small>
                 {notaCampo('numero_farmacos')}
@@ -380,7 +377,7 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
 
               <label className={claseCampo('tomas_dia')}>
                 <span>Tomas por día *</span>
-                <input name="tomas_dia" type="number" min="1" max="20" required
+                <input name="tomas_dia" inputMode="numeric" maxLength={2} required placeholder="1 a 20"
                   value={valores.tomas_dia} onChange={cambiar} onBlur={marcarTocado} />
                 {notaCampo('tomas_dia')}
               </label>
@@ -430,14 +427,14 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
             <div className="rejilla">
               <label className={claseCampo('controles_programados_6m')}>
                 <span>Controles programados (6 meses)</span>
-                <input name="controles_programados_6m" type="number" min="0" max="30"
+                <input name="controles_programados_6m" inputMode="numeric" maxLength={2} placeholder="0 a 30"
                   value={valores.controles_programados_6m} onChange={cambiar} onBlur={marcarTocado} />
                 {notaCampo('controles_programados_6m')}
               </label>
 
               <label className={claseCampo('controles_perdidos_6m')}>
                 <span>Controles perdidos (6 meses)</span>
-                <input name="controles_perdidos_6m" type="number" min="0" max="30"
+                <input name="controles_perdidos_6m" inputMode="numeric" maxLength={2} placeholder="0 a 30"
                   value={valores.controles_perdidos_6m} onChange={cambiar} onBlur={marcarTocado} />
                 <small>No puede superar a los programados.</small>
                 {notaCampo('controles_perdidos_6m')}
@@ -445,7 +442,7 @@ export default function FormularioPaciente({ paciente, alGuardar, alCancelar }) 
 
               <label className={claseCampo('puntaje_morisky')}>
                 <span>Puntaje Morisky-Green (0–4)</span>
-                <input name="puntaje_morisky" type="number" min="0" max="4"
+                <input name="puntaje_morisky" inputMode="numeric" maxLength={1} placeholder="0 a 4"
                   value={valores.puntaje_morisky} onChange={cambiar} onBlur={marcarTocado} />
                 {notaCampo('puntaje_morisky')}
               </label>

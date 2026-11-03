@@ -22,7 +22,15 @@ from sqlalchemy.orm import Session
 from ..core.exceptions import AppError, ConflictoError, PermisoDenegadoError
 from ..core.security import get_current_user
 from ..db.database import get_db
-from ..db.models import EstadoToma, Paciente, RegistroAdherencia, Rol, Usuario
+from ..db.models import (
+    Acompanante,
+    EstadoToma,
+    OrigenRegistro,
+    Paciente,
+    RegistroAdherencia,
+    Rol,
+    Usuario,
+)
 from ..schemas.adherencia_schema import (
     ESTADOS_CUMPLIDOS,
     RegistroTomaCreate,
@@ -60,7 +68,7 @@ def _paciente_destino(
 
     if not paciente.activo:
         raise ConflictoError(
-            "El paciente esta dado de baja del seguimiento; no admite nuevos registros."
+            "El paciente está dado de baja del seguimiento; no admite nuevos registros."
         )
     return paciente
 
@@ -334,7 +342,51 @@ def listar_registros(
     limite: int = Query(default=100, ge=1, le=500),
 ) -> list[RegistroAdherencia]:
     paciente = obtener_paciente_autorizado(db, usuario, id_paciente)
-    return _consultar_registros(db, paciente, desde, hasta, limite=limite)
+    registros = _consultar_registros(db, paciente, desde, hasta, limite=limite)
+    _anotar_testigos(db, paciente, registros)
+    return registros
+
+
+# Quien registra la toma, segun el canal por el que entro el dato.
+_REGISTRA = {
+    OrigenRegistro.APP_MOVIL: "paciente",
+    OrigenRegistro.PANEL_WEB: "medico",
+    OrigenRegistro.IMPORTACION: "importacion",
+}
+
+
+def _anotar_testigos(db: Session, paciente: Paciente, registros: list[RegistroAdherencia]) -> None:
+    """Agrega a cada toma la lista de personas que la respaldan.
+
+    Una sola consulta trae a los familiares del paciente; el resto se resuelve
+    en memoria, de modo que el historial no hace una consulta por fila.
+    """
+    familiares = {
+        a.id_usuario: a
+        for a in db.query(Acompanante).filter(
+            Acompanante.id_paciente == paciente.id_paciente,
+            Acompanante.id_usuario.isnot(None),
+        )
+    }
+    nombre_paciente = (paciente.nombres or "").split(" ")[0] or paciente.codigo_anonimizado
+    for registro in registros:
+        testigos = []
+        relacion = _REGISTRA.get(registro.origen, "paciente")
+        if relacion == "paciente":
+            testigos.append({"nombre": nombre_paciente, "papel": "registro", "relacion": "paciente"})
+        elif relacion == "medico":
+            testigos.append({"nombre": "Médico tratante", "papel": "registro", "relacion": "medico"})
+        else:
+            testigos.append({"nombre": "Carga de datos", "papel": "registro", "relacion": "importacion"})
+        if registro.id_confirmante:
+            familiar = familiares.get(registro.id_confirmante)
+            testigos.append({
+                "nombre": familiar.nombre_invitado if familiar else "Familiar",
+                "papel": "corroboro",
+                "relacion": familiar.parentesco.value if familiar else "familiar",
+            })
+        # Atributo transitorio: no es columna, solo viaja en la respuesta.
+        registro.testigos = testigos
 
 
 @router.get(

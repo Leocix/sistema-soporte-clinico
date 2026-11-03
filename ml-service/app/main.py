@@ -106,6 +106,4 @@ def predecir(ficha: FichaEntrada) -> Prediccion:
 
 @app.post("/predicciones/lote", response_model=RespuestaLote, dependencies=[Depends(verificar_clave)])
 def predecir_lote(peticion: PeticionLote) -> RespuestaLote:
-    if not peticion.fichas:
-        return RespuestaLote(predicciones=[])
     return RespuestaLote(predicciones=servicio.predecir(peticion.fichas, con_explicacion=False))

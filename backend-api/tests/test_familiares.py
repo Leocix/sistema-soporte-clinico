@@ -438,3 +438,26 @@ def test_retirar_a_un_acompanante_activo_conserva_sus_corroboraciones(
         ).json()
         == []
     )
+
+
+def test_el_historial_del_medico_nombra_a_quien_registro_y_a_quien_corroboro(
+    client, cab_paciente, cab_medico, datos
+):
+    """La columna «Testigo» muestra personas con nombre, no solo «Familiar»."""
+    cab_familiar = _familiar(client, cab_paciente)
+    corroborada = _toma_cumplida(client, cab_paciente)
+    solo_paciente = _toma_cumplida(client, cab_paciente, medicamento="Metformina 850 mg")
+    client.post(f"/api/familiares/tomas/{corroborada}/confirmacion", headers=cab_familiar)
+
+    historial = client.get(
+        f"/api/adherencia/pacientes/{datos['ficha'].id_paciente}/registros", headers=cab_medico
+    )
+    assert historial.status_code == 200
+    por_id = {r["id_registro"]: r["testigos"] for r in historial.json()}
+
+    assert por_id[corroborada] == [
+        {"nombre": "Jose", "papel": "registro", "relacion": "paciente"},
+        {"nombre": "Rosa Vasquez", "papel": "corroboro", "relacion": "hijo"},
+    ]
+    # Sin corroboracion, el unico testigo es el propio paciente.
+    assert por_id[solo_paciente] == [{"nombre": "Jose", "papel": "registro", "relacion": "paciente"}]

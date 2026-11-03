@@ -100,7 +100,7 @@ def _generar_codigo(db: Session) -> str:
         )
         if ocupado is None:
             return codigo
-    raise ConflictoError("No se pudo generar un codigo de invitacion; reintente.")
+    raise ConflictoError("No se pudo generar un código de invitación; reintente.")
 
 
 def _corroboraciones(db: Session, vinculo: Acompanante) -> int:
@@ -257,7 +257,7 @@ def _invitacion_vigente(db: Session, codigo: str) -> Acompanante:
     # codigo es una credencial y no se informa en cual de los tres estados esta.
     if vinculo is None or not vinculo.vigente:
         raise RecursoNoEncontradoError(
-            "El codigo no es valido o ya vencio. Pida uno nuevo al paciente."
+            "El código no es válido o ya venció. Pida uno nuevo al paciente."
         )
     return vinculo
 
@@ -288,8 +288,8 @@ def registrar_familiar(
     correo = payload.correo.lower()
     if db.query(Usuario).filter(Usuario.correo == correo).first() is not None:
         raise ConflictoError(
-            "Ese correo ya tiene una cuenta. Inicie sesion con ella y use la "
-            "opcion de acompanar a otra persona."
+            "Ese correo ya tiene una cuenta. Inicie sesión con ella y use la "
+            "opción de acompañar a otra persona."
         )
 
     cuenta = Usuario(
@@ -463,7 +463,7 @@ def confirmar_toma(
     programada = _con_zona(registro.fecha_hora_programada)
     if programada is not None and programada < _ahora() - VENTANA_CORROBORACION:
         raise ConflictoError(
-            "El plazo para corroborar esta toma ya vencio."
+            "El plazo para corroborar esta toma ya venció."
         )
 
     registro.id_confirmante = usuario.id_usuario

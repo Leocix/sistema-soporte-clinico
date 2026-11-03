@@ -53,19 +53,23 @@ from sklearn.metrics import (
     roc_auc_score,
 )
 from sklearn.inspection import permutation_importance
-from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_validate
+from sklearn.base import clone
+from sklearn.model_selection import (
+    GridSearchCV,
+    StratifiedKFold,
+    cross_val_predict,
+    cross_validate,
+)
 from sklearn.svm import SVC
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import preprocess  # noqa: E402  (el esquema cambia con --perfil; se lee al usarlo)
 from preprocess import (  # noqa: E402
     COL_OBJETIVO,
     DIR_MODELOS,
     DIR_PROCESSED,
     DIR_RAW,
-    NOMINALES,
-    NUMERICAS,
-    ORDINALES,
     SEMILLA,
     cargar_datos,
     construir_preprocesador,
@@ -83,8 +87,17 @@ log = logging.getLogger("train_evaluate")
 # Meta fijada en la hipotesis del proyecto de investigacion.
 META_AUCROC = 0.80
 
+# Umbral con el que se convierte la probabilidad en decision para McNemar.
+UMBRAL_DECISION = 0.5
+
 # Etiqueta con la que se marca un modelo entrenado sobre datos simulados.
 ORIGEN_SIMULADO = "conjunto de demostracion simulado"
+
+# Los artefactos del perfil reducido llevan sufijo propio: el microservicio
+# carga risk_model_v1.pkl y espera el esquema completo del consultorio, de modo
+# que un modelo entrenado con la ENDES no debe ocupar ese nombre.
+SUFIJO_PERFIL = {"clinico": "", "endes": "_endes"}
+ORIGEN_ENDES = "ENDES (INEI), microdatos publicos"
 
 
 # ---------------------------------------------------------------------------
@@ -360,11 +373,12 @@ def seleccionar_mejor(
 ) -> ResultadoModelo:
     """Mayor AUCROC; ante empate estadistico, mayor sensibilidad.
 
-    `ordenados` va de mayor a menor AUCROC. Si la prueba de McNemar entre los
-    dos primeros no encuentra diferencia significativa, el AUCROC no basta para
-    preferir a uno y decide la sensibilidad: el error clinicamente costoso es
-    el falso negativo —un paciente en riesgo que el sistema no detecta y que
-    por tanto no recibe la alerta temprana—.
+    `ordenados` va de mayor a menor AUCROC. `contraste` es la prueba de DeLong
+    entre las AUCROC de los dos primeros. Si no encuentra diferencia
+    significativa, el AUCROC no basta para preferir a uno y decide la
+    sensibilidad: el error clinicamente costoso es el falso negativo —un
+    paciente en riesgo que el sistema no detecta y que por tanto no recibe la
+    alerta temprana—.
     """
     primero = ordenados[0]
     if len(ordenados) < 2 or not contraste:
@@ -377,12 +391,103 @@ def seleccionar_mejor(
     return primero
 
 
+def _delong(y_verdadero, puntajes: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """AUCROC de uno o varios modelos y su matriz de covarianza (DeLong).
+
+    Implementacion rapida de Sun y Xu (2014) del metodo de DeLong et al.
+    (1988). `puntajes` tiene una fila por modelo, evaluados sobre los mismos
+    pacientes: por eso las AUCROC estan correlacionadas y la covarianza entre
+    ellas no puede ignorarse al compararlas.
+    """
+    from scipy.stats import rankdata
+
+    y = np.asarray(y_verdadero).astype(int)
+    puntajes = np.atleast_2d(np.asarray(puntajes, dtype=float))
+    positivos, negativos = puntajes[:, y == 1], puntajes[:, y == 0]
+    m, n = positivos.shape[1], negativos.shape[1]
+
+    rx = np.vstack([rankdata(fila) for fila in positivos])
+    ry = np.vstack([rankdata(fila) for fila in negativos])
+    rz = np.vstack([rankdata(fila) for fila in np.hstack([positivos, negativos])])
+
+    aucs = rz[:, :m].sum(axis=1) / (m * n) - (m + 1.0) / (2.0 * n)
+    v01 = (rz[:, :m] - rx) / n
+    v10 = 1.0 - (rz[:, m:] - ry) / m
+    covarianza = np.atleast_2d(np.cov(v01)) / m + np.atleast_2d(np.cov(v10)) / n
+    return aucs, covarianza
+
+
+def intervalo_auc(y_verdadero, probabilidad) -> dict:
+    """AUCROC con su intervalo de confianza al 95 % y contraste frente al azar.
+
+    El contraste frente a 0,5 delimita lo que el resultado demuestra: una
+    AUCROC baja pero significativamente mayor que 0,5 indica que las variables
+    contienen señal, aunque insuficiente para la meta.
+    """
+    from scipy.stats import norm
+
+    aucs, cov = _delong(y_verdadero, probabilidad)
+    auc, ee = float(aucs[0]), float(np.sqrt(cov[0, 0]))
+    z = (auc - 0.5) / ee if ee > 0 else float("inf")
+    return {
+        "aucroc": round(auc, 4),
+        "error_estandar": round(ee, 4),
+        "ic95": [round(max(0.0, auc - 1.96 * ee), 4), round(min(1.0, auc + 1.96 * ee), 4)],
+        "p_valor_frente_al_azar": round(float(norm.sf(z)), 6),
+    }
+
+
+def prueba_delong(y_verdadero, probabilidad_a, probabilidad_b) -> dict:
+    """Contrasta si dos modelos difieren en AUCROC sobre los mismos pacientes.
+
+    Es la prueba que corresponde a un criterio de seleccion basado en AUCROC:
+    compara la capacidad de ordenar a los pacientes por riesgo, sin depender
+    de ningun umbral. McNemar, en cambio, compara aciertos con un umbral fijo,
+    y responde a otra pregunta (ver `prueba_mcnemar`).
+    """
+    from scipy.stats import norm
+
+    aucs, cov = _delong(y_verdadero, np.vstack([probabilidad_a, probabilidad_b]))
+    diferencia = float(aucs[0] - aucs[1])
+    varianza = float(cov[0, 0] + cov[1, 1] - 2 * cov[0, 1])
+    ee = float(np.sqrt(max(varianza, 0.0)))
+    if ee == 0:
+        p = 1.0 if diferencia == 0 else 0.0
+        z = None
+    else:
+        z = diferencia / ee
+        p = float(2 * norm.sf(abs(z)))
+
+    significativo = p < 0.05
+    return {
+        "prueba": "DeLong (AUCROC correlacionadas)",
+        "aucroc_a": round(float(aucs[0]), 4),
+        "aucroc_b": round(float(aucs[1]), 4),
+        "diferencia": round(diferencia, 4),
+        "ic95_diferencia": [round(diferencia - 1.96 * ee, 4), round(diferencia + 1.96 * ee, 4)],
+        "estadistico_z": None if z is None else round(z, 4),
+        "p_valor": round(p, 4),
+        "p_valor_completo": p,
+        "interpretacion": (
+            "Las AUCROC difieren de forma estadisticamente significativa (p < 0,05)."
+            if significativo
+            else "Sin evidencia de diferencia entre las AUCROC (p >= 0,05); "
+            "la eleccion entre ambos se decide por la sensibilidad."
+        ),
+    }
+
+
 def prueba_mcnemar(y_verdadero, prediccion_a, prediccion_b) -> dict:
-    """Contrasta si dos clasificadores difieren en sus aciertos.
+    """Contrasta si dos clasificadores difieren en sus aciertos con un umbral.
 
     Compara solo los casos discordantes: aquellos que un modelo clasifica bien
     y el otro mal. Con pocos discordantes se usa la version binomial exacta,
     que no depende de la aproximacion asintotica de la chi-cuadrado.
+
+    No decide la seleccion: el criterio es el AUCROC y su contraste es DeLong.
+    McNemar se reporta como complemento, porque responde a algo que el AUCROC
+    no dice: si los dos modelos, con el umbral de decision, alertarian sobre
+    los mismos pacientes o sobre pacientes distintos.
     """
     from scipy.stats import binomtest, chi2
 
@@ -453,6 +558,7 @@ def guardar_artefactos(
     pipeline_ganador,
     contraste: dict,
     contexto: dict,
+    sufijo: str = "",
 ) -> None:
     import joblib
 
@@ -461,7 +567,7 @@ def guardar_artefactos(
 
     # El pipeline incluye la preparacion: en inferencia recibe la fila cruda y
     # aplica exactamente las mismas transformaciones del entrenamiento.
-    ruta_modelo = DIR_MODELOS / "risk_model_v1.pkl"
+    ruta_modelo = DIR_MODELOS / f"risk_model{sufijo}_v1.pkl"
     joblib.dump(pipeline_ganador, ruta_modelo)
 
     # La procedencia viaja con el modelo. El microservicio la lee y la devuelve
@@ -484,10 +590,11 @@ def guardar_artefactos(
         # Referencia de la explicacion individual con SHAP (RF06).
         "fondo_shap": contexto["fondo_shap"],
     }
-    (DIR_MODELOS / "risk_model_v1.json").write_text(
+    ruta_ficha = DIR_MODELOS / f"risk_model{sufijo}_v1.json"
+    ruta_ficha.write_text(
         json.dumps(ficha, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    log.info("Ficha del modelo guardada en %s", DIR_MODELOS / "risk_model_v1.json")
+    log.info("Ficha del modelo guardada en %s", ruta_ficha)
 
     reporte = {
         "fecha": date.today().isoformat(),
@@ -496,15 +603,16 @@ def guardar_artefactos(
         "modelo_seleccionado": mejor.nombre,
         "cumple_meta_aucroc": mejor.aucroc_cv >= META_AUCROC,
         "meta_aucroc": META_AUCROC,
-        "contraste_dos_mejores": contraste,
+        # Contraste que decide la seleccion: DeLong sobre las AUCROC.
+        "contraste_auc_delong": contraste,
         "resultados": [asdict(r) for r in resultados],
     }
-    ruta_reporte = DIR_PROCESSED / "reporte_modelado.json"
+    ruta_reporte = DIR_PROCESSED / f"reporte_modelado{sufijo}.json"
     ruta_reporte.write_text(
         json.dumps(reporte, indent=2, ensure_ascii=False), encoding="utf-8"
     )
 
-    ruta_tabla = DIR_PROCESSED / "tabla_comparativa.md"
+    ruta_tabla = DIR_PROCESSED / f"tabla_comparativa{sufijo}.md"
     ruta_tabla.write_text(
         "# Comparacion de algoritmos (validacion cruzada estratificada de "
         f"{contexto['pliegues']} pliegues)\n\n"
@@ -528,6 +636,7 @@ def ejecutar(
     con_busqueda: bool = True,
     incluir_xgboost: bool = True,
     origen_datos: str = "extraccion documental (Anexo n.o 04)",
+    sufijo: str = "",
 ) -> tuple[list[ResultadoModelo], ResultadoModelo]:
     reporte_prep = ReporteDePreparacion()
 
@@ -536,8 +645,8 @@ def ejecutar(
     df = limpiar(df, reporte_prep)
     df = derivar_variables(df, reporte_prep)
 
-    numericas = [*NUMERICAS, *reporte_prep.caracteristicas_derivadas]
-    X = df[[*numericas, *ORDINALES, *NOMINALES]]
+    numericas = [*preprocess.NUMERICAS, *reporte_prep.caracteristicas_derivadas]
+    X = df[[*numericas, *preprocess.ORDINALES, *preprocess.NOMINALES]]
     y = df[COL_OBJETIVO]
 
     conteo = y.value_counts().sort_index()
@@ -572,20 +681,49 @@ def ejecutar(
         resultados, key=lambda r: (r.aucroc_cv, r.sensibilidad_cv), reverse=True
     )
 
+    # El contraste entre los dos mejores se hace sobre las predicciones fuera
+    # de pliegue del ENTRENAMIENTO, no sobre el conjunto de prueba. Si la
+    # prueba interviniera en la seleccion, dejaria de ser una estimacion
+    # independiente del desempeño del modelo elegido.
+    contraste_decisiones: dict = {"prueba": "no aplicable"}
     if len(ordenados) >= 2:
         primero, segundo = ordenados[0], ordenados[1]
-        contraste = prueba_mcnemar(
-            y_test,
-            pipelines[primero.nombre].predict(X_test),
-            pipelines[segundo.nombre].predict(X_test),
+        particion = StratifiedKFold(n_splits=pliegues, shuffle=True, random_state=SEMILLA)
+        fuera_de_pliegue = {
+            r.nombre: cross_val_predict(
+                clone(pipelines[r.nombre]), X_train, y_train,
+                cv=particion, method="predict_proba", n_jobs=-1,
+            )[:, 1]
+            for r in (primero, segundo)
+        }
+        contraste = prueba_delong(
+            y_train, fuera_de_pliegue[primero.nombre], fuera_de_pliegue[segundo.nombre]
         )
-        contraste["modelo_a"] = primero.nombre
-        contraste["modelo_b"] = segundo.nombre
+        contraste_decisiones = prueba_mcnemar(
+            y_train,
+            (fuera_de_pliegue[primero.nombre] >= UMBRAL_DECISION).astype(int),
+            (fuera_de_pliegue[segundo.nombre] >= UMBRAL_DECISION).astype(int),
+        )
+        for c in (contraste, contraste_decisiones):
+            c["modelo_a"] = primero.nombre
+            c["modelo_b"] = segundo.nombre
+            c["datos"] = "predicciones fuera de pliegue del conjunto de entrenamiento"
+        contraste_decisiones["umbral"] = UMBRAL_DECISION
+        log.info("DeLong %s vs %s: diferencia %.4f, p = %.4f",
+                 primero.nombre, segundo.nombre, contraste["diferencia"], contraste["p_valor"])
     else:
         contraste = {"prueba": "no aplicable", "interpretacion": "Un solo modelo."}
 
     mejor = seleccionar_mejor(ordenados, contraste)
     log.info("Modelo seleccionado: %s", mejor.nombre)
+
+    # Desempeño del elegido en la prueba reservada, con su intervalo: es la
+    # unica cifra que el conjunto de prueba aporta, y la aporta una sola vez.
+    auc_prueba = intervalo_auc(
+        y_test, pipelines[mejor.nombre].predict_proba(X_test)[:, 1]
+    )
+    log.info("AUCROC en prueba: %.4f (IC95 %s); p frente al azar = %.6f",
+             auc_prueba["aucroc"], auc_prueba["ic95"], auc_prueba["p_valor_frente_al_azar"])
 
     log.info("Calculando la importancia de las variables por permutacion...")
     factores = importancia_de_variables(pipelines[mejor.nombre], X_test, y_test)
@@ -608,9 +746,14 @@ def ejecutar(
             "busqueda_de_hiperparametros": con_busqueda,
             "algoritmos_comparados": len(resultados),
             "origen_datos": origen_datos,
+            "perfil": preprocess.PERFIL_ACTUAL,
+            "variables": list(X.columns),
+            "contraste_decisiones_mcnemar": contraste_decisiones,
+            "aucroc_prueba_con_intervalo": auc_prueba,
             "factores": factores,
             "fondo_shap": fondo_de_referencia(pipelines[mejor.nombre], X_train),
         },
+        sufijo=sufijo,
     )
     return resultados, mejor
 
@@ -634,7 +777,15 @@ def main(argv: list[str] | None = None) -> int:
         "--generar-muestra", type=int, metavar="N",
         help="Genera N filas sinteticas y ejecuta sobre ellas (solo prueba tecnica).",
     )
+    parser.add_argument(
+        "--perfil", choices=list(preprocess.PERFILES), default="clinico",
+        help="Esquema de variables segun la fuente: 'clinico' para la ficha del "
+             "Anexo n.o 04, 'endes' para los microdatos del INEI. El perfil "
+             "reducido escribe sus artefactos con el sufijo _endes.",
+    )
     args = parser.parse_args(argv)
+
+    preprocess.aplicar_perfil(args.perfil)
 
     # La consola de Windows usa cp1252 por defecto y rompe el simbolo +/- de
     # la tabla. Los archivos generados ya se escriben en UTF-8.
@@ -644,7 +795,7 @@ def main(argv: list[str] | None = None) -> int:
         pass
 
     entrada = args.entrada
-    origen = "extraccion documental (Anexo n.o 04)"
+    origen = ORIGEN_ENDES if args.perfil == "endes" else "extraccion documental (Anexo n.o 04)"
     if args.generar_muestra:
         entrada = generar_muestra_sintetica(
             args.generar_muestra, DIR_RAW / "demostracion_simulada.csv"
@@ -662,6 +813,7 @@ def main(argv: list[str] | None = None) -> int:
             con_busqueda=not args.sin_busqueda,
             incluir_xgboost=not args.sin_xgboost,
             origen_datos=origen,
+            sufijo=SUFIJO_PERFIL[args.perfil],
         )
     except (FileNotFoundError, ValueError) as exc:
         log.error("%s", exc)
@@ -673,6 +825,20 @@ def main(argv: list[str] | None = None) -> int:
     print(f"AUCROC en validacion cruzada: {mejor.aucroc_cv:.4f} "
           f"(meta >= {META_AUCROC})")
     print(f"AUCROC en el conjunto de prueba: {mejor.prueba['aucroc']:.4f}")
+
+    ruta = DIR_PROCESSED / f"reporte_modelado{SUFIJO_PERFIL[args.perfil]}.json"
+    reporte = json.loads(ruta.read_text(encoding="utf-8"))
+    d = reporte["contraste_auc_delong"]
+    if "diferencia" in d:
+        print(f"\nDeLong {d['modelo_a']} vs {d['modelo_b']} (fuera de pliegue): "
+              f"diferencia {d['diferencia']:+.4f}, IC95 {d['ic95_diferencia']}, "
+              f"p = {d['p_valor']:.4f}")
+        m = reporte["contraste_decisiones_mcnemar"]
+        print(f"McNemar con umbral {m.get('umbral')}: {m.get('discordantes')} discordantes, "
+              f"p = {m.get('p_valor')}")
+    a = reporte["aucroc_prueba_con_intervalo"]
+    print(f"AUCROC en prueba con IC95: {a['aucroc']} {a['ic95']}; "
+          f"p frente al azar = {a['p_valor_frente_al_azar']}")
 
     if mejor.aucroc_cv < META_AUCROC:
         print(

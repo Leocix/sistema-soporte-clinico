@@ -169,6 +169,15 @@ class DosisDelDia {
 
   bool get respondida => registro != null;
 
-  /// Una dosis futura no debe ofrecer los botones de respuesta todavia.
-  bool get esFutura => programada.isAfter(DateTime.now());
+  /// Momento desde el que se puede marcar como tomada.
+  DateTime get abreVentana => programada.subtract(Constantes.ventanaAntes);
+
+  /// Momento hasta el que se puede marcar como tomada.
+  DateTime get cierraVentana => programada.add(Constantes.ventanaDespues);
+
+  /// Aun no se abre la ventana: no se ofrecen los botones de respuesta.
+  bool get esFutura => DateTime.now().isBefore(abreVentana);
+
+  /// La ventana ya cerro: solo puede declararse que no se tomo.
+  bool get ventanaCerrada => DateTime.now().isAfter(cierraVentana);
 }

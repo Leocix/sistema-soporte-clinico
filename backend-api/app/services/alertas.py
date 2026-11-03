@@ -163,7 +163,7 @@ def evaluar_paciente(
         _registrar(
             db, abiertas, paciente, TipoAlerta.RIESGO_PREDICHO,
             f"El modelo estima {round(probabilidad * 100)} % de probabilidad de "
-            "incumplimiento antes del proximo control.",
+            "incumplimiento antes del próximo control.",
             round(probabilidad * 100, 2),
         )
 

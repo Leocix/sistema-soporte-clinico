@@ -32,3 +32,18 @@ el siguiente cambio en el `.md` sobrescribiría la corrección.
 
 Requisitos: `pip install python-docx`. Cierre el documento en Word antes de
 ejecutarlo: Windows bloquea el archivo mientras está abierto.
+
+## `md_a_anexo.py`
+
+Para los anexos, que son documentos sueltos sin plantilla ni índice:
+
+```bash
+cd documentacion/05_manual
+python ../herramientas/md_a_anexo.py Manual_de_usuario.md Anexo_23_Manual_de_usuario.docx
+```
+
+Sin el segundo argumento el `.docx` se crea junto al `.md`, con su mismo
+nombre. Reutiliza el formateo de `md_a_docx.py` —negritas, enlaces, tablas con
+anchos repartidos—, de modo que un anexo y el informe se ven igual.
+
+Aquí también **el Markdown es la fuente**: el `.docx` se regenera.

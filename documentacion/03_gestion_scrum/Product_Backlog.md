@@ -42,6 +42,8 @@ incumplimiento.
 | RF08 | Enviar recordatorios de toma al paciente | Could | B4 | OE4 | 3 | **Terminado** |
 | RF09 | Corroborar la toma mediante un grupo familiar de acompañamiento | Should | B1 | OE4 | 3 | **Terminado** |
 | RF10 | Restablecer la contraseña mediante un enlace enviado por correo | Should | B4 | OE4 | 3 | **Terminado** |
+| PBI-11 | Comparar los algoritmos sobre una fuente de datos real y de acceso público | Must | B3 | OE3 | Posterior al 4 | **Terminado** |
+| PBI-12 | Verificar el producto con pruebas de caja negra y caja blanca, y ajustes de cierre (ventana de registro, baja, descarga de la app y textos legales) | Must | B1–B4 | OE4 | Posterior al 4 | **Terminado** |
 
 **Brechas del diagnóstico (OE1):** B1 ausencia de registro estructurado ·
 B2 inexistencia de trazabilidad entre citas · B3 falta de analítica predictiva ·
@@ -59,6 +61,17 @@ residencia casi no varían entre pacientes y no ayudan a distinguir quién
 incumple. Se reemplazaron por nivel educativo, convivencia y apoyo familiar en
 la medicación. Las comorbilidades pasaron de un número a una lista de
 enfermedades; el modelo usa su total.
+
+PBI-11 es el único elemento que no nació de una necesidad del Product Owner,
+sino de un impedimento de la retrospectiva del Sprint 4: con el único
+resultado proveniente del conjunto de demostración, el OE3 quedaría «en
+ejecución» mientras durase la extracción documental, y el informe no podría
+reportar ninguna comparación de algoritmos defendible. Se priorizó como
+**Must** porque sin él un objetivo específico del proyecto se quedaba sin
+resultado, lo que pesa más que cualquier funcionalidad adicional. Su
+incremento es el apartado 1.1.8 del pre informe: cuatro algoritmos comparados
+sobre 8 422 pacientes reales de la ENDES, con el resultado reportado aunque
+no alcance la meta de AUCROC.
 
 RF10 tampoco figuraba en la pila inicial, y su origen es una observación de
 usabilidad: la pantalla de acceso remitía al consultorio a quien olvidara su

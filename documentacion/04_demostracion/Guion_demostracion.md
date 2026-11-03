@@ -76,7 +76,7 @@ prioridad clínica. *(RF02, RF07 · OE4)*
 
 ## 4. El familiar corrobora (1 minuto)
 
-Entre como el familiar (cuenta `rosa.d-001@ejemplo.pe` en la demostración) y
+Entre como el familiar (cuenta `rosa.p-001@ejemplo.pe` en la demostración) y
 confirme una toma cumplida. En el panel, la columna **Testigo** del historial
 pasa de «Autorreporte» a «Familiar». *(RF09 · OE4)*
 
@@ -93,7 +93,7 @@ pasa de «Autorreporte» a «Familiar». *(RF09 · OE4)*
 | 5.5 | Compare con **Riesgo observado**: uno resume lo que el paciente hizo; el otro anticipa lo que hará | RF04, RF07 |
 
 > Si el jurado pregunta por la validez: el protocolo compara cuatro algoritmos
-> con validación cruzada de 5 pliegues y prueba de McNemar; el modelo en
+> con validación cruzada de 5 pliegues y prueba de DeLong entre los dos mejores; el modelo en
 > servicio es el ganador de esa comparación, serializado con su preparación.
 
 ---

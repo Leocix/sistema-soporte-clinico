@@ -33,17 +33,17 @@ def obtener_paciente_autorizado(
             # Se responde 403 y no 404: el recurso existe, pero corresponde a
             # otro medico tratante.
             raise PermisoDenegadoError(
-                "El paciente no figura a su cargo como medico tratante."
+                "El paciente no figura a su cargo como médico tratante."
             )
         return paciente
 
     if usuario.rol is Rol.FAMILIAR:
         raise PermisoDenegadoError(
-            "Su perfil de acompanante no da acceso a la ficha clinica."
+            "Su perfil de acompañante no da acceso a la ficha clínica."
         )
 
     if paciente.id_usuario != usuario.id_usuario:
-        raise PermisoDenegadoError("Solo puede consultar su propia ficha clinica.")
+        raise PermisoDenegadoError("Solo puede consultar su propia ficha clínica.")
     return paciente
 
 
@@ -52,7 +52,7 @@ def ficha_del_paciente_autenticado(db: Session, usuario: Usuario) -> Paciente:
     paciente = db.query(Paciente).filter(Paciente.id_usuario == usuario.id_usuario).first()
     if paciente is None:
         raise RecursoNoEncontradoError(
-            "Su cuenta aun no tiene una ficha clinica asociada. "
+            "Su cuenta aún no tiene una ficha clínica asociada. "
             "Solicite al consultorio que complete su registro."
         )
     return paciente

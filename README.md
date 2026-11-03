@@ -66,7 +66,8 @@ sistema-soporte-clinico/
 │   ├── 02_instrumentos/        Anexos 04 a 07 y plantilla de captura
 │   ├── 03_gestion_scrum/       Product Backlog, trazabilidad, actas
 │   ├── 04_demostracion/        Guion de la demostracion del producto
-│   └── herramientas/           Generador del Word desde el Markdown
+│   ├── 05_manual/              Manual de usuario (medico, paciente, familiar)
+│   └── herramientas/           Generadores del Word desde el Markdown
 ├── render.yaml             Despliegue del API y del microservicio
 └── DESPLIEGUE.md           Guia completa de puesta en produccion
 ```
@@ -86,7 +87,66 @@ sistema-soporte-clinico/
 | RF09 | Corroboración de la toma por el grupo familiar | Should | Implementado |
 | RF10 | Restablecimiento de la contraseña por correo | Should | Implementado |
 
-## Puesta en marcha
+## Modo local (sustentación)
+
+Un solo script levanta el sistema completo en el equipo, sobre una base
+PostgreSQL local administrada con DBeaver. **No toca la base de producción**:
+las variables que fija el script tienen prioridad sobre las de
+`backend-api/.env`, y el script rechaza cualquier base que no esté en
+`localhost`.
+
+### 1. La base, una sola vez
+
+Con el servidor PostgreSQL instalado y encendido, en DBeaver: conexión nueva →
+PostgreSQL → `localhost:5432`, usuario `postgres`. Abra un editor SQL y ejecute,
+eligiendo usted la contraseña:
+
+```sql
+CREATE ROLE cdss_app WITH LOGIN PASSWORD 'su-contraseña';
+CREATE DATABASE cdss_local OWNER cdss_app ENCODING 'UTF8';
+```
+
+La aplicación se conecta con `cdss_app`, que es dueño de su base y nada más: no
+usa el superusuario. Copie `local.env.example` como `local.env` y ponga ahí esa
+contraseña. `local.env` no entra en git.
+
+```bash
+python iniciar_local.py preparar
+```
+
+Crea las tablas con las migraciones y carga el médico, cinco pacientes de
+demostración y un familiar; le pide la contraseña de esas cuentas.
+`preparar --rehacer` vacía la base y vuelve a empezar. Sin `local.env`, el
+script usa una base SQLite como alternativa de ensayo.
+
+### 2. Cada vez que se presenta
+
+```bash
+python iniciar_local.py
+```
+
+Arranca el microservicio (8001), el API (8000) y el panel
+(<http://localhost:5173>), con recarga automática al guardar cambios. Ctrl+C
+detiene todo.
+
+```bash
+python iniciar_local.py movil
+```
+
+En **otra** terminal: abre el emulador de Android e instala la aplicación
+conectada al API local (`10.0.2.2:8000`). En esa terminal, `r` recarga los
+cambios en caliente.
+
+```bash
+python iniciar_local.py apk
+```
+
+Construye el APK de publicación y lo deja en `frontend-web/public/descargas/`,
+de donde lo sirve la página pública <http://localhost:5173/descargar> (con
+código QR para escanear desde el celular). El panel también publica
+`/privacidad` y `/terminos`, enlazadas desde el inicio de sesión y la app.
+
+## Puesta en marcha manual
 
 Requiere Python 3.12+, Node 20+ y una base PostgreSQL (o SQLite en local).
 
@@ -167,7 +227,8 @@ enviará.
 
 Los datos clínicos se almacenan seudonimizados: el código `P-0NN` es la única
 clave que viaja al pipeline de aprendizaje automático. Los pacientes de la
-serie `D-0NN` que genera `scripts/seed.py --demo` son **ficticios** y no deben
+demostración (P-001 a P-005, con correos `@ejemplo.pe`) que genera
+`scripts/seed.py --demo` son **ficticios** y no deben
 incluirse en el dataset de entrenamiento ni en los resultados de la
 investigación. El directorio `ml-pipeline/data/` está excluido del control de
 versiones.

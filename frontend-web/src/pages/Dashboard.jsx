@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import FormularioPaciente from '../components/FormularioPaciente'
 import { DistintivoRiesgo } from '../components/AlertaRiesgo'
 import { mensajeDeError, servicioAdherencia, servicioPacientes } from '../services/api'
@@ -22,7 +22,9 @@ export default function Dashboard() {
   const [error, setError] = useState(null)
   // El sistema confirma lo que acaba de ocurrir: sin esta linea, el medico da
   // de alta a un paciente y la pantalla vuelve al listado sin decir nada.
-  const [confirmacion, setConfirmacion] = useState(null)
+  // La ficha del paciente puede devolver aquí un mensaje (p. ej., tras darlo de baja).
+  const ubicacion = useLocation()
+  const [confirmacion, setConfirmacion] = useState(ubicacion.state?.confirmacion ?? null)
   const [mostrarAlta, setMostrarAlta] = useState(false)
 
   const cargar = useCallback(async () => {
@@ -139,7 +141,7 @@ export default function Dashboard() {
             <input
               value={busqueda}
               onChange={(e) => { setBusqueda(e.target.value); setPagina(1) }}
-              placeholder="Nombre o P-001"
+              placeholder="Nombre o código"
               maxLength={60}
             />
           </label>

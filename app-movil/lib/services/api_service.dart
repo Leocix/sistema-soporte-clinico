@@ -34,7 +34,7 @@ class ErrorApi implements Exception {
 /// aplicacion encola el evento y sigue funcionando, mientras que ante un error
 /// de negocio debe mostrarselo al paciente.
 class ErrorDeConexion implements Exception {
-  ErrorDeConexion([this.mensaje = 'Sin conexion con el servidor.']);
+  ErrorDeConexion([this.mensaje = 'Sin conexión con el servidor.']);
 
   final String mensaje;
 
@@ -115,14 +115,14 @@ class ServicioApi {
       // registro se habia guardado cuando lo unico que habia ocurrido es que no
       // pudo entrar. Cada pantalla anade su propio matiz.
       throw ErrorDeConexion(
-        'No se pudo conectar con el servidor. Revise su conexion a internet e '
-        'intentelo de nuevo.',
+        'No se pudo conectar con el servidor. Revise su conexión a internet e '
+        'inténtelo de nuevo.',
       );
     } on TimeoutException {
       // Para el paciente agotar el tiempo de espera equivale a no tener
       // conexion: en ambos casos el evento debe quedar en la cola.
       throw ErrorDeConexion(
-        'El servidor tardo demasiado en responder. Intentelo de nuevo en un '
+        'El servidor tardó demasiado en responder. Inténtelo de nuevo en un '
         'momento.',
       );
     }
@@ -144,7 +144,7 @@ class ServicioApi {
       );
     }
     throw ErrorApi(
-      'No se pudo completar la operacion.',
+      'No se pudo completar la operación.',
       estado: respuesta.statusCode,
     );
   }
@@ -162,7 +162,7 @@ class ServicioApi {
             : '$campo: $motivo';
       }).join(' · ');
     }
-    return (cuerpo['mensaje'] as String?) ?? 'Ocurrio un error inesperado.';
+    return (cuerpo['mensaje'] as String?) ?? 'Ocurrió un error inesperado.';
   }
 
   // --- Sesion (RF01) -------------------------------------------------------

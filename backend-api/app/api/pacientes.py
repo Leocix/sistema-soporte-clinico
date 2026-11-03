@@ -66,7 +66,7 @@ def crear_paciente(
     codigo = datos.pop("codigo_anonimizado", None) or _siguiente_codigo(db)
 
     if db.query(Paciente).filter(Paciente.codigo_anonimizado == codigo).first():
-        raise ConflictoError(f"Ya existe un paciente con el codigo {codigo}.")
+        raise ConflictoError(f"Ya existe un paciente con el código {codigo}.")
 
     id_usuario = datos.pop("id_usuario", None)
     if id_usuario is not None:
@@ -172,7 +172,7 @@ def actualizar_paciente(
 
     cambios = payload.campos_enviados()
     if not cambios:
-        raise ConflictoError("No se envio ningun campo para actualizar.")
+        raise ConflictoError("No se envió ningún campo para actualizar.")
 
     for campo, valor in cambios.items():
         setattr(paciente, campo, valor)
@@ -186,6 +186,10 @@ def actualizar_paciente(
         raise ConflictoError(
             "Los controles perdidos no pueden superar a los programados."
         )
+    if (paciente.tiempo_enfermedad_anios is not None
+            and paciente.tiempo_enfermedad_anios > paciente.edad):
+        db.rollback()
+        raise ConflictoError("El tiempo de enfermedad no puede superar la edad del paciente.")
 
     db.commit()
     db.refresh(paciente)
@@ -265,8 +269,8 @@ def generar_acceso_movil(
         )
     if not paciente.activo:
         raise ConflictoError(
-            "El paciente esta dado de baja del seguimiento; no admite acceso a "
-            "la aplicacion."
+            "El paciente está dado de baja del seguimiento; no admite acceso a "
+            "la aplicación."
         )
 
     correo = paciente.correo.strip().lower()

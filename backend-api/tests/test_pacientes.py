@@ -278,3 +278,34 @@ def test_el_total_no_se_envia_a_mano(client, cab_medico):
 def test_ya_no_se_aceptan_las_variables_socioeconomicas_retiradas(client, cab_medico):
     ficha = {**FICHA_VALIDA, "aseguramiento": "sis"}
     assert client.post("/api/pacientes", json=ficha, headers=cab_medico).status_code == 422
+
+
+# --- Defectos hallados por la caja negra (CN-18 y CN-19) ---------------------
+
+
+def test_los_nombres_no_admiten_digitos_ni_simbolos(client, cab_medico, datos):
+    """CN-18: la regla del formulario se aplica también en el API."""
+    for campo in ("nombres", "apellidos"):
+        alta = client.post("/api/pacientes", json={**FICHA_VALIDA, campo: "Ana3"}, headers=cab_medico)
+        assert alta.status_code == 422, campo
+    edicion = client.patch(f"/api/pacientes/{datos['ficha'].id_paciente}",
+                           json={"nombres": "Jose#"}, headers=cab_medico)
+    assert edicion.status_code == 422
+    # Tildes, eñes, apóstrofos y guiones siguen siendo válidos.
+    valido = client.post("/api/pacientes", json={**FICHA_VALIDA, "apellidos": "O'Brien Muñoz-Díaz"},
+                         headers=cab_medico)
+    assert valido.status_code == 201
+
+
+def test_el_tiempo_de_enfermedad_no_supera_la_edad(client, cab_medico, datos):
+    """CN-19: en el alta y sobre el estado resultante de una edición."""
+    alta = client.post("/api/pacientes", json={**FICHA_VALIDA, "edad": 30,
+                                               "tiempo_enfermedad_anios": 40}, headers=cab_medico)
+    assert alta.status_code == 422
+    limite = client.post("/api/pacientes", json={**FICHA_VALIDA, "edad": 30,
+                                                 "tiempo_enfermedad_anios": 30}, headers=cab_medico)
+    assert limite.status_code == 201
+    # La ficha P-001 tiene 68 años: subir solo el tiempo de enfermedad la vuelve incoherente.
+    edicion = client.patch(f"/api/pacientes/{datos['ficha'].id_paciente}",
+                           json={"tiempo_enfermedad_anios": 70}, headers=cab_medico)
+    assert edicion.status_code == 409

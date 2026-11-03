@@ -48,7 +48,7 @@ def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse
         or not verify_password(payload.contrasena, usuario.hash_contrasena)
         or usuario.rol != payload.perfil
     ):
-        raise NoAutenticadoError("Usuario o contrasena incorrectos.")
+        raise NoAutenticadoError("Usuario o contraseña incorrectos.")
 
     usuario.ultimo_acceso = datetime.now(timezone.utc)
     db.commit()
@@ -77,11 +77,11 @@ def perfil_actual(usuario: Usuario = Depends(get_current_user)) -> UsuarioOut:
 # Mensaje unico de la solicitud. Es el mismo exista o no la cuenta: contestar
 # distinto convertiria esta ruta en un buscador de correos registrados.
 _AVISO_ENVIADO = (
-    "Si esa direccion corresponde a una cuenta, le hemos enviado un enlace "
-    "para crear una contrasena nueva. Revise su correo."
+    "Si esa dirección corresponde a una cuenta, le hemos enviado un enlace "
+    "para crear una contraseña nueva. Revise su correo."
 )
 _AVISO_SIN_CORREO = (
-    "El envio de correos no esta disponible. Solicite el restablecimiento en "
+    "El envío de correos no está disponible. Solicite el restablecimiento en "
     "el consultorio."
 )
 
@@ -180,13 +180,13 @@ def confirmar_recuperacion(
     )
     if permiso is None or not permiso.vigente:
         raise RecursoNoEncontradoError(
-            "El enlace no es valido o ya vencio. Pida uno nuevo."
+            "El enlace no es válido o ya venció. Pida uno nuevo."
         )
 
     usuario = permiso.usuario
     if usuario is None or not usuario.activo:
         raise RecursoNoEncontradoError(
-            "El enlace no es valido o ya vencio. Pida uno nuevo."
+            "El enlace no es válido o ya venció. Pida uno nuevo."
         )
 
     usuario.hash_contrasena = hash_password(payload.contrasena)
@@ -197,6 +197,6 @@ def confirmar_recuperacion(
     db.commit()
 
     return RecuperacionResponse(
-        mensaje="Su contrasena quedo cambiada. Ya puede iniciar sesion.",
+        mensaje="Su contraseña quedó cambiada. Ya puede iniciar sesión.",
         correo_habilitado=True,
     )

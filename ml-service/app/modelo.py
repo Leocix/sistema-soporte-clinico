@@ -194,6 +194,11 @@ def _redondear(valor):
 
 
 def predecir(fichas: list[FichaEntrada], con_explicacion: bool) -> list[Prediccion]:
+    # Un lote vacio no llega al modelo: scikit-learn no admite un marco sin
+    # filas. Antes lo filtraba el endpoint; la prueba de caja blanca CB-05
+    # mostro que la funcion fallaba si otro llamador no lo hacia.
+    if not fichas:
+        return []
     modelo = cargar()
     filas = [construir_fila(f) for f in fichas]
     marco = _marco(modelo, filas)

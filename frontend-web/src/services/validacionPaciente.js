@@ -98,9 +98,11 @@ export function validarFicha(valores, { edicion = false } = {}) {
   // valor que el médico no puede corregir. Es lo que ocurría con la serie D-
   // de los pacientes de demostración.
   if (!edicion && !vacio(valores.codigo_anonimizado)
-      && !/^[A-Z]-\d{3,6}$/.test(valores.codigo_anonimizado)) {
+      && !/^P-\d{3,6}$/.test(valores.codigo_anonimizado)) {
+    // Mismo patrón que el API (^P-\d{3,6}$): aceptar otra letra aquí solo
+    // trasladaba el error al momento de guardar.
     errores.codigo_anonimizado =
-      'El formato es una letra, un guion y al menos tres dígitos (P-002).'
+      'El código es P, un guion y al menos tres dígitos (P-002).'
   }
 
   // --- Paciente ------------------------------------------------------------
@@ -200,6 +202,58 @@ export function validarFicha(valores, { edicion = false } = {}) {
   }
 
   return { errores, avisos }
+}
+
+// ---------------------------------------------------------------------------
+// Limpieza mientras se teclea
+// ---------------------------------------------------------------------------
+// La validación de arriba avisa de un valor fuera de rango, pero no impide
+// escribirlo. Con un campo numérico del navegador, además, lo inválido
+// («--1000», «1e5») llega como cadena vacía: el campo opcional lo da por no
+// respondido y el médico cree haber guardado un dato que no se guardó. Aquí se
+// impide escribirlo: solo dígitos, sin ceros a la izquierda y con un tope de
+// cifras acorde al rango de cada variable. Cubre también lo que se pega.
+export const NUMERICOS = {
+  edad: { enteros: 3 },
+  tiempo_enfermedad_anios: { enteros: 2, decimales: 1 },
+  numero_farmacos: { enteros: 2 },
+  tomas_dia: { enteros: 2 },
+  controles_programados_6m: { enteros: 2 },
+  controles_perdidos_6m: { enteros: 2 },
+  puntaje_morisky: { enteros: 1 },
+}
+
+function limpiarNumero(valor, { enteros, decimales = 0 }) {
+  let texto = String(valor ?? '').replace(',', '.')
+  texto = texto.replace(decimales ? /[^\d.]/g : /\D/g, '')
+  let [parteEntera = '', ...resto] = texto.split('.')
+  parteEntera = parteEntera.replace(/^0+(?=\d)/, '').slice(0, enteros)
+  if (!decimales || resto.length === 0) return parteEntera
+  // Un solo punto decimal, con las cifras que admite la variable.
+  const parteDecimal = resto.join('').slice(0, decimales)
+  return `${parteEntera || '0'}.${parteDecimal}`
+}
+
+/**
+ * Devuelve el valor que puede quedar en el campo mientras se escribe.
+ * Los campos que no figuran aquí se devuelven tal cual.
+ */
+export function limpiarAlEscribir(campo, valor) {
+  if (NUMERICOS[campo]) return limpiarNumero(valor, NUMERICOS[campo])
+  switch (campo) {
+    case 'nombres':
+    case 'apellidos':
+      // Letras del castellano, apóstrofo, guion y espacio; sin dobles espacios.
+      return String(valor).replace(/[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ' -]/g, '').replace(/ {2,}/g, ' ')
+    case 'documento_identidad':
+      return String(valor).replace(/[^0-9A-Za-z]/g, '').slice(0, 12).toUpperCase()
+    case 'telefono':
+      return String(valor).replace(/[^\d +-]/g, '').slice(0, 15)
+    case 'codigo_anonimizado':
+      return String(valor).toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 8)
+    default:
+      return valor
+  }
 }
 
 /** Aplica la normalización de texto antes de enviar la ficha. */

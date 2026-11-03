@@ -38,6 +38,55 @@ class ErrorEnvelope(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Mensajes de validacion en castellano
+# ---------------------------------------------------------------------------
+def motivo_en_castellano(err: dict) -> str:
+    """Traduce el motivo de un error de Pydantic al castellano.
+
+    Pydantic redacta en ingles («Input should be greater than or equal to
+    18»). Las pruebas de caja negra mostraron que esos textos llegaban tal cual
+    al usuario cuando un dato se rechazaba en el servidor. Los mensajes que
+    escriben nuestros propios validadores ya estan en castellano y se respetan.
+    """
+    tipo = err.get("type", "")
+    ctx = dict(err.get("ctx") or {})
+    if "expected" in ctx:
+        ctx["expected"] = str(ctx["expected"]).replace(" or ", " o ")
+    plantillas = {
+        "missing": "Campo obligatorio.",
+        "greater_than_equal": "Debe ser mayor o igual a {ge}.",
+        "greater_than": "Debe ser mayor que {gt}.",
+        "less_than_equal": "Debe ser menor o igual a {le}.",
+        "less_than": "Debe ser menor que {lt}.",
+        "string_too_short": "Debe tener al menos {min_length} caracteres.",
+        "string_too_long": "Debe tener como máximo {max_length} caracteres.",
+        "too_long": "Admite como máximo {max_length} elementos.",
+        "string_pattern_mismatch": "El formato no es válido.",
+        "int_parsing": "Debe ser un número entero.",
+        "int_from_float": "Debe ser un número entero.",
+        "float_parsing": "Debe ser un número.",
+        "bool_parsing": "Debe ser sí o no.",
+        "datetime_parsing": "La fecha u hora no es válida.",
+        "datetime_from_date_parsing": "La fecha u hora no es válida.",
+        "date_parsing": "La fecha no es válida.",
+        "enum": "Valor no permitido. Use: {expected}.",
+        "literal_error": "Valor no permitido. Use: {expected}.",
+        "extra_forbidden": "Campo no permitido.",
+        "string_type": "Debe ser un texto.",
+        "list_type": "Debe ser una lista.",
+    }
+    if tipo in plantillas:
+        try:
+            return plantillas[tipo].format(**ctx)
+        except (KeyError, IndexError):
+            return plantillas[tipo].split(" {")[0].rstrip(":.") + "."
+    mensaje = err.get("msg", "").removeprefix("Value error, ")
+    if "email address" in mensaje:
+        return "El correo electrónico no es válido."
+    return mensaje
+
+
+# ---------------------------------------------------------------------------
 # Excepciones de dominio
 # ---------------------------------------------------------------------------
 class AppError(Exception):
@@ -45,7 +94,7 @@ class AppError(Exception):
 
     status_code: int = status.HTTP_400_BAD_REQUEST
     codigo: str = "ERROR_APLICACION"
-    mensaje: str = "No fue posible completar la operacion."
+    mensaje: str = "No fue posible completar la operación."
 
     def __init__(
         self,
@@ -65,7 +114,7 @@ class AppError(Exception):
 class NoAutenticadoError(AppError):
     status_code = status.HTTP_401_UNAUTHORIZED
     codigo = "NO_AUTENTICADO"
-    mensaje = "Credenciales ausentes, invalidas o expiradas."
+    mensaje = "Credenciales ausentes, inválidas o expiradas."
 
 
 class PermisoDenegadoError(AppError):
@@ -97,7 +146,7 @@ class ModeloNoDisponibleError(AppError):
 
     status_code = status.HTTP_503_SERVICE_UNAVAILABLE
     codigo = "MODELO_NO_DISPONIBLE"
-    mensaje = "El servicio de prediccion de riesgo no esta disponible."
+    mensaje = "El servicio de predicción de riesgo no está disponible."
 
 
 # ---------------------------------------------------------------------------
@@ -154,9 +203,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             detalles.append(
                 {
                     "campo": campo or "general",
-                    # Pydantic antepone "Value error, " al mensaje que escribe
-                    # el validador; se retira para mostrarlo tal cual se redacto.
-                    "motivo": err.get("msg", "").removeprefix("Value error, "),
+                    "motivo": motivo_en_castellano(err),
                     "tipo": err.get("type", ""),
                 }
             )
@@ -175,7 +222,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             request,
             status.HTTP_409_CONFLICT,
             "CONFLICTO",
-            "La operacion viola una restriccion de integridad de los datos.",
+            "La operación viola una restricción de integridad de los datos.",
         )
 
     @app.exception_handler(SQLAlchemyError)
@@ -186,7 +233,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             request,
             status.HTTP_503_SERVICE_UNAVAILABLE,
             "BD_NO_DISPONIBLE",
-            "El servicio de datos no esta disponible temporalmente.",
+            "El servicio de datos no está disponible temporalmente.",
         )
 
     @app.exception_handler(Exception)

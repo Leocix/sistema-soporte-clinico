@@ -117,7 +117,7 @@ def test_el_estado_informa_el_modelo_del_microservicio(client, cab_medico, micro
 def test_la_procedencia_del_modelo_viaja_en_cada_prediccion(client, cab_medico, datos, microservicio):
     cuerpo = client.get(_url(datos), headers=cab_medico).json()
     assert cuerpo["modelo"]["datos_reales"] is False
-    assert "no constituye un diagnostico" in cuerpo["aviso"].lower()
+    assert "no constituye un diagnóstico" in cuerpo["aviso"].lower()
 
 
 def test_el_reporte_pide_todas_las_predicciones_en_una_sola_llamada(

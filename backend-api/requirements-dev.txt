@@ -1,0 +1,4 @@
+# Herramientas de verificacion (no las necesita el servicio en produccion).
+# Cobertura de sentencias y ramas, y complejidad ciclomatica (Anexo n.o 28).
+pytest-cov==6.0.0
+radon==6.0.1

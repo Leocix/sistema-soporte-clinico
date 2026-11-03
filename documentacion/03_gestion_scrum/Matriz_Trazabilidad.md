@@ -16,8 +16,8 @@ del repositorio.
 | Objetivo específico | Brecha del diagnóstico (OE1) | Requisitos derivados |
 | :--- | :--- | :--- |
 | **OE1** Caracterizar el proceso actual y los factores de incumplimiento | — (es la fuente del diagnóstico) | Define B1–B4 |
-| **OE2** Determinar requisitos funcionales y no funcionales | B1–B4 | RF01–RF08, RNF01–RNF06 |
-| **OE3** Determinar el algoritmo con mayor capacidad predictiva | B3 falta de analítica predictiva | RF04, RF06 |
+| **OE2** Determinar requisitos funcionales y no funcionales | B1–B4 | RF01–RF10, RNF01–RNF06 |
+| **OE3** Determinar el algoritmo con mayor capacidad predictiva | B3 falta de analítica predictiva | RF04, RF06, PBI-11 |
 | **OE4** Construir el sistema integrando web, móvil y modelo | B1, B2, B4 | RF01, RF02, RF03, RF05, RF07, RF08, RF09 |
 | **OE5** Evaluar la usabilidad mediante la escala SUS | — (verificación del producto) | RNF03 |
 
@@ -86,14 +86,14 @@ del repositorio.
 | OE1 | Procesos de seguimiento no digitalizados | Medida | **100 %** |
 | OE2 | Requisitos especificados / identificados | 100 % | **100 %** (10 RF + 6 RNF) |
 | OE2 | Alineación con estándares de arquitectura | Juicio de 3 expertos (1–5) | Pendiente |
-| OE3 | Algoritmos comparados | ≥ 4 | **4 configurados y ejecutables** |
-| OE3 | AUCROC en validación cruzada | ≥ 0,80 | **0,856** en la corrida de verificación; pendiente sobre el dataset real |
-| OE3 | Sensibilidad y especificidad | Reportadas | **0,794 y 0,757** en la corrida de verificación |
-| OE3 | F1-score en prueba independiente | Reportado | **0,471** sobre el conjunto apartado |
-| OE4 | Historias de usuario completadas | 100 % por sprint | **5 de 5** (HU01–HU05) |
+| OE3 | Algoritmos comparados | ≥ 4 | **4 comparados sobre datos reales** (8 422 pacientes de la ENDES, PBI-11) |
+| OE3 | AUCROC en validación cruzada | ≥ 0,80 | **0,591** sobre la ENDES: **no cumple**, por las variables que esa fuente registra. Pendiente sobre las historias del consultorio |
+| OE3 | Sensibilidad y especificidad | Reportadas | **0,450 y 0,664** sobre la ENDES; 0,794 y 0,757 en la corrida de verificación |
+| OE3 | F1-score en prueba independiente | Reportado | **0,252** sobre la ENDES; AUCROC 0,571 en el conjunto de prueba reservado |
+| OE4 | Historias de usuario completadas | 100 % por sprint | **12 de 12** (RF01–RF10, PBI-11 y PBI-12); 100 %, 92 %, 95 % y 59 % por sprint |
 | OE4 | Módulos construidos / requeridos | Todos | **10 de 10** requisitos funcionales |
-| OE4 | Densidad de errores por módulo | Decreciente | 22 incidencias cerradas, 0 abiertas; 195 pruebas en verde |
-| OE4 | Cumplimiento ISO/IEC 25010 | Funcionalidad, eficiencia, usabilidad | **7 de 8 atributos verificados**; usabilidad pendiente del SUS |
+| OE4 | Densidad de errores por módulo | Decreciente | 22 incidencias cerradas, 0 abiertas; 193 pruebas en verde |
+| OE4 | Cumplimiento ISO/IEC 25010 | Funcionalidad, eficiencia, usabilidad | **8 de 9 características verificadas** (ISO/IEC 25010:2023); capacidad de interacción pendiente del SUS |
 | OE5 | Nivel de usabilidad (SUS) | ≥ 80 | Pendiente: requiere usuarios |
 | OE5 | Tasa de éxito en tareas | Medida | Pendiente: requiere usuarios |
 | OE5 | Tiempo de aprendizaje de uso | Medido | Pendiente: requiere usuarios |

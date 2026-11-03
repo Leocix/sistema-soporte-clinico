@@ -1,0 +1,21 @@
+=== Ficha de procedencia del modelo entrenado ===
+(ml-pipeline/models/risk_model_endes_v1.json)
+
+algoritmo                          Random Forest
+hiperparametros                    {'max_depth': 8, 'min_samples_leaf': 5, 'n_estimators': 200}
+entrenado_el                       2026-09-29
+origen_datos                       ENDES (INEI), microdatos publicos
+datos_reales                       True
+filas_entrenamiento                6737
+aucroc_validacion_cruzada          0.5913
+sensibilidad_validacion_cruzada    0.4502
+cumple_meta_aucroc                 False
+semilla                            42
+
+Variables mas influyentes (importancia por permutacion):
+  edad                       +0.0348
+  tiempo_enfermedad_anios    +0.0257
+  nivel_educativo            +0.0093
+  diagnostico                +0.0061
+  cronicidad_relativa        +0.0050
+  comorbilidades             -0.0001

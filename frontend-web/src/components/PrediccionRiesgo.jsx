@@ -58,12 +58,9 @@ export default function PrediccionRiesgo({ prediccion }) {
         </span>
       </div>
 
-      {!modelo.datos_reales && (
-        <p className="prediccion__procedencia">
-          Modelo entrenado con un conjunto de demostración simulado. El resultado
-          ilustra el funcionamiento del componente; no es un hallazgo del estudio.
-        </p>
-      )}
+      {/* La procedencia del modelo (datos reales o de demostración) sigue
+          viajando en cada respuesta del API y queda en la ficha del modelo;
+          por decisión del usuario ya no se muestra como aviso en la tarjeta. */}
 
       {contribuciones.length > 0 && (
         <div className="prediccion__factores">

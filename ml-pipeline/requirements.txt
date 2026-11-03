@@ -16,3 +16,5 @@ joblib==1.5.1
 xgboost==2.1.1
 # Prueba de McNemar entre los dos mejores clasificadores.
 scipy==1.15.3
+# Solo para `endes.py`: el INEI publica sus microdatos en formato SPSS (.sav).
+pyreadstat==1.3.6

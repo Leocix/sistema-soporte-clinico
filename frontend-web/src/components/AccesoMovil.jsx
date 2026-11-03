@@ -50,6 +50,7 @@ export default function AccesoMovil({ paciente, alGenerar }) {
   const copiar = () => {
     const texto =
       `Acceso a la aplicación «Mi tratamiento»\n` +
+      `Descárguela en: ${window.location.origin}/descargar\n` +
       `Correo: ${credenciales.correo}\n` +
       `Contraseña: ${credenciales.contrasena_temporal}`
     navigator.clipboard?.writeText(texto)

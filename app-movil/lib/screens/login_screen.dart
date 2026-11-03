@@ -7,6 +7,7 @@ import '../utils/tema.dart';
 import '../widgets/mensaje_estado.dart';
 import 'inicio_familiar.dart';
 import 'inicio_paciente.dart';
+import 'legal_screen.dart';
 import 'registro_familiar.dart';
 
 /// Acceso a la aplicacion (RF01).
@@ -292,6 +293,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   icon: const Icon(Icons.key_outlined, size: 22),
                   label: const Text('Crear mi cuenta con el código'),
                 ),
+                const SizedBox(height: 16),
+                const EnlaceLegal(),
               ],
             ),
           ),

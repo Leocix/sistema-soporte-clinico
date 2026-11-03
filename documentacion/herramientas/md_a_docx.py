@@ -80,16 +80,12 @@ def escribir_inline(parrafo, texto: str, base_negrita=False, base_cursiva=False)
         run = parrafo.add_run(contenido)
         run.bold = negrita or None
         run.italic = cursiva or None
+        # Los fragmentos de codigo NO cambian de tipografia: el documento usa
+        # una sola fuente en todo el cuerpo, y una segunda familia —aunque sea
+        # monoespaciada y correcta tipograficamente— rompe el formato
+        # institucional. Se distinguen en cursiva, que si respeta la fuente.
         if mono:
-            run.font.name = "Consolas"
-            run.font.size = Pt(9.5)
-            rpr = run._element.get_or_add_rPr()
-            rfonts = rpr.find(qn("w:rFonts"))
-            if rfonts is None:
-                rfonts = rpr.makeelement(qn("w:rFonts"), {})
-                rpr.append(rfonts)
-            rfonts.set(qn("w:ascii"), "Consolas")
-            rfonts.set(qn("w:hAnsi"), "Consolas")
+            run.italic = True
 
 
 # ---------------------------------------------------------------------------
@@ -131,19 +127,29 @@ def repartir_anchos(filas: list[list[str]], columnas: int) -> list[float]:
     total = sum(pesos) or 1
     anchos = [ANCHO_UTIL * p / total for p in pesos]
 
+    # Mínimo de cada columna: su palabra más larga debe caber entera. Sin esto
+    # una columna de estado partía «Conforme» en «Conform» y «e». Se usa el
+    # cuerpo de 8 a 9 puntos de las tablas (unas 0,075 pulgadas por letra) y
+    # se limita, para que una ruta de archivo no se lleve media tabla.
+    minimos = []
+    for i in range(columnas):
+        palabras = [p for f in filas if i < len(f) for p in re.split(r"[\s/]+", f[i].replace("*", "").replace("`", ""))]
+        larga = max((len(p) for p in palabras), default=0)
+        minimos.append(max(MIN_COL, min(larga * 0.075 + 0.14, 1.5)))
+
     # Se sube al mínimo lo que quede por debajo y se descuenta de las columnas
     # que tengan holgura, repitiendo hasta que todas cumplan.
     for _ in range(columnas):
-        deficit = sum(MIN_COL - a for a in anchos if a < MIN_COL)
+        deficit = sum(m - a for a, m in zip(anchos, minimos) if a < m)
         if deficit <= 0:
             break
-        holgadas = [i for i, a in enumerate(anchos) if a > MIN_COL]
+        holgadas = [i for i, a in enumerate(anchos) if a > minimos[i]]
         if not holgadas:
             break
-        sobrante = sum(anchos[i] - MIN_COL for i in holgadas)
+        sobrante = sum(anchos[i] - minimos[i] for i in holgadas)
         for i in holgadas:
-            anchos[i] -= deficit * (anchos[i] - MIN_COL) / sobrante
-        anchos = [max(a, MIN_COL) for a in anchos]
+            anchos[i] -= min(deficit, sobrante) * (anchos[i] - minimos[i]) / sobrante
+        anchos = [max(a, m) for a, m in zip(anchos, minimos)]
 
     escala = ANCHO_UTIL / sum(anchos)
     return [a * escala for a in anchos]
@@ -201,6 +207,48 @@ def insertar_tabla(doc, bloque: list[str]) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Tipografía y color: una sola familia, un solo color
+# ---------------------------------------------------------------------------
+# El formato institucional usa Times New Roman en negro. Cualquier fuente o
+# color que se cuele —la de un tema de Word, la de un encabezado heredado de la
+# plantilla, la de un fragmento de codigo— se corrige al final, de una vez,
+# sobre el documento ya construido. Es mas fiable que recordarlo en cada run.
+FUENTE = "Times New Roman"
+NEGRO = RGBColor(0, 0, 0)
+
+
+def _fijar_fuente(run) -> None:
+    run.font.name = FUENTE
+    run.font.color.rgb = NEGRO
+    rpr = run._element.get_or_add_rPr()
+    rfonts = rpr.find(qn("w:rFonts"))
+    if rfonts is None:
+        rfonts = rpr.makeelement(qn("w:rFonts"), {})
+        rpr.append(rfonts)
+    # `ascii` y `hAnsi` cubren el texto latino; `cs` y `eastAsia` evitan que
+    # Word sustituya la fuente en los simbolos (✔, –, «») que usan las tablas.
+    for atributo in ("w:ascii", "w:hAnsi", "w:cs", "w:eastAsia"):
+        rfonts.set(qn(atributo), FUENTE)
+
+
+def uniformar(doc) -> None:
+    """Deja todo el documento en una sola fuente y en negro."""
+    normal = doc.styles["Normal"]
+    normal.font.name = FUENTE
+    normal.font.color.rgb = NEGRO
+
+    for parrafo in doc.paragraphs:
+        for run in parrafo.runs:
+            _fijar_fuente(run)
+    for tabla in doc.tables:
+        for fila in tabla.rows:
+            for celda in fila.cells:
+                for parrafo in celda.paragraphs:
+                    for run in parrafo.runs:
+                        _fijar_fuente(run)
+
+
+# ---------------------------------------------------------------------------
 # Conversión del cuerpo
 # ---------------------------------------------------------------------------
 def _ya_hay_salto(doc) -> bool:
@@ -209,7 +257,58 @@ def _ya_hay_salto(doc) -> bool:
     return 'w:br' in ultimo._p.xml and 'type="page"' in ultimo._p.xml
 
 
-def convertir(doc, markdown: str) -> None:
+def insertar_imagen(doc, ruta: Path, pie: str) -> None:
+    """Imagen centrada con su pie debajo.
+
+    Las capturas del celular son verticales: a todo el ancho ocuparian dos
+    paginas, asi que se limitan por alto y no por ancho.
+    """
+    from docx.shared import Cm
+    from PIL import Image
+
+    with Image.open(ruta) as img:
+        ancho, alto = img.size
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.keep_with_next = True
+    if ruta.parent.name in ("grafos", "codigo", "evidencia"):
+        # Un grafo de flujo se lee por sus números y rótulos: se le da la
+        # página casi entera en vez del tamaño de una captura de celular.
+        alto_cm = min(19.0, 15.5 * alto / ancho)
+        p.add_run().add_picture(str(ruta), height=Cm(alto_cm))
+    elif alto > ancho * 1.3:
+        p.add_run().add_picture(str(ruta), height=Cm(12))
+    else:
+        p.add_run().add_picture(str(ruta), width=Cm(min(15.5, 15.5 * ancho / 1366 + 4)))
+    if pie:
+        leyenda = doc.add_paragraph()
+        leyenda.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        leyenda.paragraph_format.space_after = Pt(12)
+        escribir_inline(leyenda, pie, base_cursiva=True)
+        for run in leyenda.runs:
+            run.font.size = Pt(10)
+
+
+def _con_continuacion(lineas: list[str], i: int, texto: str) -> tuple[str, int]:
+    """Une al elemento de lista las lineas sangradas que lo continuan.
+
+    Sin esto, un paso escrito en dos lineas del Markdown salia en Word como
+    dos parrafos: el numero en uno y el resto de la frase en otro.
+    """
+    i += 1
+    partes = [texto]
+    while i < len(lineas):
+        linea = lineas[i]
+        if not linea.strip() or not linea.startswith((" ", "\t")):
+            break
+        if re.match(r"^\s*([-*]\s+|\d+\.\s+)", linea):
+            break
+        partes.append(linea.strip())
+        i += 1
+    return " ".join(partes), i
+
+
+def convertir(doc, markdown: str, base: Path | None = None) -> None:
     lineas = markdown.split("\n")
     i = 0
     while i < len(lineas):
@@ -230,6 +329,13 @@ def convertir(doc, markdown: str) -> None:
             doc.add_paragraph()
             continue
 
+        # Imagen: ![pie](ruta relativa al .md)
+        imagen = re.match(r"^!\[(.*)\]\((.+)\)$", crudo)
+        if imagen:
+            insertar_imagen(doc, (base or Path.cwd()) / imagen.group(2), imagen.group(1))
+            i += 1
+            continue
+
         # Encabezados
         titulo = re.match(r"^(#{1,4})\s+(.*)$", crudo)
         if titulo:
@@ -245,20 +351,20 @@ def convertir(doc, markdown: str) -> None:
 
         # Lista con viñeta
         if re.match(r"^[-*]\s+", crudo):
+            texto, i = _con_continuacion(lineas, i, re.sub(r"^[-*]\s+", "", crudo))
             p = doc.add_paragraph(style="List Paragraph")
             p.paragraph_format.left_indent = Pt(24)
-            escribir_inline(p, re.sub(r"^[-*]\s+", "", crudo))
+            escribir_inline(p, texto)
             p.runs and setattr(p.runs[0], "text", "•  " + p.runs[0].text)
-            i += 1
             continue
 
         # Lista numerada
         numerada = re.match(r"^(\d+)\.\s+(.*)$", crudo)
         if numerada:
+            texto, i = _con_continuacion(lineas, i, numerada.group(2))
             p = doc.add_paragraph(style="List Paragraph")
             p.paragraph_format.left_indent = Pt(24)
-            escribir_inline(p, f"{numerada.group(1)}.  {numerada.group(2)}")
-            i += 1
+            escribir_inline(p, f"{numerada.group(1)}.  {texto}")
             continue
 
         # Cita
@@ -274,7 +380,7 @@ def convertir(doc, markdown: str) -> None:
         i += 1
         while i < len(lineas):
             siguiente = lineas[i].strip()
-            if (not siguiente or siguiente.startswith(("#", "|", ">", "---"))
+            if (not siguiente or siguiente.startswith(("#", "|", ">", "---", "!["))
                     or re.match(r"^([-*]\s+|\d+\.\s+)", siguiente)):
                 break
             parrafo.append(siguiente)
@@ -283,6 +389,9 @@ def convertir(doc, markdown: str) -> None:
         p = doc.add_paragraph()
         p.paragraph_format.space_after = Pt(8)
         p.alignment = WD_ALIGN_PARAGRAPH.JUSTIFY
+        # El rótulo de una tabla no debe quedar solo al pie de una página.
+        if parrafo[0].startswith("**Tabla "):
+            p.paragraph_format.keep_with_next = True
         escribir_inline(p, " ".join(parrafo))
 
 
@@ -360,7 +469,12 @@ def main() -> int:
         if re.fullmatch(r"\d{1,2} de \w+ de \d{4}", texto):
             reemplazar_texto(hijo, fecha)
         elif texto.rstrip().rstrip(",").strip() == "Chiclayo":
-            reemplazar_texto(hijo, "Chiclayo, 2026")
+            # El año NO se escribe aqui. La plantilla trae un control de
+            # contenido llamado «Año de sustentación» incrustado en esta misma
+            # linea, y `Paragraph.text` no lo ve porque vive dentro de un
+            # `w:sdt`. Escribir «Chiclayo, 2026» dejaba el año dos veces
+            # seguidas en la portada: el que escribiamos y el del control.
+            reemplazar_texto(hijo, "Chiclayo, ")
         elif titulo and texto.lower().startswith("sistema de soporte clínico"):
             # Aparece dos veces: en la portada y en el punto 2 de la
             # informacion general.
@@ -400,7 +514,24 @@ def main() -> int:
             convertir(doc, "#### 6. Estado del avance")
         convertir(doc, md[inicio_estado:marca].replace("**6. Estado del avance**", ""))
 
-    convertir(doc, md[marca:])
+    # El indice y los anexos NO se generan desde el Markdown:
+    #
+    # - El indice es una tabla de contenido automatica de Word, insertada a
+    #   mano en el documento. Lleva numeros de pagina y se actualiza con F9;
+    #   una lista con viñetas escrita aqui la duplicaria.
+    # - Los anexos se arman en Word porque son capturas e imagenes, que el
+    #   Markdown no puede aportar. La relacion de anexos del Markdown queda
+    #   como inventario de trabajo, no como contenido del entregable.
+    cuerpo_md = md[marca:]
+    inicio = cuerpo_md.find("# I. RESULTADOS")
+    if inicio > 0:
+        cuerpo_md = cuerpo_md[inicio:]
+    fin = cuerpo_md.find("# ANEXOS")
+    if fin > 0:
+        cuerpo_md = cuerpo_md[:fin]
+
+    convertir(doc, cuerpo_md)
+    uniformar(doc)
 
     doc.save(str(DESTINO))
     print(f"Generado: {DESTINO.name}")
